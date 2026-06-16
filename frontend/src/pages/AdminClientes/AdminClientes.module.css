@@ -1,0 +1,78 @@
+.container {
+  min-height: 100vh;
+  padding: 40px 64px;
+  background: #f5f7fa;
+  color: #1f2937;
+}
+
+.container h1 {
+  margin-bottom: 24px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.card h3 {
+  margin-bottom: 10px;
+}
+
+.card p {
+  margin: 5px 0;
+  color: #6b7280;
+}
+
+.acoes {
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.acoes select {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.acoes button {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #f97316;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.acoes button:hover {
+  background: #ea580c;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 18px;
+  }
+
+  .card {
+    flex-direction: column;
+  }
+
+  .acoes {
+    min-width: 100%;
+  }
+}
