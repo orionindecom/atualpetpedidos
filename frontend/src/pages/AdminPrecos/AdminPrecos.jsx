@@ -1,0 +1,196 @@
+import { useEffect, useState } from "react";
+import api from "../../api/axios";
+import Navbar from "../../components/Navbar/Navbar";
+import styles from "./AdminPrecos.module.css";
+
+function AdminPrecos() {
+    const [tabelas, setTabelas] = useState([]);
+    const [produtos, setProdutos] = useState([]);
+    const [precos, setPrecos] = useState({});
+    const [tabelaSelecionada, setTabelaSelecionada] = useState("");
+    const [busca, setBusca] = useState("");
+    const [linhaFiltro, setLinhaFiltro] = useState("");
+    const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
+    useEffect(() => {
+        async function carregarDados() {
+            const tabelasResponse = await api.get("/tabelas");
+            const produtosResponse = await api.get("/produtos");
+
+            setTabelas(tabelasResponse.data);
+            setProdutos(produtosResponse.data);
+        }
+
+        carregarDados();
+    }, []);
+
+    const carregarPrecosTabela = async (tabelaId) => {
+        setTabelaSelecionada(tabelaId);
+
+        if (!tabelaId) {
+            setPrecos({});
+            return;
+        }
+
+        const response = await api.get(`/precos/tabela/${tabelaId}`);
+
+        const mapaPrecos = {};
+
+        response.data.forEach((item) => {
+            mapaPrecos[item.produtoId._id] = item.valor;
+        });
+
+        setPrecos(mapaPrecos);
+    };
+
+    const alterarPreco = (produtoId, valor) => {
+        setPrecos({
+            ...precos,
+            [produtoId]: valor,
+        });
+    };
+
+    const salvarPreco = async (produtoId) => {
+        if (!tabelaSelecionada) {
+            alert("Selecione uma tabela");
+            return;
+        }
+
+        const valor = Number(precos[produtoId]);
+
+        if (!valor || valor <= 0) {
+            alert("Informe um valor válido");
+            return;
+        }
+
+        await api.post("/precos", {
+            produtoId,
+            tabelaPrecoId: tabelaSelecionada,
+            valor,
+        });
+
+        alert("Preço salvo com sucesso");
+    };
+
+    const linhas = [...new Set(produtos.map((p) => p.linha).filter(Boolean))];
+
+    const categorias = [
+        ...new Set(produtos.map((p) => p.categoria).filter(Boolean)),
+    ];
+
+    const produtosFiltrados = produtos.filter((produto) => {
+        const combinaBusca = produto.nome
+            .toLowerCase()
+            .includes(busca.toLowerCase());
+
+        const combinaLinha = linhaFiltro
+            ? produto.linha === linhaFiltro
+            : true;
+
+        const combinaCategoria = categoriaFiltro
+            ? produto.categoria === categoriaFiltro
+            : true;
+
+        return combinaBusca && combinaLinha && combinaCategoria;
+    });
+
+    return (
+        <>
+            <Navbar />
+
+            <div className={styles.container}>
+                <h1>Preços por Tabela</h1>
+
+                <div className={styles.filtros}>
+                    <select
+                        value={tabelaSelecionada}
+                        onChange={(e) => carregarPrecosTabela(e.target.value)}
+                    >
+                        <option value="">Selecione uma tabela</option>
+
+                        {tabelas.map((tabela) => (
+                            <option key={tabela._id} value={tabela._id}>
+                                {tabela.nome}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className={styles.filtrosProdutos}>
+                    <input
+                        type="text"
+                        placeholder="Buscar produto..."
+                        value={busca}
+                        onChange={(e) => setBusca(e.target.value)}
+                    />
+
+                    <select
+                        value={linhaFiltro}
+                        onChange={(e) => setLinhaFiltro(e.target.value)}
+                    >
+                        <option value="">Todas as linhas</option>
+
+                        {linhas.map((linha) => (
+                            <option key={linha} value={linha}>
+                                {linha}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={categoriaFiltro}
+                        onChange={(e) => setCategoriaFiltro(e.target.value)}
+                    >
+                        <option value="">Todas as categorias</option>
+
+                        {categorias.map((categoria) => (
+                            <option key={categoria} value={categoria}>
+                                {categoria}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {tabelaSelecionada && (
+                    <div className={styles.lista}>
+                        {produtosFiltrados.map((produto) => (
+                            <div className={styles.card} key={produto._id}>
+                                <div className={styles.produto}>
+                                    {produto.fotoUrl && (
+                                        <img
+                                            src={`http://localhost:5000${produto.fotoUrl}`}
+                                            alt={produto.nome}
+                                        />
+                                    )}
+
+                                    <div>
+                                        <h3>{produto.nome}</h3>
+                                        <p>{produto.linha} • {produto.categoria}</p>
+                                    </div>
+                                </div>
+
+                                <div className={styles.precoBox}>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="Preço"
+                                        value={precos[produto._id] || ""}
+                                        onChange={(e) =>
+                                            alterarPreco(produto._id, e.target.value)
+                                        }
+                                    />
+
+                                    <button onClick={() => salvarPreco(produto._id)}>
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
+export default AdminPrecos;

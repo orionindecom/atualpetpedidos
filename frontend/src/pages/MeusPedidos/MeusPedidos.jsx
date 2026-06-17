@@ -24,7 +24,7 @@ function MeusPedidos() {
   const data = (pedido) => {
     const dia = String(pedido.dia).padStart(2, "0");
     const mes = String(pedido.mes).padStart(2, "0");
-    return `${dia}/${mes}/${pedido.ano}`;
+    return `${pedido.dia}/${pedido.mes}/${pedido.ano}`;
   };
 
   const baixarPdf = async (pedidoId) => {

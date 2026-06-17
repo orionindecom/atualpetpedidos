@@ -6,6 +6,7 @@ import {
   listarTodosPedidos,
   buscarPedidoPorId,
   gerarPdf,
+  atualizarStatusPedido,
 } from "../controllers/pedidoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
@@ -42,6 +43,13 @@ router.get(
   "/:id",
   proteger,
   buscarPedidoPorId
+);
+
+router.put(
+  "/:id/status",
+  proteger,
+  somenteAdmin,
+  atualizarStatusPedido
 );
 
 export default router;

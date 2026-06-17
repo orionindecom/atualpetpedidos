@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
+import logo from "../../assets/logo-atualpet.png";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ function Navbar() {
   return (
     <header className={styles.navbar}>
       <div className={styles.logo}>
-        ATUALPET
+        <img src={logo} alt="AtualPet" />
       </div>
 
       <nav className={styles.links}>
@@ -27,6 +28,10 @@ function Navbar() {
             <Link to="/admin">Dashboard</Link>
             <Link to="/produtos">Produtos</Link>
             <Link to="/clientes">Clientes</Link>
+            <Link to="/precos">Preços</Link>
+            <Link to="/tabelas">Tabelas</Link>
+            <Link to="/pedidos">Pedidos</Link>
+
           </>
         ) : (
           <>

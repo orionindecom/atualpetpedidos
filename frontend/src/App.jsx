@@ -4,11 +4,11 @@ import Catalogo from "./pages/Catalogo/Catalogo";
 import MeusPedidos from "./pages/MeusPedidos/MeusPedidos";
 import AdminClientes from "./pages/AdminClientes/AdminClientes";
 import Cadastro from "./pages/Cadastro/Cadastro";
-
-
-function Admin() {
-  return <h1>Painel Admin</h1>;
-}
+import AdminProdutos from "./pages/AdminProdutos/AdminProdutos";
+import AdminPrecos from "./pages/AdminPrecos/AdminPrecos";
+import AdminTabelas from "./pages/AdminTabelas/AdminTabelas";
+import AdminPedidos from "./pages/AdminPedidos/AdminPedidos";
+import Dashboard from "./pages/Dashboard/Dashboard";
 
 function App() {
   return (
@@ -17,10 +17,14 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/catalogo" element={<Catalogo />} />
-        <Route path="/admin" element={<Admin />} />
         <Route path="/meus-pedidos" element={<MeusPedidos />} />
         <Route path="/clientes" element={<AdminClientes />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/produtos" element={<AdminProdutos />} />
+        <Route path="/precos" element={<AdminPrecos />} />
+        <Route path="/tabelas" element={<AdminTabelas />} />
+        <Route path="/pedidos" element={<AdminPedidos />} />
+        <Route path="/admin" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );

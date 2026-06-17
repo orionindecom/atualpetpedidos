@@ -153,7 +153,10 @@ function Catalogo() {
                         {produtosFiltrados.map((produto) => (
                             <div className={styles.card} key={produto.id}>
                                 {produto.fotoUrl && (
-                                    <img src={produto.fotoUrl} alt={produto.nome} />
+                                    <img
+                                        src={`http://localhost:5000${produto.fotoUrl}`}
+                                        alt={produto.nome}
+                                    />
                                 )}
 
                                 <h3>{produto.nome}</h3>

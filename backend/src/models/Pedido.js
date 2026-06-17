@@ -134,7 +134,15 @@ const pedidoSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["novo", "processando", "faturado", "cancelado"],
+      enum: [
+        "novo",
+        "em_analise",
+        "separando",
+        "faturado",
+        "enviado",
+        "entregue",
+        "cancelado",
+      ],
       default: "novo",
     },
 

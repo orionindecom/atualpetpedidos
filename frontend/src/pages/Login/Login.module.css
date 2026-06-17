@@ -1,77 +1,193 @@
-.container {
+.page {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
   background: #f5f7fa;
+}
+
+.hero {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: white;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logoMark {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  font-weight: 900;
+  font-size: 22px;
+}
+
+.brand h1 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.brand p {
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.heroText {
+  max-width: 620px;
+}
+
+.heroText h2 {
+  font-size: 48px;
+  line-height: 1.05;
+  margin-bottom: 20px;
+}
+
+.heroText p {
+  font-size: 18px;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.features span {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.loginArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
 }
 
 .card {
   width: 100%;
-  max-width: 420px;
-  background: #ffffff;
+  max-width: 430px;
+  background: white;
   padding: 36px;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  border-radius: 26px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
 }
 
-.logo {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.logo h1 {
-  color: #f97316;
+.card h2 {
+  font-size: 32px;
   margin-bottom: 8px;
+  color: #111827;
 }
 
-.logo p {
+.card > p {
   color: #6b7280;
+  margin-bottom: 28px;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
-.input {
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #374151;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.form input {
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #d1d5db;
-  background: #ffffff;
+  background: white;
   color: #1f2937;
   font-size: 15px;
 }
 
-.input:focus {
+.form input:focus {
   outline: none;
   border-color: #f97316;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
-.botao {
+.form button {
   margin-top: 8px;
-  padding: 14px;
+  padding: 15px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #f97316;
   color: white;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 15px;
   cursor: pointer;
 }
 
-.botao:hover {
+.form button:hover {
   background: #ea580c;
 }
 
-.links {
-  margin-top: 18px;
-  text-align: center;
+.footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
 }
 
-.links a {
+.footer span {
+  color: #6b7280;
+}
+
+.footer a {
   color: #f97316;
+  font-weight: 800;
   text-decoration: none;
-  font-weight: 600;
+}
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 36px 24px;
+    gap: 48px;
+  }
+
+  .heroText h2 {
+    font-size: 36px;
+  }
+
+  .loginArea {
+    padding: 28px 18px;
+  }
 }

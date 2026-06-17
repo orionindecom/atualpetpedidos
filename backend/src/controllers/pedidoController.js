@@ -184,3 +184,33 @@ export const gerarPdf = async (req, res) => {
     });
   }
 };
+
+export const atualizarStatusPedido = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const pedido = await Pedido.findById(
+      req.params.id
+    );
+
+    if (!pedido) {
+      return res.status(404).json({
+        message: "Pedido não encontrado",
+      });
+    }
+
+    pedido.status = status;
+
+    await pedido.save();
+
+    res.status(200).json({
+      message: "Status atualizado",
+      pedido,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};

@@ -9,7 +9,7 @@ import tabelaPrecoRoutes from "./routes/tabelaPrecoRoutes.js";
 import precoProdutoRoutes from "./routes/precoProdutoRoutes.js";
 import catalogoRoutes from "./routes/catalogoRoutes.js";
 import pedidoRoutes from "./routes/pedidoRoutes.js";
-
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 
@@ -19,6 +19,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("src/uploads"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/clientes", clienteRoutes);
@@ -27,6 +28,11 @@ app.use("/api/tabelas", tabelaPrecoRoutes);
 app.use("/api/precos", precoProdutoRoutes);
 app.use("/api/catalogo", catalogoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
+app.use(
+  "/uploads",
+  express.static("src/uploads")
+);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });
