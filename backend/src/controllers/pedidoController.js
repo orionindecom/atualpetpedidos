@@ -214,3 +214,98 @@ export const atualizarStatusPedido = async (req, res) => {
     });
   }
 };
+
+export const atualizarPedidoAdmin = async (req, res) => {
+  try {
+    const { itens, observacao } = req.body;
+
+    if (!itens || itens.length === 0) {
+      return res.status(400).json({
+        message: "Informe pelo menos um item",
+      });
+    }
+
+    const pedido = await Pedido.findById(req.params.id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        message: "Pedido não encontrado",
+      });
+    }
+
+    const novosItens = [];
+    let novoTotal = 0;
+
+    for (const item of itens) {
+      const produto = await Produto.findById(item.produtoId);
+
+      if (!produto) continue;
+
+      const preco = await PrecoProduto.findOne({
+        produtoId: produto._id,
+        tabelaPrecoId: pedido.tabelaPrecoId,
+      });
+
+      if (!preco) continue;
+
+      const quantidade = Number(item.quantidade);
+
+      if (!quantidade || quantidade <= 0) continue;
+
+      const subtotal = preco.valor * quantidade;
+
+      novosItens.push({
+        produtoId: produto._id,
+        nomeProduto: produto.nome,
+        quantidade,
+        valorUnitario: preco.valor,
+        subtotal,
+      });
+
+      novoTotal += subtotal;
+    }
+
+    if (novosItens.length === 0) {
+      return res.status(400).json({
+        message: "Nenhum item válido encontrado",
+      });
+    }
+
+    pedido.itens = novosItens;
+    pedido.valorTotal = novoTotal;
+    pedido.observacao = observacao ?? pedido.observacao;
+
+    await pedido.save();
+
+    res.status(200).json({
+      message: "Pedido atualizado com sucesso",
+      pedido,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const excluirPedidoAdmin = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        message: "Pedido não encontrado",
+      });
+    }
+
+    await Pedido.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      message: "Pedido excluído com sucesso",
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};

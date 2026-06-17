@@ -115,3 +115,142 @@
     flex-direction: column;
   }
 }
+
+.acoesPedido {
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acoesPedido button {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #f97316;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.acoesPedido button:hover {
+  background: #ea580c;
+}
+
+.acoesPedido .secundario {
+  background: #6b7280;
+}
+
+.acoesPedido .perigo {
+  background: #ef4444;
+}
+
+.edicaoPedido {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.edicaoPedido h4 {
+  margin-bottom: 12px;
+}
+
+.itemEdicao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.itemEdicao:last-child {
+  border-bottom: none;
+}
+
+.itemEdicao div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemEdicao span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.itemAcoes {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemAcoes input {
+  width: 90px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.removerItem {
+  padding: 9px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #ef4444 !important;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.adicionarItem {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 1fr 90px auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.adicionarItem h4 {
+  grid-column: 1 / -1;
+}
+
+.adicionarItem select,
+.adicionarItem input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.adicionarItem button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #f97316;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .acoesPedido {
+    width: 100%;
+  }
+
+  .adicionarItem {
+    grid-template-columns: 1fr;
+  }
+
+  .itemEdicao {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

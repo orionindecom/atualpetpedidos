@@ -7,6 +7,8 @@ import {
   buscarPedidoPorId,
   gerarPdf,
   atualizarStatusPedido,
+  atualizarPedidoAdmin,
+  excluirPedidoAdmin,
 } from "../controllers/pedidoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
@@ -39,6 +41,20 @@ router.get(
   gerarPdf
 );
 
+router.put(
+  "/:id",
+  proteger,
+  somenteAdmin,
+  atualizarPedidoAdmin
+);
+
+router.delete(
+  "/:id",
+  proteger,
+  somenteAdmin,
+  excluirPedidoAdmin
+);
+
 router.get(
   "/:id",
   proteger,
@@ -51,5 +67,7 @@ router.put(
   somenteAdmin,
   atualizarStatusPedido
 );
+
+
 
 export default router;

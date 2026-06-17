@@ -13,6 +13,9 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 
+console.log("Cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("API key:", process.env.CLOUDINARY_API_KEY);
+
 connectDB();
 
 const app = express();

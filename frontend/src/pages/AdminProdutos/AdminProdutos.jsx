@@ -181,7 +181,7 @@ function AdminProdutos() {
               <div className={styles.card} key={produto._id}>
                 {produto.fotoUrl && (
                   <img
-                    src={`http://localhost:5000${produto.fotoUrl}`}
+                    src={produto.fotoUrl}
                     alt={produto.nome}
                   />
                 )}

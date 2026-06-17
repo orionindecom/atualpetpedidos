@@ -2,16 +2,9 @@ import Produto from "../models/Produto.js";
 
 export const cadastrarProduto = async (req, res) => {
   try {
-    const {
-      nome,
-      descricao,
-      linha,
-      categoria,
-    } = req.body;
+    const { nome, descricao, linha, categoria } = req.body;
 
-    const fotoUrl = req.file
-      ? `/uploads/produtos/${req.file.filename}`
-      : "";
+    const fotoUrl = req.file ? req.file.path : "";
 
     const produto = await Produto.create({
       nome,
@@ -64,11 +57,11 @@ export const atualizarProduto = async (req, res) => {
     produto.categoria = categoria ?? produto.categoria;
 
     if (ativo !== undefined) {
-      produto.ativo = ativo;
+      produto.ativo = ativo === "true" || ativo === true;
     }
 
     if (req.file) {
-      produto.fotoUrl = `/uploads/produtos/${req.file.filename}`;
+      produto.fotoUrl = req.file.path;
     }
 
     await produto.save();

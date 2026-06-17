@@ -154,7 +154,7 @@ function Catalogo() {
                             <div className={styles.card} key={produto.id}>
                                 {produto.fotoUrl && (
                                     <img
-                                        src={`http://localhost:5000${produto.fotoUrl}`}
+                                        src={produto.fotoUrl}
                                         alt={produto.nome}
                                     />
                                 )}
