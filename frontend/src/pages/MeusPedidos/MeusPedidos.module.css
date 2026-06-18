@@ -1,51 +1,243 @@
+/* ─────────────────────────────────────────
+   MeusPedidos — consistente com Catálogo
+   Whitesmoke + patinhas + badges de status
+───────────────────────────────────────── */
+
 .container {
   min-height: 100vh;
-  padding: 40px 64px;
-  background: #f5f7fa;
-  color: #1f2937;
+  width: 100%;
+  padding: 40px 52px;
+  background-color: #f5f5f5;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 100 100'%3E%3Cg fill='%23b0b8c1' opacity='0.35'%3E%3Cellipse cx='38' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='62' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='22' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='78' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='50' cy='65' rx='22' ry='20'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 100 100'%3E%3Cg fill='%23c8cdd4' opacity='0.2' transform='rotate(30 50 50)'%3E%3Cellipse cx='38' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='62' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='22' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='78' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='50' cy='65' rx='22' ry='20'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45' height='45' viewBox='0 0 100 100'%3E%3Cg fill='%23f97316' opacity='0.08' transform='rotate(-20 50 50)'%3E%3Cellipse cx='38' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='62' cy='18' rx='7' ry='9'/%3E%3Cellipse cx='22' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='78' cy='36' rx='6' ry='8'/%3E%3Cellipse cx='50' cy='65' rx='22' ry='20'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 180px 180px, 270px 270px, 135px 135px;
+  background-position: 0 0, 90px 90px, 45px 135px;
+  color: #111827;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
+/* ── Título ── */
+
 .container h1 {
-  margin-bottom: 24px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
+/* ── Mensagem de lista vazia ── */
+
+.container > p {
+  color: #9ca3af;
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+/* ── Lista — tabela unificada ── */
 
 .lista {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.card {
+  gap: 0;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  margin-top: 28px;
+}
+
+/* ── Card / Linha ── */
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
+  gap: 24px;
+  padding: 20px 28px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s ease;
 }
 
+.card:last-child {
+  border-bottom: none;
+}
+
+.card:hover {
+  background: #fffbf8;
+}
+
+/* Barra lateral colorida por status — via borda esquerda */
+.card {
+  border-left: 4px solid transparent;
+}
+
+/* ── Bloco de info (div) ── */
+
+.card > div {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Número do pedido — ocupa a primeira coluna */
 .card h3 {
-  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.2px;
+  grid-column: 1;
+  grid-row: 1;
 }
 
-.card p {
-  margin: 4px 0;
+/* Data — embaixo do número */
+.card > div > p:nth-child(1) {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Status badge — coluna do meio */
+.card > div > p:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+  justify-self: start;
+  align-self: center;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  width: fit-content;
+  white-space: nowrap;
+
+  /* padrão cinza */
+  background: #f3f4f6;
   color: #6b7280;
+  border: 1px solid #e5e7eb;
 }
 
-.card button {
-  background: #f97316;
+.card > div > p:nth-child(2)::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #9ca3af;
+}
+
+/* Total — coluna da direita */
+.card > div > p:nth-child(3) {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  margin: 0;
+  justify-self: end;
+  align-self: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: #f97316;
+  white-space: nowrap;
+}
+
+/* ── Botão ── */
+
+.card > button {
+  background: linear-gradient(135deg, #f97316, #ea580c);
   color: #ffffff;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border-radius: 10px;
   border: none;
   font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+  box-shadow: 0 3px 12px rgba(249, 115, 22, 0.28);
 }
 
-.card button:hover {
-  background: #ea580c;
+.card > button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(249, 115, 22, 0.4);
+}
+
+.card > button:active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   BADGES DE STATUS — classes aplicadas via JSX
+   Adicione className={styles['status-' + pedido.status.toLowerCase().replace(/ /g,'-')]}
+   no <p> de Status para ativar as cores.
+═══════════════════════════════════════════ */
+
+/* Novo */
+.card.statusNovo               { border-left-color: #3b82f6; }
+.statusBadgeNovo               { background: #eff6ff !important; color: #1d4ed8 !important; border-color: #bfdbfe !important; }
+.statusBadgeNovo::before       { background: #3b82f6 !important; }
+
+/* Em Separação / Separação */
+.card.statusSeparacao          { border-left-color: #f59e0b; }
+.statusBadgeSeparacao          { background: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
+.statusBadgeSeparacao::before  { background: #f59e0b !important; }
+
+/* Enviado */
+.card.statusEnviado            { border-left-color: #06b6d4; }
+.statusBadgeEnviado            { background: #ecfeff !important; color: #0e7490 !important; border-color: #a5f3fc !important; }
+.statusBadgeEnviado::before    { background: #06b6d4 !important; }
+
+/* Entregue */
+.card.statusEntregue           { border-left-color: #22c55e; }
+.statusBadgeEntregue           { background: #f0fdf4 !important; color: #166534 !important; border-color: #86efac !important; }
+.statusBadgeEntregue::before   { background: #22c55e !important; }
+
+/* Cancelado */
+.card.statusCancelado          { border-left-color: #ef4444; }
+.statusBadgeCancelado          { background: #fef2f2 !important; color: #991b1b !important; border-color: #fecaca !important; }
+.statusBadgeCancelado::before  { background: #ef4444 !important; }
+
+/* Aguardando Pagamento */
+.card.statusAguardando         { border-left-color: #8b5cf6; }
+.statusBadgeAguardando         { background: #f5f3ff !important; color: #5b21b6 !important; border-color: #ddd6fe !important; }
+.statusBadgeAguardando::before { background: #8b5cf6 !important; }
+
+/* ── Responsivo ── */
+
+@media (max-width: 900px) {
+  .card > div {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card > div > p:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .card > div > p:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .card > div > p:nth-child(1) {
+    grid-column: 1;
+    grid-row: 3;
+  }
 }
 
 @media (max-width: 768px) {
@@ -53,9 +245,35 @@
     padding: 24px 18px;
   }
 
+  .container h1 {
+    font-size: 28px;
+  }
+
   .card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    grid-template-columns: 1fr;
+    padding: 18px 20px;
+    gap: 14px;
+  }
+
+  .card > div {
+    grid-template-columns: 1fr;
+  }
+
+  .card > div > p:nth-child(1),
+  .card > div > p:nth-child(2),
+  .card > div > p:nth-child(3) {
+    grid-column: 1;
+    grid-row: unset;
+    justify-self: start;
+  }
+
+  .card > div > p:nth-child(3) {
+    font-size: 18px;
+  }
+
+  .card > button {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
   }
 }

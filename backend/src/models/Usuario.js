@@ -61,7 +61,7 @@ const usuarioSchema = new mongoose.Schema(
 
         statusCadastro: {
             type: String,
-            enum: ["pendente", "aprovado", "reprovado"],
+            enum: ["pendente", "aprovado", "reprovado", "inativo"],
             default: "pendente",
         },
 

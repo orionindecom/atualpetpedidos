@@ -1,66 +1,371 @@
+/* ─────────────────────────────────────────
+   AdminClientes — consistente com Catálogo
+   Whitesmoke + patinhas + badges de status
+───────────────────────────────────────── */
+
 .container {
   min-height: 100vh;
-  padding: 40px 64px;
-  background: #f5f7fa;
-  color: #1f2937;
+  width: 100%;
+  padding: 40px 52px;
+  background-color: #f5f5f5;
+
+  background-size: 180px 180px, 270px 270px, 135px 135px;
+  background-position: 0 0, 90px 90px, 45px 135px;
+  color: #111827;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
+/* ── Título ── */
+
 .container h1 {
-  margin-bottom: 24px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
+.container > p {
+  color: #9ca3af;
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+
+/* ── Topo e busca ── */
+
+.topo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.topo p {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
+
+.buscaBox {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.buscaBox label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+}
+
+.buscaBox input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.buscaBox input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.buscaBox input::placeholder {
+  color: #9ca3af;
+}
+
+/* ── Lista ── */
 
 .lista {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  margin-top: 28px;
 }
+
+/* ── Card ── */
 
 .card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  padding: 22px;
+  border-left: 4px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px 28px;
   display: flex;
   justify-content: space-between;
-  gap: 24px;
+  gap: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
+}
+
+/* Borda lateral por status */
+.card.statusPendente  { border-left-color: #f59e0b; }
+.card.statusAprovado  { border-left-color: #22c55e; }
+.card.statusInativo   { border-left-color: #ef4444; }
+
+/* ── Info do cliente ── */
+
+.card > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .card h3 {
-  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 12px;
+  letter-spacing: -0.2px;
 }
 
-.card p {
+/* Grade de campos: label + valor lado a lado */
+.card > div:first-child p {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: baseline;
+  gap: 6px;
   margin: 5px 0;
+  font-size: 13.5px;
+  color: #374151;
+}
+
+/* Label (antes dos dois-pontos) — estilo de "rótulo" */
+.card > div:first-child p::before {
+  /* Não é possível separar via CSS sem alterar JSX,
+     então deixamos o estilo uniforme e limpo */
+  content: none;
+}
+
+/* Badge de status inline — o último <p> dentro do div de info */
+.card > div:first-child p:last-child {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
   color: #6b7280;
 }
 
+.card > div:first-child p:last-child::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* Cores do badge por status — aplicadas via className no card pai */
+.card.statusPendente > div:first-child p:last-child {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.card.statusPendente > div:first-child p:last-child::before {
+  background: #f59e0b;
+}
+
+.card.statusAprovado > div:first-child p:last-child {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #86efac;
+}
+.card.statusAprovado > div:first-child p:last-child::before {
+  background: #22c55e;
+}
+
+.card.statusInativo > div:first-child p:last-child {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+.card.statusInativo > div:first-child p:last-child::before {
+  background: #ef4444;
+}
+
+/* ── Ações (coluna direita) ── */
+
 .acoes {
-  min-width: 260px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  justify-content: center;
 }
 
 .acoes select {
-  padding: 12px;
+  padding: 11px 14px;
   border-radius: 10px;
   border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #1f2937;
-}
-
-.acoes button {
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: #f97316;
-  color: #ffffff;
-  font-weight: 700;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
   cursor: pointer;
 }
 
-.acoes button:hover {
-  background: #ea580c;
+.acoes select:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+/* Botões */
+
+.botaoPrincipal,
+.botaoSecundario,
+.botaoPerigo {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.botaoPrincipal {
+  border: none;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(249, 115, 22, 0.28);
+}
+
+.botaoPrincipal:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(249, 115, 22, 0.4);
+}
+
+.botaoSecundario {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.botaoSecundario:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.botaoPerigo {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.botaoPerigo:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.acoes select:disabled,
+.acoes button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Responsivo ── */
+
+@media (max-width: 900px) {
+  .topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .buscaBox {
+    width: 100%;
+  }
+
+  .card {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .acoes {
+    min-width: 100%;
+  }
+}
+.btnReativar {
+  padding: 11px 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(34, 197, 94, 0.28);
+  transition:
+    opacity 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+.btnReativar:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(34, 197, 94, 0.4);
+}
+
+.btnReativar:active {
+  transform: translateY(0);
+}
+
+.btnInativar {
+  padding: 11px 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(239, 68, 68, 0.28);
+  transition:
+    opacity 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+.btnInativar:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(239, 68, 68, 0.4);
+}
+
+.btnInativar:active {
+  transform: translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -68,11 +373,16 @@
     padding: 24px 18px;
   }
 
-  .card {
-    flex-direction: column;
+  .container h1 {
+    font-size: 28px;
   }
 
-  .acoes {
-    min-width: 100%;
+  .card {
+    padding: 20px;
+  }
+
+  .card > div:first-child p {
+    grid-template-columns: 1fr;
+    gap: 1px;
   }
 }

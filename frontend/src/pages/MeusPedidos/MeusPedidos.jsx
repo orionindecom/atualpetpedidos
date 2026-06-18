@@ -3,6 +3,18 @@ import api from "../../api/axios";
 import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
 
+// Mapeia o valor de status para os sufixos das classes CSS
+const statusClasse = (status = "") => {
+  const s = status.toLowerCase().replace(/\s+/g, "");
+  if (s.includes("nov"))         return "Novo";
+  if (s.includes("separ"))       return "Separacao";
+  if (s.includes("envi"))        return "Enviado";
+  if (s.includes("entreg"))      return "Entregue";
+  if (s.includes("cancel"))      return "Cancelado";
+  if (s.includes("aguard"))      return "Aguardando";
+  return "";
+};
+
 function MeusPedidos() {
   const [pedidos, setPedidos] = useState([]);
 
@@ -54,20 +66,28 @@ function MeusPedidos() {
         {pedidos.length === 0 && <p>Você ainda não possui pedidos.</p>}
 
         <div className={styles.lista}>
-          {pedidos.map((pedido) => (
-            <div className={styles.card} key={pedido._id}>
-              <div>
-                <h3>{pedido.numeroPedido}</h3>
-                <p>Data: {data(pedido)}</p>
-                <p>Status: {pedido.status}</p>
-                <p>Total: {moeda(pedido.valorTotal)}</p>
-              </div>
+          {pedidos.map((pedido) => {
+            const sc = statusClasse(pedido.status);
+            return (
+              <div
+                className={`${styles.card} ${sc ? styles["status" + sc] : ""}`}
+                key={pedido._id}
+              >
+                <div>
+                  <h3>{pedido.numeroPedido}</h3>
+                  <p>Data: {data(pedido)}</p>
+                  <p className={sc ? styles["statusBadge" + sc] : ""}>
+                    Status: {pedido.status}
+                  </p>
+                  <p>Total: {moeda(pedido.valorTotal)}</p>
+                </div>
 
-              <button onClick={() => baixarPdf(pedido._id)}>
-                Baixar PDF
-              </button>
-            </div>
-          ))}
+                <button onClick={() => baixarPdf(pedido._id)}>
+                  Baixar PDF
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </>

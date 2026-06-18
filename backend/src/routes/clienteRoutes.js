@@ -4,6 +4,8 @@ import {
   aprovarCliente,
   redefinirSenhaCliente,
   listarClientes,
+  inativarCliente,
+   reativarCliente
 } from "../controllers/clienteController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
@@ -25,5 +27,16 @@ router.put(
   somenteAdmin,
   redefinirSenhaCliente
 );
-
+router.put(
+  "/:id/desativar",
+  proteger,
+  somenteAdmin,
+  inativarCliente
+);
+router.put(
+  "/:id/reativar",
+  proteger,
+  somenteAdmin,
+  reativarCliente
+);
 export default router;

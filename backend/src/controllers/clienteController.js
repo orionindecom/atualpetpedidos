@@ -102,3 +102,55 @@ export const listarClientes = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const inativarCliente = async (req, res) => {
+  try {
+    const cliente = await Usuario.findById(req.params.id);
+
+    if (!cliente) {
+      return res.status(404).json({
+        message: "Cliente não encontrado",
+      });
+    }
+
+    cliente.statusCadastro = "inativo";
+
+    await cliente.save();
+
+    return res.status(200).json({
+      message: "Cliente inativado com sucesso",
+    });
+  } catch (error) {
+    console.error("Erro ao inativar cliente:", error);
+
+    return res.status(500).json({
+      message: error.message || "Erro ao inativar cliente",
+    });
+  }
+};
+
+export const reativarCliente = async (req, res) => {
+  try {
+    const cliente = await Usuario.findById(req.params.id);
+
+    if (!cliente) {
+      return res.status(404).json({
+        message: "Cliente não encontrado",
+      });
+    }
+
+    cliente.statusCadastro = "aprovado";
+
+    await cliente.save();
+
+    return res.status(200).json({
+      message: "Cliente reativado com sucesso",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Erro ao reativar cliente",
+    });
+  }
+};
