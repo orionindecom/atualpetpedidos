@@ -1,12 +1,14 @@
 .container {
   min-height: 100vh;
   padding: 40px 64px;
-  background: #f5f7fa;
+  background: #eef2f7;
   color: #1f2937;
 }
 
 .container h1 {
   margin-bottom: 24px;
+  font-size: 32px;
+  color: #111827;
 }
 
 .content {
@@ -19,30 +21,33 @@
 .form,
 .lista {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border: 1px solid #d7dde5;
+  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: sticky;
+  top: 92px;
 }
 
 .form h2,
 .lista h2 {
   margin-bottom: 18px;
+  color: #111827;
 }
 
 .form input,
 .form textarea,
 .acoes input {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
   color: #1f2937;
 }
 
@@ -56,21 +61,21 @@
 .acoes input:focus {
   outline: none;
   border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
-.form button,
-.acoes button {
-  padding: 12px;
+.form button {
+  padding: 13px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #f97316;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
-.form button:hover,
-.acoes button:hover {
+.form button:hover {
   background: #ea580c;
 }
 
@@ -85,12 +90,20 @@
 }
 
 .card {
-  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border: 1px solid #d7dde5;
   border-radius: 16px;
   padding: 18px;
   display: flex;
   justify-content: space-between;
   gap: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  border-color: #fdba74;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.08);
+  transform: translateY(-2px);
 }
 
 .info {
@@ -99,6 +112,7 @@
 
 .info h3 {
   margin-bottom: 6px;
+  color: #111827;
 }
 
 .info p {
@@ -106,14 +120,23 @@
   margin-bottom: 10px;
 }
 
+.ativa,
+.inativa {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .ativa {
-  color: #15803d;
-  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
 }
 
 .inativa {
-  color: #dc2626;
-  font-weight: 700;
+  color: #991b1b;
+  background: #fee2e2;
 }
 
 .acoes {
@@ -121,6 +144,31 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.acoes button {
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.acoes button:hover {
+  background: #f3f4f6;
+  border-color: #94a3b8;
+}
+
+.acoes button:last-child {
+  background: #68c1bd;
+  color: #ffffff;
+  border: none;
+}
+
+.acoes button:last-child:hover {
+  background: #389994;
 }
 
 @media (max-width: 900px) {
@@ -132,6 +180,10 @@
     grid-template-columns: 1fr;
   }
 
+  .form {
+    position: static;
+  }
+
   .card {
     flex-direction: column;
   }
@@ -139,4 +191,24 @@
   .acoes {
     min-width: 100%;
   }
+}
+
+.ativarBtn {
+  background: #16a34a !important;
+  color: white !important;
+  border: none !important;
+}
+
+.ativarBtn:hover {
+  background: #15803d !important;
+}
+
+.inativarBtn {
+  background: #dc2626 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.inativarBtn:hover {
+  background: #b91c1c !important;
 }

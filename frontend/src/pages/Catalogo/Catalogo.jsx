@@ -52,7 +52,49 @@ function Catalogo() {
 
         return combinaBusca && combinaLinha && combinaCategoria;
     });
+    const ordemLinhas = [
+        "Dream Color",
+        "The Luxe",
+        "Zoom",
+        "Vanity Pet",
+    ];
 
+    const ordemCategorias = [
+        "Shampoo",
+        "Condicionador",
+        "Máscara",
+        "Perfume",
+        "Colônia",
+        "Cuidados Especiais",
+    ];
+
+    const produtosPorLinha = produtosFiltrados.reduce((grupos, produto) => {
+        const linha = produto.linha || "Sem linha";
+
+        if (!grupos[linha]) {
+            grupos[linha] = [];
+        }
+
+        grupos[linha].push(produto);
+
+        return grupos;
+    }, {});
+
+    Object.keys(produtosPorLinha).forEach((linha) => {
+        produtosPorLinha[linha].sort((a, b) => {
+            const indexA = ordemCategorias.indexOf(a.categoria);
+            const indexB = ordemCategorias.indexOf(b.categoria);
+
+            const ordemA = indexA === -1 ? 999 : indexA;
+            const ordemB = indexB === -1 ? 999 : indexB;
+
+            if (ordemA !== ordemB) {
+                return ordemA - ordemB;
+            }
+
+            return a.nome.localeCompare(b.nome);
+        });
+    });
     const itensSelecionados = produtos.filter(
         (produto) => Number(quantidades[produto.id]) > 0
     );
@@ -149,40 +191,56 @@ function Catalogo() {
                 </div>
 
                 <div className={styles.layout}>
-                    <div className={styles.grid}>
-                        {produtosFiltrados.map((produto) => (
-                            <div className={styles.card} key={produto.id}>
-                                {produto.fotoUrl && (
-                                    <img
-                                        src={produto.fotoUrl}
-                                        alt={produto.nome}
-                                    />
-                                )}
+                    <div className={styles.secoes}>
+                        {[
+                            ...ordemLinhas.filter((linha) => produtosPorLinha[linha]),
+                            ...Object.keys(produtosPorLinha).filter(
+                                (linha) => !ordemLinhas.includes(linha)
+                            ),
+                        ].map((linha) => {
+                            const produtosLinha = produtosPorLinha[linha];
 
-                                <h3>{produto.nome}</h3>
-                                <p className={styles.descricao}>{produto.descricao}</p>
-                                <p className={styles.tags}>
-                                    {produto.linha} • {produto.categoria}
-                                </p>
+                            return (
+                                <section className={styles.secaoLinha} key={linha}>
+                                    <div className={styles.tituloLinha}>
+                                        <h2>{linha}</h2>
+                                        <span>{produtosLinha.length} produtos</span>
+                                    </div>
+                                    <div className={styles.grid}>
+                                        {produtosLinha.map((produto) => (
+                                            <div className={styles.card} key={produto.id}>
+                                                {produto.fotoUrl && (
+                                                    <img src={produto.fotoUrl} alt={produto.nome} />
+                                                )}
 
-                                <p className={styles.preco}>{moeda(produto.preco)}</p>
+                                                <h3>{produto.nome}</h3>
+                                                <p className={styles.descricao}>{produto.descricao}</p>
+                                                <p className={styles.tags}>
+                                                    {produto.linha} • {produto.categoria}
+                                                </p>
 
-                                <div className={styles.quantidadeBox}>
-                                    <label>Quantidade</label>
+                                                <p className={styles.preco}>{moeda(produto.preco)}</p>
 
-                                    <input
-                                        className={styles.input}
-                                        type="number"
-                                        min="0"
-                                        placeholder="0"
-                                        value={quantidades[produto.id] || ""}
-                                        onChange={(e) =>
-                                            alterarQuantidade(produto.id, e.target.value)
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                                                <div className={styles.quantidadeBox}>
+                                                    <label>Quantidade</label>
+
+                                                    <input
+                                                        className={styles.input}
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="0"
+                                                        value={quantidades[produto.id] || ""}
+                                                        onChange={(e) =>
+                                                            alterarQuantidade(produto.id, e.target.value)
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        })}
                     </div>
 
                     <aside className={styles.resumo}>

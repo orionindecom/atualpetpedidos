@@ -11,10 +11,9 @@ function AdminPedidos() {
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("");
 
-  const [pedidoEditando, setPedidoEditando] = useState(null);
-  const [itensEditados, setItensEditados] = useState({});
-  const [produtoNovo, setProdutoNovo] = useState({});
-  const [quantidadeNova, setQuantidadeNova] = useState({});
+  const [modalPedido, setModalPedido] = useState(null);
+  const [quantidadesModal, setQuantidadesModal] = useState({});
+  const [buscaProduto, setBuscaProduto] = useState("");
 
   const statusOptions = [
     "novo",
@@ -94,85 +93,38 @@ function AdminPedidos() {
     }
   };
 
-  const iniciarEdicao = (pedido) => {
-    setPedidoEditando(pedido._id);
-
+  const abrirModalEdicao = (pedido) => {
     const mapa = {};
 
     pedido.itens.forEach((item) => {
       mapa[item.produtoId] = item.quantidade;
     });
 
-    setItensEditados(mapa);
+    setModalPedido(pedido);
+    setQuantidadesModal(mapa);
+    setBuscaProduto("");
   };
 
-  const alterarQuantidadeItem = (produtoId, quantidade) => {
-    setItensEditados({
-      ...itensEditados,
+  const alterarQuantidadeModal = (produtoId, quantidade) => {
+    setQuantidadesModal({
+      ...quantidadesModal,
       [produtoId]: quantidade,
     });
   };
 
-  const adicionarItemAoPedido = (pedido) => {
-    const produtoId = produtoNovo[pedido._id];
-    const quantidade = Number(quantidadeNova[pedido._id]);
-
-    if (!produtoId || !quantidade || quantidade <= 0) {
-      alert("Selecione um produto e informe uma quantidade");
-      return;
-    }
-
-    const produto = produtos.find((p) => p._id === produtoId);
-
-    if (!produto) {
-      alert("Produto não encontrado");
-      return;
-    }
-
-    const itemExiste = pedido.itens.find(
-      (item) => String(item.produtoId) === String(produtoId)
-    );
-
-    if (itemExiste) {
-      setItensEditados({
-        ...itensEditados,
-        [produtoId]:
-          Number(itensEditados[produtoId] || itemExiste.quantidade) +
-          quantidade,
-      });
-    } else {
-      pedido.itens.push({
-        produtoId,
-        nomeProduto: produto.nome,
-        quantidade,
-        valorUnitario: 0,
-        subtotal: 0,
-      });
-
-      setItensEditados({
-        ...itensEditados,
-        [produtoId]: quantidade,
-      });
-    }
-
-    setProdutoNovo({
-      ...produtoNovo,
-      [pedido._id]: "",
-    });
-
-    setQuantidadeNova({
-      ...quantidadeNova,
-      [pedido._id]: "",
-    });
+  const fecharModal = () => {
+    setModalPedido(null);
+    setQuantidadesModal({});
+    setBuscaProduto("");
   };
 
-  const salvarEdicaoPedido = async (pedido) => {
-    const itens = pedido.itens
-      .map((item) => ({
-        produtoId: item.produtoId,
-        quantidade: Number(itensEditados[item.produtoId]),
-      }))
-      .filter((item) => item.quantidade > 0);
+  const salvarModalPedido = async () => {
+    const itens = Object.entries(quantidadesModal)
+      .filter(([_, quantidade]) => Number(quantidade) > 0)
+      .map(([produtoId, quantidade]) => ({
+        produtoId,
+        quantidade: Number(quantidade),
+      }));
 
     if (itens.length === 0) {
       alert("O pedido precisa ter pelo menos um item");
@@ -180,18 +132,14 @@ function AdminPedidos() {
     }
 
     try {
-      await api.put(`/pedidos/${pedido._id}`, {
+      await api.put(`/pedidos/${modalPedido._id}`, {
         itens,
-        observacao: pedido.observacao || "",
+        observacao: modalPedido.observacao || "",
       });
 
       alert("Pedido atualizado com sucesso");
 
-      setPedidoEditando(null);
-      setItensEditados({});
-      setProdutoNovo({});
-      setQuantidadeNova({});
-
+      fecharModal();
       carregarDados();
     } catch (error) {
       console.error(error);
@@ -229,6 +177,15 @@ function AdminPedidos() {
 
     return combinaBusca && combinaStatus;
   });
+
+  const produtosFiltradosModal = produtos.filter((produto) =>
+    produto.nome.toLowerCase().includes(buscaProduto.toLowerCase())
+  );
+
+  const quantidadeTotalModal = Object.values(quantidadesModal).reduce(
+    (total, qtd) => total + Number(qtd || 0),
+    0
+  );
 
   return (
     <>
@@ -303,130 +260,98 @@ function AdminPedidos() {
                 </div>
 
                 <strong>Total: {moeda(pedido.valorTotal)}</strong>
-
-                {pedidoEditando === pedido._id && (
-                  <div className={styles.edicaoPedido}>
-                    <h4>Editar itens</h4>
-
-                    {pedido.itens.map((item) => (
-                      <div className={styles.itemEdicao} key={item.produtoId}>
-                        <div>
-                          <strong>{item.nomeProduto}</strong>
-                          <span>Unitário: {moeda(item.valorUnitario)}</span>
-                        </div>
-
-                        <div className={styles.itemAcoes}>
-                          <input
-                            type="number"
-                            min="0"
-                            value={itensEditados[item.produtoId] || ""}
-                            onChange={(e) =>
-                              alterarQuantidadeItem(
-                                item.produtoId,
-                                e.target.value
-                              )
-                            }
-                          />
-
-                          <button
-                            type="button"
-                            className={styles.removerItem}
-                            onClick={() =>
-                              alterarQuantidadeItem(item.produtoId, 0)
-                            }
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className={styles.adicionarItem}>
-                      <h4>Adicionar item</h4>
-
-                      <select
-                        value={produtoNovo[pedido._id] || ""}
-                        onChange={(e) =>
-                          setProdutoNovo({
-                            ...produtoNovo,
-                            [pedido._id]: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="">Selecione um produto</option>
-
-                        {produtos.map((produto) => (
-                          <option key={produto._id} value={produto._id}>
-                            {produto.nome}
-                          </option>
-                        ))}
-                      </select>
-
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Qtd"
-                        value={quantidadeNova[pedido._id] || ""}
-                        onChange={(e) =>
-                          setQuantidadeNova({
-                            ...quantidadeNova,
-                            [pedido._id]: e.target.value,
-                          })
-                        }
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => adicionarItemAoPedido(pedido)}
-                      >
-                        Adicionar
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className={styles.acoesPedido}>
-                {pedidoEditando === pedido._id ? (
-                  <>
-                    <button onClick={() => salvarEdicaoPedido(pedido)}>
-                      Salvar Alterações
-                    </button>
+                <button
+                  className={styles.editarBtn}
+                  onClick={() => abrirModalEdicao(pedido)}
+                >
+                  Editar Pedido
+                </button>
 
-                    <button
-                      className={styles.secundario}
-                      onClick={() => {
-                        setPedidoEditando(null);
-                        setItensEditados({});
-                        setProdutoNovo({});
-                        setQuantidadeNova({});
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => iniciarEdicao(pedido)}>
-                      Editar Pedido
-                    </button>
+                <button
+                  className={styles.pdfBtn}
+                  onClick={() => baixarPdf(pedido._id)}
+                >
+                  Baixar PDF
+                </button>
 
-                    <button onClick={() => baixarPdf(pedido._id)}>
-                      Baixar PDF
-                    </button>
-
-                    <button
-                      className={styles.perigo}
-                      onClick={() => excluirPedido(pedido._id)}
-                    >
-                      Excluir Pedido
-                    </button>
-                  </>
-                )}
+                <button
+                  className={styles.perigo}
+                  onClick={() => excluirPedido(pedido._id)}
+                >
+                  Excluir Pedido
+                </button>
               </div>
             </div>
           ))}
         </div>
+
+        {modalPedido && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <div>
+                  <h2>Editar Pedido</h2>
+                  <p>{modalPedido.numeroPedido}</p>
+                </div>
+
+                <button onClick={fecharModal}>Fechar</button>
+              </div>
+
+              <div className={styles.modalInfo}>
+                <strong>{modalPedido.nomeFantasiaCliente || "-"}</strong>
+                <span>Total de itens: {quantidadeTotalModal}</span>
+              </div>
+
+              <input
+                className={styles.buscaProduto}
+                type="text"
+                placeholder="Buscar produto..."
+                value={buscaProduto}
+                onChange={(e) => setBuscaProduto(e.target.value)}
+              />
+
+              <div className={styles.listaProdutosModal}>
+                {produtosFiltradosModal.map((produto) => (
+                  <div className={styles.produtoModal} key={produto._id}>
+                    <div>
+                      <strong>{produto.nome}</strong>
+                      <span>
+                        {produto.linha} • {produto.categoria}
+                      </span>
+                    </div>
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={quantidadesModal[produto._id] || ""}
+                      placeholder="0"
+                      onChange={(e) =>
+                        alterarQuantidadeModal(produto._id, e.target.value)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  className={styles.secundario}
+                  onClick={fecharModal}
+                >
+                  Cancelar
+                </button>
+
+                <button onClick={salvarModalPedido}>
+                  Salvar Alterações
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

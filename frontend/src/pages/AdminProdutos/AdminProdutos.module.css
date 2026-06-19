@@ -1,17 +1,19 @@
 .container {
   min-height: 100vh;
   padding: 40px 64px;
-  background: #f5f7fa;
+  background: #eef2f7;
   color: #1f2937;
 }
 
 .container h1 {
   margin-bottom: 24px;
+  font-size: 32px;
+  color: #111827;
 }
 
 .content {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 28px;
   align-items: start;
 }
@@ -19,35 +21,38 @@
 .form,
 .lista {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border: 1px solid #d7dde5;
+  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
-
-.form h2,
-.lista h2 {
-  margin-bottom: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: sticky;
+  top: 90px;
+}
+
+.form h2,
+.lista h2 {
+  margin-bottom: 18px;
+  color: #111827;
 }
 
 .form input,
 .form textarea {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
   color: #1f2937;
   font-size: 15px;
 }
 
 .form textarea {
-  min-height: 90px;
+  min-height: 100px;
   resize: vertical;
 }
 
@@ -55,6 +60,8 @@
 .form textarea:focus {
   outline: none;
   border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 .form button {
@@ -63,13 +70,21 @@
   border: none;
   border-radius: 12px;
   background: #f97316;
-  color: #ffffff;
-  font-weight: 700;
+  color: white;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .form button:hover {
   background: #ea580c;
+}
+
+.cancelar {
+  background: #6b7280 !important;
+}
+
+.cancelar:hover {
+  background: #4b5563 !important;
 }
 
 .lista {
@@ -80,33 +95,93 @@
 
 .card {
   display: flex;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #d7dde5;
+  border-radius: 16px;
   background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: #fdba74;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.08);
+  transform: translateY(-2px);
 }
 
 .card img {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
-  background: #f9fafb;
-  border-radius: 12px;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
 }
 
-.card h3 {
+.info {
+  flex: 1;
+}
+
+.info h3 {
   margin-bottom: 6px;
+  color: #111827;
 }
 
-.card p {
+.info p {
   color: #6b7280;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
 
-.card span {
-  color: #f97316;
+.info span {
+  display: inline-block;
+  padding: 6px 10px;
+  background: #ffedd5;
+  color: #c2410c;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 700;
+}
+
+.acoes {
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acoes button {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.acoes button:first-child {
+  background: #f97316;
+}
+
+.acoes button:first-child:hover {
+  background: #ea580c;
+}
+
+.inativar {
+  background: #dc2626 !important;
+}
+
+.inativar:hover {
+  background: #b91c1c !important;
+}
+
+.ativar {
+  background: #16a34a !important;
+}
+
+.ativar:hover {
+  background: #15803d !important;
 }
 
 @media (max-width: 900px) {
@@ -117,32 +192,53 @@
   .content {
     grid-template-columns: 1fr;
   }
+
+  .form {
+    position: static;
+  }
+
+  .card {
+    flex-direction: column;
+  }
+
+  .acoes {
+    width: 100%;
+  }
+}
+.filtros {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.info {
-  flex: 1;
+.filtros input,
+.filtros select {
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
+  color: #1f2937;
 }
 
-.acoes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.editar {
+  background: #f97316 !important;
 }
 
-.acoes button {
-  padding: 9px 12px;
-  border: none;
-  border-radius: 8px;
-  background: #f97316;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
+.editar:hover {
+  background: #ea580c !important;
 }
 
-.acoes .inativar {
-  background: #ef4444;
+.inativar {
+  background: #dc2626 !important;
 }
 
-.cancelar {
-  background: #6b7280 !important;
+.inativar:hover {
+  background: #b91c1c !important;
+}
+
+@media (max-width: 900px) {
+  .filtros {
+    grid-template-columns: 1fr;
+  }
 }

@@ -8,6 +8,10 @@ function AdminProdutos() {
   const [produtoEditando, setProdutoEditando] = useState(null);
   const [foto, setFoto] = useState(null);
 
+  const [busca, setBusca] = useState("");
+  const [linhaFiltro, setLinhaFiltro] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
   const [form, setForm] = useState({
     nome: "",
     descricao: "",
@@ -111,6 +115,26 @@ function AdminProdutos() {
     }
   };
 
+  const linhas = [...new Set(produtos.map((p) => p.linha).filter(Boolean))];
+
+  const categorias = [
+    ...new Set(produtos.map((p) => p.categoria).filter(Boolean)),
+  ];
+
+  const produtosFiltrados = produtos.filter((produto) => {
+    const combinaBusca = produto.nome
+      .toLowerCase()
+      .includes(busca.toLowerCase());
+
+    const combinaLinha = linhaFiltro ? produto.linha === linhaFiltro : true;
+
+    const combinaCategoria = categoriaFiltro
+      ? produto.categoria === categoriaFiltro
+      : true;
+
+    return combinaBusca && combinaLinha && combinaCategoria;
+  });
+
   return (
     <>
       <Navbar />
@@ -139,7 +163,7 @@ function AdminProdutos() {
 
             <input
               name="linha"
-              placeholder="Linha. Ex: Trim Color"
+              placeholder="Linha. Ex: Dream Color"
               value={form.linha}
               onChange={alterar}
               required
@@ -177,13 +201,45 @@ function AdminProdutos() {
           <div className={styles.lista}>
             <h2>Produtos Cadastrados</h2>
 
-            {produtos.map((produto) => (
+            <div className={styles.filtros}>
+              <input
+                type="text"
+                placeholder="Buscar produto..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+              />
+
+              <select
+                value={linhaFiltro}
+                onChange={(e) => setLinhaFiltro(e.target.value)}
+              >
+                <option value="">Todas as linhas</option>
+
+                {linhas.map((linha) => (
+                  <option key={linha} value={linha}>
+                    {linha}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={categoriaFiltro}
+                onChange={(e) => setCategoriaFiltro(e.target.value)}
+              >
+                <option value="">Todas as categorias</option>
+
+                {categorias.map((categoria) => (
+                  <option key={categoria} value={categoria}>
+                    {categoria}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {produtosFiltrados.map((produto) => (
               <div className={styles.card} key={produto._id}>
                 {produto.fotoUrl && (
-                  <img
-                    src={produto.fotoUrl}
-                    alt={produto.nome}
-                  />
+                  <img src={produto.fotoUrl} alt={produto.nome} />
                 )}
 
                 <div className={styles.info}>
@@ -195,7 +251,10 @@ function AdminProdutos() {
                 </div>
 
                 <div className={styles.acoes}>
-                  <button onClick={() => editarProduto(produto)}>
+                  <button
+                    className={styles.editar}
+                    onClick={() => editarProduto(produto)}
+                  >
                     Editar
                   </button>
 

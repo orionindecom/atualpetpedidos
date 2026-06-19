@@ -129,13 +129,19 @@ function AdminTabelas() {
                     {tabela.ativa ? "Ativa" : "Inativa"}
                   </span>
                 </div>
-
                 <div className={styles.acoes}>
                   <button onClick={() => editarTabela(tabela)}>
                     Editar
                   </button>
 
-                  <button onClick={() => alternarStatus(tabela)}>
+                  <button
+                    className={
+                      tabela.ativa
+                        ? styles.inativarBtn
+                        : styles.ativarBtn
+                    }
+                    onClick={() => alternarStatus(tabela)}
+                  >
                     {tabela.ativa ? "Inativar" : "Ativar"}
                   </button>
 

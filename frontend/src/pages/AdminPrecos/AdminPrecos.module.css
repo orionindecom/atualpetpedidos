@@ -1,27 +1,60 @@
 .container {
   min-height: 100vh;
   padding: 40px 64px;
-  background: #f5f7fa;
+  background: #eef2f7;
   color: #1f2937;
 }
 
 .container h1 {
   margin-bottom: 24px;
+  font-size: 32px;
+  color: #111827;
 }
 
 .filtros {
   margin-bottom: 24px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #d7dde5;
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
 .filtros select {
   width: 100%;
   max-width: 420px;
-  padding: 13px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  padding: 13px 14px;
+  border-radius: 11px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
   color: #1f2937;
   font-size: 15px;
+}
+
+.filtrosProdutos {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 14px;
+}
+
+.filtrosProdutos input,
+.filtrosProdutos select {
+  padding: 13px 14px;
+  border-radius: 11px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.filtros select:focus,
+.filtrosProdutos input:focus,
+.filtrosProdutos select:focus {
+  outline: none;
+  border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 .lista {
@@ -32,13 +65,21 @@
 
 .card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border: 1px solid #d7dde5;
+  border-radius: 18px;
   padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: #fdba74;
+  box-shadow: 0 10px 26px rgba(249, 115, 22, 0.08);
+  transform: translateY(-2px);
 }
 
 .produto {
@@ -48,15 +89,18 @@
 }
 
 .produto img {
-  width: 70px;
-  height: 70px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
-  background: #f9fafb;
-  border-radius: 12px;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 .produto h3 {
   margin-bottom: 6px;
+  color: #111827;
 }
 
 .produto p {
@@ -66,24 +110,32 @@
 .precoBox {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .precoBox input {
-  width: 140px;
-  padding: 11px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  width: 150px;
+  padding: 11px 12px;
+  border-radius: 11px;
+  border: 1px solid #cbd5e1;
+  background: #f9fafb;
   color: #1f2937;
+}
+
+.precoBox input:focus {
+  outline: none;
+  border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 .precoBox button {
   padding: 11px 16px;
   border: none;
-  border-radius: 10px;
+  border-radius: 11px;
   background: #f97316;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -94,6 +146,10 @@
 @media (max-width: 768px) {
   .container {
     padding: 24px 18px;
+  }
+
+  .filtrosProdutos {
+    grid-template-columns: 1fr;
   }
 
   .card {
@@ -107,33 +163,5 @@
 
   .precoBox input {
     flex: 1;
-  }
-}
-.filtrosProdutos {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 14px;
-}
-
-.filtrosProdutos input,
-.filtrosProdutos select {
-  padding: 13px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #1f2937;
-  font-size: 15px;
-}
-
-.filtrosProdutos input:focus,
-.filtrosProdutos select:focus {
-  outline: none;
-  border-color: #f97316;
-}
-
-@media (max-width: 768px) {
-  .filtrosProdutos {
-    grid-template-columns: 1fr;
   }
 }
