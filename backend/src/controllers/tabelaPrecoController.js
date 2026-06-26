@@ -1,11 +1,22 @@
 import TabelaPreco from "../models/TabelaPreco.js";
 import PrecoProduto from "../models/PrecoProduto.js";
+import {
+  isNonEmptyString,
+  isOptionalString,
+  sendServerError,
+} from "../utils/validation.js";
 
 export const criarTabela = async (req, res) => {
   try {
     const { nome, descricao } = req.body;
 
-    const tabelaExiste = await TabelaPreco.findOne({ nome });
+    if (!isNonEmptyString(nome, 120) || !isOptionalString(descricao, 500)) {
+      return res.status(400).json({
+        message: "Dados da tabela inválidos",
+      });
+    }
+
+    const tabelaExiste = await TabelaPreco.findOne({ nome: nome.trim() });
 
     if (tabelaExiste) {
       return res.status(400).json({
@@ -14,29 +25,34 @@ export const criarTabela = async (req, res) => {
     }
 
     const tabela = await TabelaPreco.create({
-      nome,
-      descricao,
+      nome: nome.trim(),
+      descricao: descricao?.trim(),
     });
 
-    res.status(201).json(tabela);
+    return res.status(201).json(tabela);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res);
   }
 };
-
 export const listarTabelas = async (req, res) => {
   try {
     const tabelas = await TabelaPreco.find().sort({ createdAt: -1 });
 
-    res.status(200).json(tabelas);
+    return res.status(200).json(tabelas);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res);
   }
 };
 
 export const atualizarTabela = async (req, res) => {
   try {
     const { nome, descricao, ativa } = req.body;
+
+    if (!isOptionalString(nome, 120) || !isOptionalString(descricao, 500)) {
+      return res.status(400).json({
+        message: "Dados da tabela inválidos",
+      });
+    }
 
     const tabela = await TabelaPreco.findById(req.params.id);
 
@@ -46,27 +62,33 @@ export const atualizarTabela = async (req, res) => {
       });
     }
 
-    tabela.nome = nome ?? tabela.nome;
-    tabela.descricao = descricao ?? tabela.descricao;
+    tabela.nome = nome?.trim() ?? tabela.nome;
+    tabela.descricao = descricao?.trim() ?? tabela.descricao;
 
     if (ativa !== undefined) {
-      tabela.ativa = ativa;
+      tabela.ativa = ativa === true || ativa === "true";
     }
 
     await tabela.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Tabela atualizada com sucesso",
       tabela,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res);
   }
 };
 
 export const duplicarTabela = async (req, res) => {
   try {
     const { novoNome, descricao } = req.body;
+
+    if (!isNonEmptyString(novoNome, 120) || !isOptionalString(descricao, 500)) {
+      return res.status(400).json({
+        message: "Dados da tabela inválidos",
+      });
+    }
 
     const tabelaOrigem = await TabelaPreco.findById(req.params.id);
 
@@ -76,7 +98,7 @@ export const duplicarTabela = async (req, res) => {
       });
     }
 
-    const nomeExiste = await TabelaPreco.findOne({ nome: novoNome });
+    const nomeExiste = await TabelaPreco.findOne({ nome: novoNome.trim() });
 
     if (nomeExiste) {
       return res.status(400).json({
@@ -85,8 +107,8 @@ export const duplicarTabela = async (req, res) => {
     }
 
     const novaTabela = await TabelaPreco.create({
-      nome: novoNome,
-      descricao: descricao || `Cópia de ${tabelaOrigem.nome}`,
+      nome: novoNome.trim(),
+      descricao: descricao?.trim() || `Cópia de ${tabelaOrigem.nome}`,
       ativa: true,
     });
 
@@ -104,12 +126,12 @@ export const duplicarTabela = async (req, res) => {
       await PrecoProduto.insertMany(novosPrecos);
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Tabela duplicada com sucesso",
       tabela: novaTabela,
       precosCopiados: novosPrecos.length,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return sendServerError(res);
   }
 };

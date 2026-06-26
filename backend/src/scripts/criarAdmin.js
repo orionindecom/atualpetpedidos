@@ -2,15 +2,31 @@ import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import Usuario from "../models/Usuario.js";
 import { connectDB } from "../config/db.js";
+import {
+  isStrongEnoughPassword,
+  isValidEmail,
+} from "../utils/validation.js";
 
 dotenv.config();
 
 const criarAdmin = async () => {
   try {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!isValidEmail(adminEmail) || !isStrongEnoughPassword(adminPassword)) {
+      console.error(
+        "Defina ADMIN_EMAIL válido e ADMIN_PASSWORD com pelo menos 8 caracteres."
+      );
+      process.exit(1);
+    }
+
     await connectDB();
 
+    const emailNormalizado = adminEmail.trim().toLowerCase();
+
     const adminExiste = await Usuario.findOne({
-      email: "admin@atualpet.com",
+      email: emailNormalizado,
     });
 
     if (adminExiste) {
@@ -18,11 +34,11 @@ const criarAdmin = async () => {
       process.exit();
     }
 
-    const senhaHash = await bcrypt.hash("Admin123", 10);
+    const senhaHash = await bcrypt.hash(adminPassword, 10);
 
     await Usuario.create({
       nomeResponsavel: "Administrador",
-      email: "admin@atualpet.com",
+      email: emailNormalizado,
       senha: senhaHash,
       tipo: "admin",
       ativo: true,
@@ -33,7 +49,7 @@ const criarAdmin = async () => {
 
     process.exit();
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao criar administrador");
     process.exit(1);
   }
 };

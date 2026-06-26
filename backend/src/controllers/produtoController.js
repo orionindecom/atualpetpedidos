@@ -1,27 +1,42 @@
 import Produto from "../models/Produto.js";
+import {
+  isNonEmptyString,
+  isOptionalString,
+  sendServerError,
+} from "../utils/validation.js";
+import { uploadImageBuffer } from "../utils/cloudinaryUpload.js";
 
 export const cadastrarProduto = async (req, res) => {
   try {
     const { nome, descricao, linha, categoria } = req.body;
 
-    const fotoUrl = req.file ? req.file.path : "";
+    if (
+      !isNonEmptyString(nome, 160) ||
+      !isOptionalString(descricao, 1000) ||
+      !isNonEmptyString(linha, 120) ||
+      !isNonEmptyString(categoria, 120)
+    ) {
+      return res.status(400).json({
+        message: "Dados do produto inválidos",
+      });
+    }
+
+    const fotoUrl = req.file ? await uploadImageBuffer(req.file) : "";
 
     const produto = await Produto.create({
-      nome,
-      descricao,
-      linha,
-      categoria,
+      nome: nome.trim(),
+      descricao: descricao?.trim(),
+      linha: linha.trim(),
+      categoria: categoria.trim(),
       fotoUrl,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Produto cadastrado com sucesso",
       produto,
     });
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
+    return sendServerError(res);
   }
 };
 
@@ -31,17 +46,26 @@ export const listarProdutos = async (req, res) => {
       ativo: true,
     });
 
-    res.status(200).json(produtos);
+    return res.status(200).json(produtos);
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
+    return sendServerError(res);
   }
 };
 
 export const atualizarProduto = async (req, res) => {
   try {
     const { nome, descricao, linha, categoria, ativo } = req.body;
+
+    if (
+      !isOptionalString(nome, 160) ||
+      !isOptionalString(descricao, 1000) ||
+      !isOptionalString(linha, 120) ||
+      !isOptionalString(categoria, 120)
+    ) {
+      return res.status(400).json({
+        message: "Dados do produto inválidos",
+      });
+    }
 
     const produto = await Produto.findById(req.params.id);
 
@@ -51,29 +75,27 @@ export const atualizarProduto = async (req, res) => {
       });
     }
 
-    produto.nome = nome ?? produto.nome;
-    produto.descricao = descricao ?? produto.descricao;
-    produto.linha = linha ?? produto.linha;
-    produto.categoria = categoria ?? produto.categoria;
+    produto.nome = nome?.trim() ?? produto.nome;
+    produto.descricao = descricao?.trim() ?? produto.descricao;
+    produto.linha = linha?.trim() ?? produto.linha;
+    produto.categoria = categoria?.trim() ?? produto.categoria;
 
     if (ativo !== undefined) {
       produto.ativo = ativo === "true" || ativo === true;
     }
 
     if (req.file) {
-      produto.fotoUrl = req.file.path;
+      produto.fotoUrl = await uploadImageBuffer(req.file);
     }
 
     await produto.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Produto atualizado com sucesso",
       produto,
     });
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
+    return sendServerError(res);
   }
 };
 
@@ -91,12 +113,10 @@ export const inativarProduto = async (req, res) => {
 
     await produto.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Produto inativado com sucesso",
     });
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
+    return sendServerError(res);
   }
 };

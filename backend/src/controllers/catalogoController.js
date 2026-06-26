@@ -1,4 +1,5 @@
 import PrecoProduto from "../models/PrecoProduto.js";
+import { sendServerError } from "../utils/validation.js";
 
 export const listarCatalogoCliente = async (req, res) => {
   try {
@@ -31,8 +32,6 @@ export const listarCatalogoCliente = async (req, res) => {
 
     res.status(200).json(produtos);
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
+    sendServerError(res);
   }
 };

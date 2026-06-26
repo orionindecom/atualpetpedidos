@@ -2,6 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
+import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
+import {
+  sanitizeRequest,
+  securityHeaders,
+} from "./middlewares/securityMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import clienteRoutes from "./routes/clienteRoutes.js";
 import produtoRoutes from "./routes/produtoRoutes.js";
@@ -13,16 +18,56 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 
-console.log("Cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("API key:", process.env.CLOUDINARY_API_KEY);
-
 connectDB();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use("/uploads", express.static("src/uploads"));
+const parseAllowedOrigins = () => {
+  const configuredOrigins = process.env.CORS_ORIGIN || process.env.FRONTEND_URL;
+
+  if (configuredOrigins) {
+    return configuredOrigins
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
+  }
+
+  return ["http://localhost:5173", "http://127.0.0.1:5173"];
+};
+
+const allowedOrigins = parseAllowedOrigins();
+
+app.set("trust proxy", 1);
+
+app.use(securityHeaders);
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origem não autorizada pelo CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.use(express.json({ limit: "1mb" }));
+app.use(sanitizeRequest);
+app.use(generalLimiter);
+app.use(
+  "/uploads",
+  express.static("src/uploads", {
+    dotfiles: "deny",
+    index: false,
+    maxAge: "1d",
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/clientes", clienteRoutes);
@@ -31,14 +76,32 @@ app.use("/api/tabelas", tabelaPrecoRoutes);
 app.use("/api/precos", precoProdutoRoutes);
 app.use("/api/catalogo", catalogoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
-app.use(
-  "/uploads",
-  express.static("src/uploads")
-);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });
+});
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (err.message === "Origem não autorizada pelo CORS") {
+    return res.status(403).json({
+      message: "Origem não autorizada",
+    });
+  }
+
+  if (err.message === "Tipo de arquivo não permitido") {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+
+  return res.status(500).json({
+    message: "Erro interno do servidor",
+  });
 });
 
 const PORT = process.env.PORT || 5000;

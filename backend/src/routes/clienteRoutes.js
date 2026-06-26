@@ -10,33 +10,32 @@ import {
 
 import { proteger } from "../middlewares/authMiddleware.js";
 import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { adminLimiter } from "../middlewares/rateLimitMiddleware.js";
+import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
+router.use(proteger, somenteAdmin, adminLimiter);
+
 router.get(
   "/",
-  proteger,
-  somenteAdmin,
   listarClientes
 );
-router.get("/pendentes", proteger, somenteAdmin, listarClientesPendentes);
-router.put("/:id/aprovar", proteger, somenteAdmin, aprovarCliente);
+router.get("/pendentes", listarClientesPendentes);
+router.put("/:id/aprovar", validateObjectIdParam(), aprovarCliente);
 router.put(
   "/:id/redefinir-senha",
-  proteger,
-  somenteAdmin,
+  validateObjectIdParam(),
   redefinirSenhaCliente
 );
 router.put(
   "/:id/desativar",
-  proteger,
-  somenteAdmin,
+  validateObjectIdParam(),
   inativarCliente
 );
 router.put(
   "/:id/reativar",
-  proteger,
-  somenteAdmin,
+  validateObjectIdParam(),
   reativarCliente
 );
 export default router;

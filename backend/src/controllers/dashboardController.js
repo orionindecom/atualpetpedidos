@@ -2,6 +2,7 @@ import Pedido from "../models/Pedido.js";
 import Produto from "../models/Produto.js";
 import Usuario from "../models/Usuario.js";
 import TabelaPreco from "../models/TabelaPreco.js";
+import { sendServerError } from "../utils/validation.js";
 
 export const resumoDashboard = async (req, res) => {
     try {
@@ -160,8 +161,6 @@ export const resumoDashboard = async (req, res) => {
             })),
         });
     } catch (error) {
-        res.status(500).json({
-            error: error.message,
-        });
+        sendServerError(res);
     }
 };
