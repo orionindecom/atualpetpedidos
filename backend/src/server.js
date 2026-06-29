@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { parseAllowedOrigins, validateEnv } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
 import {
@@ -18,26 +19,10 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 
+validateEnv();
 connectDB();
 
 const app = express();
-
-const parseAllowedOrigins = () => {
-  const configuredOrigins = process.env.CORS_ORIGIN || process.env.FRONTEND_URL;
-
-  if (configuredOrigins) {
-    return configuredOrigins
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    return [];
-  }
-
-  return ["http://localhost:5173", "http://127.0.0.1:5173"];
-};
 
 const allowedOrigins = parseAllowedOrigins();
 

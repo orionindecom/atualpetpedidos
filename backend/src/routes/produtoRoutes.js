@@ -5,7 +5,9 @@ import {
   atualizarProduto,
   inativarProduto,
 } from "../controllers/produtoController.js";
-import upload from "../middlewares/uploadProduto.js";
+import upload, {
+  validarAssinaturaImagem,
+} from "../middlewares/uploadProduto.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
 import { somenteAdmin } from "../middlewares/adminMiddleware.js";
@@ -24,6 +26,7 @@ router.post(
   adminLimiter,
   uploadLimiter,
   upload.single("foto"),
+  validarAssinaturaImagem,
   cadastrarProduto
 );
 
@@ -41,6 +44,7 @@ router.put(
   uploadLimiter,
   validateObjectIdParam(),
   upload.single("foto"),
+  validarAssinaturaImagem,
   atualizarProduto
 );
 

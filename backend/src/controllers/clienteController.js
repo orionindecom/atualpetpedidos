@@ -13,7 +13,7 @@ export const listarClientesPendentes = async (req, res) => {
       tipo: "cliente",
       statusCadastro: "pendente",
     })
-      .select("-senha")
+      .select("-senha -tokenVersion")
       .populate("tabelaPrecoId");
 
     return res.status(200).json(clientes);
@@ -108,7 +108,7 @@ export const listarClientes = async (req, res) => {
     const clientes = await Usuario.find({
       tipo: "cliente",
     })
-      .select("-senha")
+      .select("-senha -tokenVersion")
       .populate("tabelaPrecoId")
       .sort({ createdAt: -1 });
 

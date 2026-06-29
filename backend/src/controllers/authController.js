@@ -66,8 +66,8 @@ export const cadastrar = async (req, res) => {
     const usuarioExiste = await Usuario.findOne({ email: emailNormalizado });
 
     if (usuarioExiste) {
-      return res.status(400).json({
-        message: "E-mail já cadastrado",
+      return res.status(202).json({
+        message: "Solicitação de cadastro recebida. Aguarde aprovação.",
       });
     }
 
