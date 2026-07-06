@@ -33,6 +33,7 @@ router.post(
 router.get(
   "/",
   proteger,
+  somenteAdmin,
   listarProdutos
 );
 

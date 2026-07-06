@@ -48,8 +48,108 @@ const expectStatus = (actual, expected) => {
   }
 };
 
+const expectOneOfStatuses = (actual, expectedStatuses) => {
+  if (!expectedStatuses.includes(actual)) {
+    throw new Error(
+      `Status esperado ${expectedStatuses.join("/")}, recebido ${actual}`
+    );
+  }
+};
+
 let adminToken = process.env.ADMIN_TOKEN;
 let clientToken = config.clientToken;
+let mockAuthServer;
+let mockAuthJwt;
+
+const getMockAuthServer = async () => {
+  if (mockAuthServer) {
+    return mockAuthServer;
+  }
+
+  process.env.JWT_SECRET ||= "smoke-test-secret-with-at-least-32-chars";
+
+  const [{ default: express }, jwt, { default: Usuario }] = await Promise.all([
+    import("express"),
+    import("jsonwebtoken"),
+    import("../models/Usuario.js"),
+  ]);
+
+  Usuario.findById = (id) => ({
+    select: async () => {
+      const tipo = String(id).endsWith("001") ? "admin" : "cliente";
+
+      return {
+        _id: id,
+        tipo,
+        ativo: true,
+        statusCadastro: "aprovado",
+        tokenVersion: 0,
+      };
+    },
+  });
+
+  const [
+    { default: produtoRoutes },
+    { default: tabelaPrecoRoutes },
+    { default: precoProdutoRoutes },
+    { default: clienteRoutes },
+    { default: dashboardRoutes },
+  ] = await Promise.all([
+    import("../routes/produtoRoutes.js"),
+    import("../routes/tabelaPrecoRoutes.js"),
+    import("../routes/precoProdutoRoutes.js"),
+    import("../routes/clienteRoutes.js"),
+    import("../routes/dashboardRoutes.js"),
+  ]);
+
+  const app = express();
+  app.use(express.json());
+  app.use("/api/clientes", clienteRoutes);
+  app.use("/api/produtos", produtoRoutes);
+  app.use("/api/tabelas", tabelaPrecoRoutes);
+  app.use("/api/precos", precoProdutoRoutes);
+  app.use("/api/dashboard", dashboardRoutes);
+
+  const server = await new Promise((resolve) => {
+    const startedServer = app.listen(0, "127.0.0.1", () => {
+      resolve(startedServer);
+    });
+  });
+
+  mockAuthJwt = jwt;
+  mockAuthServer = {
+    server,
+    baseURL: `http://127.0.0.1:${server.address().port}`,
+  };
+
+  return mockAuthServer;
+};
+
+const requestWithMockAuth = async (path, tipo) => {
+  const { baseURL } = await getMockAuthServer();
+  const id =
+    tipo === "admin"
+      ? "000000000000000000000001"
+      : "000000000000000000000002";
+  const token = mockAuthJwt.default.sign(
+    {
+      id,
+      tipo,
+      tokenVersion: 0,
+    },
+    process.env.JWT_SECRET,
+    {
+      algorithm: "HS256",
+      expiresIn: "5m",
+    }
+  );
+
+  const response = await fetch(`${baseURL}${path}`, {
+    headers: authHeaders(token),
+  });
+
+  return { response, body: null };
+};
 
 await run("login sem senha", async () => {
   const { response } = await request("/api/auth/login", {
@@ -172,6 +272,67 @@ await run("admin acessando rota admin", async () => {
   expectStatus(response.status, 200);
   return { ok: true };
 });
+
+const adminRouteChecks = [
+  {
+    name: "clientes",
+    path: "/api/clientes",
+    adminStatuses: [200],
+  },
+  {
+    name: "produtos",
+    path: "/api/produtos",
+    adminStatuses: [200],
+  },
+  {
+    name: "tabelas",
+    path: "/api/tabelas",
+    adminStatuses: [200],
+  },
+  {
+    name: "precos",
+    path: "/api/precos/tabela/000000000000000000000000",
+    adminStatuses: [200],
+  },
+  {
+    name: "dashboard",
+    path: "/api/dashboard",
+    adminStatuses: [200],
+  },
+];
+
+for (const routeCheck of adminRouteChecks) {
+  await run(`${routeCheck.name} sem token retorna 401`, async () => {
+    const { response } = await request(routeCheck.path);
+
+    expectStatus(response.status, 401);
+    return { ok: true };
+  });
+
+  await run(`${routeCheck.name} com token cliente retorna 403`, async () => {
+    const { response } = clientToken
+      ? await request(routeCheck.path, {
+          headers: authHeaders(clientToken),
+        })
+      : await requestWithMockAuth(routeCheck.path, "cliente");
+
+    expectStatus(response.status, 403);
+    return { ok: true };
+  });
+
+  await run(`${routeCheck.name} com token admin passa pela autorizacao`, async () => {
+    if (!adminToken) {
+      return skip("Defina ADMIN_TOKEN ou credenciais admin.");
+    }
+
+    const { response } = await request(routeCheck.path, {
+      headers: authHeaders(adminToken),
+    });
+
+    expectOneOfStatuses(response.status, routeCheck.adminStatuses);
+    return { ok: true };
+  });
+}
 
 await run("token invalido", async () => {
   const { response } = await request("/api/catalogo", {
@@ -314,6 +475,10 @@ for (const result of results) {
   console.log(
     `${status} - ${result.name}${result.detail ? `: ${result.detail}` : ""}`
   );
+}
+
+if (mockAuthServer) {
+  await new Promise((resolve) => mockAuthServer.server.close(resolve));
 }
 
 if (failed.length > 0) {

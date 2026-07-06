@@ -15,10 +15,24 @@ const router = express.Router();
 
 router.post("/", proteger, somenteAdmin, adminLimiter, criarTabela);
 
-router.get("/", proteger, listarTabelas);
+router.get("/", proteger, somenteAdmin, listarTabelas);
 
-router.put("/:id", proteger, somenteAdmin, adminLimiter, validateObjectIdParam(), atualizarTabela);
+router.put(
+  "/:id",
+  proteger,
+  somenteAdmin,
+  adminLimiter,
+  validateObjectIdParam(),
+  atualizarTabela
+);
 
-router.post("/:id/duplicar", proteger, somenteAdmin, adminLimiter, validateObjectIdParam(), duplicarTabela);
+router.post(
+  "/:id/duplicar",
+  proteger,
+  somenteAdmin,
+  adminLimiter,
+  validateObjectIdParam(),
+  duplicarTabela
+);
 
 export default router;

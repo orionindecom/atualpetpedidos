@@ -5,5 +5,5 @@ export const somenteAdmin = (req, res, next) => {
     });
   }
 
-  next();
+  return next();
 };
