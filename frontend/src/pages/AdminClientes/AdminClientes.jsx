@@ -35,7 +35,15 @@ function AdminClientes() {
   };
 
   useEffect(() => {
-    carregarDados();
+    async function carregarDadosIniciais() {
+      const clientesResponse = await api.get("/clientes");
+      const tabelasResponse = await api.get("/tabelas");
+
+      setClientes(clientesResponse.data);
+      setTabelas(tabelasResponse.data);
+    }
+
+    carregarDadosIniciais();
   }, []);
 
   const clientesFiltrados = useMemo(() => {

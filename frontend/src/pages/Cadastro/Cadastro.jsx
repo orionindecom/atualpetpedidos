@@ -67,19 +67,73 @@ function Cadastro() {
       </section>
 
       <section className={styles.formArea}>
+        <div className={styles.mobileIntro}>
+          <img src={logo} alt="AtualPet" />
+          <strong>AtualPet</strong>
+          <span>Solicitação de acesso</span>
+        </div>
+
         <form className={styles.card} onSubmit={cadastrar}>
+          <div className={styles.mobileCardHeader}>
+            <h1>Solicitar acesso</h1>
+            <p>Preencha seus dados para solicitar acesso ao portal comercial.</p>
+          </div>
+
           <h2>Solicitar cadastro</h2>
           <p>Preencha os dados abaixo para solicitar acesso.</p>
 
           <div className={styles.grid}>
-            <input name="nomeResponsavel" placeholder="Nome do responsável" value={form.nomeResponsavel} onChange={alterar} required />
-            <input name="email" type="email" placeholder="E-mail" value={form.email} onChange={alterar} required />
-            <input name="senha" type="password" placeholder="Senha" value={form.senha} onChange={alterar} required />
-            <input name="razaoSocial" placeholder="Razão social" value={form.razaoSocial} onChange={alterar} />
-            <input name="nomeFantasia" placeholder="Nome fantasia" value={form.nomeFantasia} onChange={alterar} />
-            <input name="cnpj" placeholder="CNPJ" value={form.cnpj} onChange={alterar} />
-            <input name="telefone" placeholder="Telefone" value={form.telefone} onChange={alterar} />
-            <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={alterar} />
+            <fieldset className={styles.section}>
+              <legend>Dados da empresa</legend>
+
+              <label>
+                Razão social
+                <input name="razaoSocial" placeholder="Razão social" value={form.razaoSocial} onChange={alterar} />
+              </label>
+
+              <label>
+                Nome fantasia
+                <input name="nomeFantasia" placeholder="Nome fantasia" value={form.nomeFantasia} onChange={alterar} />
+              </label>
+
+              <label>
+                CNPJ
+                <input name="cnpj" placeholder="CNPJ" value={form.cnpj} onChange={alterar} />
+              </label>
+            </fieldset>
+
+            <fieldset className={styles.section}>
+              <legend>Contato</legend>
+
+              <label>
+                Nome do responsável
+                <input name="nomeResponsavel" placeholder="Nome do responsável" value={form.nomeResponsavel} onChange={alterar} required />
+              </label>
+
+              <label>
+                E-mail
+                <input name="email" type="email" placeholder="E-mail" value={form.email} onChange={alterar} required />
+              </label>
+
+              <label>
+                Telefone
+                <input name="telefone" placeholder="Telefone" value={form.telefone} onChange={alterar} />
+              </label>
+
+              <label>
+                WhatsApp
+                <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={alterar} />
+              </label>
+            </fieldset>
+
+            <fieldset className={styles.section}>
+              <legend>Acesso</legend>
+
+              <label>
+                Senha
+                <input name="senha" type="password" placeholder="Senha" value={form.senha} onChange={alterar} required />
+              </label>
+            </fieldset>
           </div>
 
           <button type="submit">Enviar solicitação</button>

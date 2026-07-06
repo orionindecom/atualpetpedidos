@@ -34,7 +34,15 @@ function AdminPedidos() {
   };
 
   useEffect(() => {
-    carregarDados();
+    async function carregarDadosIniciais() {
+      const pedidosResponse = await api.get("/pedidos");
+      const produtosResponse = await api.get("/produtos");
+
+      setPedidos(pedidosResponse.data);
+      setProdutos(produtosResponse.data);
+    }
+
+    carregarDadosIniciais();
   }, []);
 
   const moeda = (valor) =>
@@ -120,7 +128,7 @@ function AdminPedidos() {
 
   const salvarModalPedido = async () => {
     const itens = Object.entries(quantidadesModal)
-      .filter(([_, quantidade]) => Number(quantidade) > 0)
+      .filter(([, quantidade]) => Number(quantidade) > 0)
       .map(([produtoId, quantidade]) => ({
         produtoId,
         quantidade: Number(quantidade),

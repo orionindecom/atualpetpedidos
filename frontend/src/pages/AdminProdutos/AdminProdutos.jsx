@@ -25,7 +25,12 @@ function AdminProdutos() {
   };
 
   useEffect(() => {
-    carregarProdutos();
+    async function carregarProdutosIniciais() {
+      const response = await api.get("/produtos");
+      setProdutos(response.data);
+    }
+
+    carregarProdutosIniciais();
   }, []);
 
   const alterar = (e) => {

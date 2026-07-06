@@ -1,28 +1,78 @@
 .navbar {
-  height: 72px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
+  min-height: 72px;
   padding: 0 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  color: #111827;
+  font-size: 16px;
+}
+
+.brand span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .links {
   display: flex;
-  gap: 24px;
+  align-items: center;
+  gap: 8px;
 }
 
-.links a {
-  text-decoration: none;
+.link {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
   color: #374151;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.links a:hover {
-  color: #f97316;
+.link:hover,
+.active {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navGroup span {
+  display: none;
 }
 
 .usuario {
@@ -32,26 +82,151 @@
 }
 
 .usuario span {
-  font-weight: 600;
+  max-width: 180px;
+  overflow: hidden;
+  color: #344054;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.usuario button {
+.usuario button,
+.sairMobile,
+.mobileHeader button {
+  min-height: 40px;
   border: none;
-  background: #ef4444;
-  color: white;
-
-  padding: 8px 12px;
   border-radius: 8px;
-
+  background: #ef4444;
+  color: #ffffff;
+  padding: 0 14px;
+  font-weight: 800;
   cursor: pointer;
 }
-.logo {
-  display: flex;
-  align-items: center;
+
+.menuButton {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  background: #ffffff;
+  display: none;
+  place-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 
-.logo img {
-  height: 42px;
-  width: auto;
-  object-fit: contain;
+.menuButton span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #111827;
+  display: block;
+}
+
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.mobileMenu {
+  width: min(340px, calc(100vw - 32px));
+  height: 100%;
+  padding: 18px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 18px 0 40px rgba(15, 23, 42, 0.18);
+}
+
+.mobileHeader {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobileHeader img {
+  height: 38px;
+}
+
+.sairMobile {
+  margin-top: auto;
+}
+
+@media (min-width: 1001px) {
+  .admin {
+    width: 260px;
+    height: 100vh;
+    padding: 24px 18px;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: none;
+    align-items: stretch;
+    justify-content: flex-start;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+  }
+
+  .admin .brand {
+    padding: 0 6px 18px;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .admin .links {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .admin .navGroup {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .admin .navGroup span {
+    margin: 16px 10px 4px;
+    color: #98a2b3;
+    display: block;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin .link {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .admin .usuario {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid #eef2f7;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin .usuario span {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .navbar {
+    padding: 0 18px;
+  }
+
+  .links,
+  .usuario {
+    display: none;
+  }
+
+  .menuButton {
+    display: grid;
+  }
 }

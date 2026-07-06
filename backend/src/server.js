@@ -40,6 +40,8 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 204,
   })
 );
 app.use(express.json({ limit: "1mb" }));

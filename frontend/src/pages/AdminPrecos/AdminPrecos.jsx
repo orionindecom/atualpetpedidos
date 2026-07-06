@@ -8,6 +8,7 @@ function AdminPrecos() {
     const [produtos, setProdutos] = useState([]);
     const [precos, setPrecos] = useState({});
     const [tabelaSelecionada, setTabelaSelecionada] = useState("");
+    const [tipoTabelaFiltro, setTipoTabelaFiltro] = useState("");
     const [busca, setBusca] = useState("");
     const [linhaFiltro, setLinhaFiltro] = useState("");
     const [categoriaFiltro, setCategoriaFiltro] = useState("");
@@ -94,6 +95,20 @@ function AdminPrecos() {
         return combinaBusca && combinaLinha && combinaCategoria;
     });
 
+    const tiposTabela = {
+        distribuidor: "Distribuidor",
+        cliente_final_internet: "Cliente final internet",
+        cliente_final_loja: "Cliente final loja física",
+    };
+
+    const tabelasFiltradas = tabelas.filter((tabela) =>
+        tipoTabelaFiltro ? tabela.tipo === tipoTabelaFiltro : true
+    );
+
+    const tabelaAtual = tabelas.find(
+        (tabela) => tabela._id === tabelaSelecionada
+    );
+
     return (
         <>
             <Navbar />
@@ -103,17 +118,45 @@ function AdminPrecos() {
 
                 <div className={styles.filtros}>
                     <select
+                        value={tipoTabelaFiltro}
+                        onChange={(e) => {
+                            setTipoTabelaFiltro(e.target.value);
+                            setTabelaSelecionada("");
+                            setPrecos({});
+                        }}
+                    >
+                        <option value="">Todos os tipos de tabela</option>
+                        <option value="distribuidor">Distribuidor</option>
+                        <option value="cliente_final_internet">
+                            Cliente final internet
+                        </option>
+                        <option value="cliente_final_loja">
+                            Cliente final loja física
+                        </option>
+                    </select>
+
+                    <select
                         value={tabelaSelecionada}
                         onChange={(e) => carregarPrecosTabela(e.target.value)}
                     >
                         <option value="">Selecione uma tabela</option>
 
-                        {tabelas.map((tabela) => (
+                        {tabelasFiltradas.map((tabela) => (
                             <option key={tabela._id} value={tabela._id}>
-                                {tabela.nome}
+                                {tabela.nome} •{" "}
+                                {tiposTabela[tabela.tipo || "distribuidor"]}
                             </option>
                         ))}
                     </select>
+
+                    {tabelaAtual && (
+                        <div className={styles.tabelaAtual}>
+                            <span>
+                                {tiposTabela[tabelaAtual.tipo || "distribuidor"]}
+                            </span>
+                            <strong>{tabelaAtual.nome}</strong>
+                        </div>
+                    )}
                 </div>
 
                 <div className={styles.filtrosProdutos}>

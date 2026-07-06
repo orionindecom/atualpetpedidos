@@ -1,9 +1,9 @@
 .container {
   min-height: 100vh;
   width: 100%;
-  padding: 40px 64px;
-  background: #f5f5f5;
-  color:black;
+  padding: 36px 56px 48px;
+  background: #f6f7f9;
+  color: #111827;
 }
 .header {
   width: 100%;
@@ -12,7 +12,7 @@
 
 
 .header h1 {
-  font-size: 36px;
+  font-size: 34px;
   margin-bottom: 8px;
 }
 
@@ -29,10 +29,10 @@
 
 .card {
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 18px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
 .card img {
@@ -40,7 +40,7 @@
   height: 180px;
   object-fit: contain;
   background: #f9fafb;
-  border-radius: 14px;
+  border-radius: 8px;
   margin-bottom: 16px;
 }
 
@@ -81,8 +81,9 @@
 
 .input {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #ffffff;
   color: #1f2937;
@@ -98,9 +99,10 @@
 
 .botao {
   align-self: flex-end;
-  padding: 14px 28px;
+  min-height: 46px;
+  padding: 0 22px;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f97316;
   color: white;
   font-weight: 700;
@@ -140,7 +142,7 @@
 .filtros input,
 .filtros select {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #ffffff;
   color: #1f2937;
@@ -171,7 +173,7 @@
 
 .resumo {
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 22px;
   position: sticky;
   top: 92px;
@@ -264,7 +266,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #68C1BD;
   color: white;
 }
@@ -276,4 +278,84 @@
 .tituloLinha span {
   color: whitesmoke;
   font-weight: 700;
+}
+
+.barraPedidoMobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-bottom: 110px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .card img {
+    height: 150px;
+  }
+
+  .tituloLinha {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .barraPedidoMobile {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 60;
+    padding: 12px;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .barraPedidoMobile span,
+  .barraPedidoMobile strong {
+    display: block;
+  }
+
+  .barraPedidoMobile span {
+    color: #667085;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .barraPedidoMobile strong {
+    color: #f97316;
+    font-size: 18px;
+  }
+
+  .barraPedidoMobile button {
+    min-height: 46px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 8px;
+    background: #f97316;
+    color: #ffffff;
+    font-weight: 900;
+  }
+
+  .barraPedidoMobile button:disabled {
+    opacity: 0.5;
+  }
 }

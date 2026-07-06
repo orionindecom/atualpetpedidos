@@ -16,7 +16,26 @@ body {
   color: #1f2937;
 }
 
+body.admin-layout [class*="container"] {
+  padding-left: max(40px, calc(260px + 40px));
+}
+
 button,
 input {
   font-family: inherit;
+}
+
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  min-height: 40px;
+}
+
+@media (max-width: 1000px) {
+  body.admin-layout [class*="container"] {
+    padding-left: 18px;
+  }
 }

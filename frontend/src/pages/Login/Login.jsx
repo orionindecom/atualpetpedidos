@@ -62,7 +62,18 @@ function Login() {
       </section>
 
       <section className={styles.loginArea}>
+        <div className={styles.mobileIntro}>
+          <img src={logo} alt="AtualPet" />
+          <strong>AtualPet</strong>
+          <span>Portal Comercial</span>
+        </div>
+
         <div className={styles.card}>
+          <div className={styles.mobileCardHeader}>
+            <h1>Bem-vindo 👋</h1>
+            <p>Acesse sua conta para continuar.</p>
+          </div>
+
           <h2>Entrar</h2>
           <p>Acesse sua conta para continuar.</p>
 
@@ -94,6 +105,9 @@ function Login() {
 
           <div className={styles.footer}>
             <span>Ainda não tem acesso?</span>
+            <span className={styles.mobileFooterText}>
+              Ainda não possui cadastro?
+            </span>
             <Link to="/cadastro">Solicitar cadastro</Link>
           </div>
         </div>

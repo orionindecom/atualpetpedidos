@@ -5,9 +5,19 @@ import styles from "./AdminTabelas.module.css";
 
 function AdminTabelas() {
   const [tabelas, setTabelas] = useState([]);
-  const [form, setForm] = useState({ nome: "", descricao: "" });
+  const [form, setForm] = useState({
+    nome: "",
+    descricao: "",
+    tipo: "distribuidor",
+  });
   const [editando, setEditando] = useState(null);
   const [novoNome, setNovoNome] = useState({});
+
+  const tiposTabela = {
+    distribuidor: "Distribuidor",
+    cliente_final_internet: "Cliente final internet",
+    cliente_final_loja: "Cliente final loja física",
+  };
 
   const carregarTabelas = async () => {
     const response = await api.get("/tabelas");
@@ -15,7 +25,12 @@ function AdminTabelas() {
   };
 
   useEffect(() => {
-    carregarTabelas();
+    async function carregarTabelasIniciais() {
+      const response = await api.get("/tabelas");
+      setTabelas(response.data);
+    }
+
+    carregarTabelasIniciais();
   }, []);
 
   const alterar = (e) => {
@@ -33,7 +48,7 @@ function AdminTabelas() {
       alert("Tabela criada com sucesso");
     }
 
-    setForm({ nome: "", descricao: "" });
+    setForm({ nome: "", descricao: "", tipo: "distribuidor" });
     setEditando(null);
     carregarTabelas();
   };
@@ -43,12 +58,13 @@ function AdminTabelas() {
     setForm({
       nome: tabela.nome || "",
       descricao: tabela.descricao || "",
+      tipo: tabela.tipo || "distribuidor",
     });
   };
 
   const cancelarEdicao = () => {
     setEditando(null);
-    setForm({ nome: "", descricao: "" });
+    setForm({ nome: "", descricao: "", tipo: "distribuidor" });
   };
 
   const alternarStatus = async (tabela) => {
@@ -102,6 +118,16 @@ function AdminTabelas() {
               onChange={alterar}
             />
 
+            <select name="tipo" value={form.tipo} onChange={alterar}>
+              <option value="distribuidor">Distribuidor</option>
+              <option value="cliente_final_internet">
+                Cliente final internet
+              </option>
+              <option value="cliente_final_loja">
+                Cliente final loja física
+              </option>
+            </select>
+
             <button type="submit">
               {editando ? "Salvar Alterações" : "Criar Tabela"}
             </button>
@@ -125,6 +151,9 @@ function AdminTabelas() {
                 <div className={styles.info}>
                   <h3>{tabela.nome}</h3>
                   <p>{tabela.descricao || "Sem descrição"}</p>
+                  <span className={styles.tipoTabela}>
+                    {tiposTabela[tabela.tipo || "distribuidor"]}
+                  </span>
                   <span className={tabela.ativa ? styles.ativa : styles.inativa}>
                     {tabela.ativa ? "Ativa" : "Inativa"}
                   </span>

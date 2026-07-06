@@ -6,11 +6,21 @@ import {
   sendServerError,
 } from "../utils/validation.js";
 
+const tiposTabelaPermitidos = new Set([
+  "distribuidor",
+  "cliente_final_internet",
+  "cliente_final_loja",
+]);
+
 export const criarTabela = async (req, res) => {
   try {
-    const { nome, descricao } = req.body;
+    const { nome, descricao, tipo } = req.body;
 
-    if (!isNonEmptyString(nome, 120) || !isOptionalString(descricao, 500)) {
+    if (
+      !isNonEmptyString(nome, 120) ||
+      !isOptionalString(descricao, 500) ||
+      (tipo !== undefined && !tiposTabelaPermitidos.has(tipo))
+    ) {
       return res.status(400).json({
         message: "Dados da tabela inválidos",
       });
@@ -27,6 +37,7 @@ export const criarTabela = async (req, res) => {
     const tabela = await TabelaPreco.create({
       nome: nome.trim(),
       descricao: descricao?.trim(),
+      tipo: tipo ?? "distribuidor",
     });
 
     return res.status(201).json(tabela);
@@ -46,9 +57,13 @@ export const listarTabelas = async (req, res) => {
 
 export const atualizarTabela = async (req, res) => {
   try {
-    const { nome, descricao, ativa } = req.body;
+    const { nome, descricao, tipo, ativa } = req.body;
 
-    if (!isOptionalString(nome, 120) || !isOptionalString(descricao, 500)) {
+    if (
+      !isOptionalString(nome, 120) ||
+      !isOptionalString(descricao, 500) ||
+      (tipo !== undefined && !tiposTabelaPermitidos.has(tipo))
+    ) {
       return res.status(400).json({
         message: "Dados da tabela inválidos",
       });
@@ -64,6 +79,7 @@ export const atualizarTabela = async (req, res) => {
 
     tabela.nome = nome?.trim() ?? tabela.nome;
     tabela.descricao = descricao?.trim() ?? tabela.descricao;
+    tabela.tipo = tipo ?? tabela.tipo;
 
     if (ativa !== undefined) {
       tabela.ativa = ativa === true || ativa === "true";
@@ -82,9 +98,13 @@ export const atualizarTabela = async (req, res) => {
 
 export const duplicarTabela = async (req, res) => {
   try {
-    const { novoNome, descricao } = req.body;
+    const { novoNome, descricao, tipo } = req.body;
 
-    if (!isNonEmptyString(novoNome, 120) || !isOptionalString(descricao, 500)) {
+    if (
+      !isNonEmptyString(novoNome, 120) ||
+      !isOptionalString(descricao, 500) ||
+      (tipo !== undefined && !tiposTabelaPermitidos.has(tipo))
+    ) {
       return res.status(400).json({
         message: "Dados da tabela inválidos",
       });
@@ -109,6 +129,7 @@ export const duplicarTabela = async (req, res) => {
     const novaTabela = await TabelaPreco.create({
       nome: novoNome.trim(),
       descricao: descricao?.trim() || `Cópia de ${tabelaOrigem.nome}`,
+      tipo: tipo ?? tabelaOrigem.tipo ?? "distribuidor",
       ativa: true,
     });
 

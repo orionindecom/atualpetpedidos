@@ -105,9 +105,14 @@ function Catalogo() {
         0
     );
 
+    const totalItens = itensSelecionados.reduce(
+        (total, produto) => total + Number(quantidades[produto.id]),
+        0
+    );
+
     const gerarPedido = async () => {
         const itens = Object.entries(quantidades)
-            .filter(([_, quantidade]) => Number(quantidade) > 0)
+            .filter(([, quantidade]) => Number(quantidade) > 0)
             .map(([produtoId, quantidade]) => ({
                 produtoId,
                 quantidade: Number(quantidade),
@@ -303,6 +308,22 @@ function Catalogo() {
                         )}
                     </aside>
                 </div>
+            </div>
+
+            <div className={styles.barraPedidoMobile}>
+                <div>
+                    <span>
+                        {totalItens} {totalItens === 1 ? "item" : "itens"}
+                    </span>
+                    <strong>{moeda(totalPedido)}</strong>
+                </div>
+
+                <button
+                    onClick={gerarPedido}
+                    disabled={itensSelecionados.length === 0}
+                >
+                    Gerar pedido
+                </button>
             </div>
         </>
     );

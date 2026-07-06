@@ -9,6 +9,7 @@ import AdminPrecos from "./pages/AdminPrecos/AdminPrecos";
 import AdminTabelas from "./pages/AdminTabelas/AdminTabelas";
 import AdminPedidos from "./pages/AdminPedidos/AdminPedidos";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import PrecosClienteFinal from "./pages/PrecosClienteFinal/PrecosClienteFinal";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/catalogo" element={<Catalogo />} />
         <Route path="/meus-pedidos" element={<MeusPedidos />} />
+        <Route path="/precos-cliente-final" element={<PrecosClienteFinal />} />
         <Route path="/clientes" element={<AdminClientes />} />
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/produtos" element={<AdminProdutos />} />

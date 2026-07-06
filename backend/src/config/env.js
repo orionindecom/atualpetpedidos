@@ -1,5 +1,20 @@
-const getConfiguredOrigins = () => (
-  process.env.CORS_ORIGIN || process.env.FRONTEND_URL || ""
+const localDevelopmentOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+const getConfiguredOrigins = () => [
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+];
+
+const parseOriginsList = (origins) => (
+  origins
+    .filter(Boolean)
+    .flatMap((origin) => origin.split(","))
+    .map((origin) => origin.trim())
+    .filter(Boolean)
 );
 
 const requiredCloudinaryVars = [
@@ -9,20 +24,15 @@ const requiredCloudinaryVars = [
 ];
 
 export const parseAllowedOrigins = () => {
-  const configuredOrigins = getConfiguredOrigins();
-
-  if (configuredOrigins) {
-    return configuredOrigins
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-  }
+  const configuredOrigins = parseOriginsList(getConfiguredOrigins());
 
   if (process.env.NODE_ENV === "production") {
-    return [];
+    return configuredOrigins;
   }
 
-  return ["http://localhost:5173", "http://127.0.0.1:5173"];
+  return Array.from(
+    new Set([...localDevelopmentOrigins, ...configuredOrigins])
+  );
 };
 
 export const validateEnv = () => {
@@ -46,7 +56,7 @@ export const validateEnv = () => {
     process.env.NODE_ENV === "production" &&
     parseAllowedOrigins().length === 0
   ) {
-    missing.push("CORS_ORIGIN");
+    missing.push("CORS_ORIGIN ou FRONTEND_URL");
   }
 
   if (missing.length > 0) {

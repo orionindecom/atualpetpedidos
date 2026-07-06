@@ -14,6 +14,12 @@ const tabelaPrecoSchema = new mongoose.Schema(
       trim: true,
     },
 
+    tipo: {
+      type: String,
+      enum: ["distribuidor", "cliente_final_internet", "cliente_final_loja"],
+      default: "distribuidor",
+    },
+
     ativa: {
       type: Boolean,
       default: true,
