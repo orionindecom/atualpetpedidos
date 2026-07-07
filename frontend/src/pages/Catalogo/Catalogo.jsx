@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import styles from "./Catalogo.module.css";
 import Navbar from "../../components/Navbar/Navbar";
+import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 
 function Catalogo() {
     const [produtos, setProdutos] = useState([]);
@@ -133,20 +134,15 @@ function Catalogo() {
         alert(`Pedido criado: ${response.data.pedido.numeroPedido}`);
     };
 
-    const baixarPdf = async (pedidoId) => {
+    const baixarPdf = async (pedido) => {
         try {
-            const response = await api.get(`/pedidos/${pedidoId}/pdf`, {
-                responseType: "blob",
+            await abrirOuBaixarPdfPedido({
+                pedidoId: pedido._id,
+                numeroPedido: pedido.numeroPedido,
             });
-
-            const fileURL = window.URL.createObjectURL(
-                new Blob([response.data], { type: "application/pdf" })
-            );
-
-            window.open(fileURL, "_blank");
         } catch (error) {
             console.error(error);
-            alert("Erro ao baixar PDF");
+            alert("Não foi possível abrir ou baixar o PDF do pedido.");
         }
     };
 
@@ -300,7 +296,7 @@ function Catalogo() {
 
                                 <button
                                     className={styles.botao}
-                                    onClick={() => baixarPdf(pedidoCriado._id)}
+                                    onClick={() => baixarPdf(pedidoCriado)}
                                 >
                                     Baixar PDF
                                 </button>

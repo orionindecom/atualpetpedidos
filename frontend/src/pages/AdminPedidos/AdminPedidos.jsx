@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminPedidos.module.css";
+import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 
 function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
@@ -71,20 +72,15 @@ function AdminPedidos() {
     return nomes[status] || status;
   };
 
-  const baixarPdf = async (pedidoId) => {
+  const baixarPdf = async (pedido) => {
     try {
-      const response = await api.get(`/pedidos/${pedidoId}/pdf`, {
-        responseType: "blob",
+      await abrirOuBaixarPdfPedido({
+        pedidoId: pedido._id,
+        numeroPedido: pedido.numeroPedido,
       });
-
-      const fileURL = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/pdf" })
-      );
-
-      window.open(fileURL, "_blank");
     } catch (error) {
       console.error(error);
-      alert("Erro ao baixar PDF");
+      alert("Não foi possível abrir ou baixar o PDF do pedido.");
     }
   };
 
@@ -280,7 +276,7 @@ function AdminPedidos() {
 
                 <button
                   className={styles.pdfBtn}
-                  onClick={() => baixarPdf(pedido._id)}
+                  onClick={() => baixarPdf(pedido)}
                 >
                   Baixar PDF
                 </button>

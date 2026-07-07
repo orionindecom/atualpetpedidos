@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
+import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 
 // Mapeia o valor de status para os sufixos das classes CSS
 const statusClasse = (status = "") => {
@@ -39,20 +40,15 @@ function MeusPedidos() {
     return `${dia}/${mes}/${pedido.ano}`;
   };
 
-  const baixarPdf = async (pedidoId) => {
+  const baixarPdf = async (pedido) => {
     try {
-      const response = await api.get(`/pedidos/${pedidoId}/pdf`, {
-        responseType: "blob",
+      await abrirOuBaixarPdfPedido({
+        pedidoId: pedido._id,
+        numeroPedido: pedido.numeroPedido,
       });
-
-      const fileURL = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/pdf" })
-      );
-
-      window.open(fileURL, "_blank");
     } catch (error) {
       console.error(error);
-      alert("Erro ao baixar PDF");
+      alert("Não foi possível abrir ou baixar o PDF do pedido.");
     }
   };
 
@@ -82,7 +78,7 @@ function MeusPedidos() {
                   <p>Total: {moeda(pedido.valorTotal)}</p>
                 </div>
 
-                <button onClick={() => baixarPdf(pedido._id)}>
+                <button onClick={() => baixarPdf(pedido)}>
                   Baixar PDF
                 </button>
               </div>
