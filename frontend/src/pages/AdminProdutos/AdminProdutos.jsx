@@ -3,6 +3,8 @@ import api from "../../api/axios";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminProdutos.module.css";
 
+const DESCRICAO_PRODUTO_MAX_LENGTH = 300;
+
 function AdminProdutos() {
   const [produtos, setProdutos] = useState([]);
   const [produtoEditando, setProdutoEditando] = useState(null);
@@ -54,6 +56,13 @@ function AdminProdutos() {
 
   const salvarProduto = async (e) => {
     e.preventDefault();
+
+    if (form.descricao.length > DESCRICAO_PRODUTO_MAX_LENGTH) {
+      alert(
+        `A descrição deve ter no máximo ${DESCRICAO_PRODUTO_MAX_LENGTH} caracteres.`
+      );
+      return;
+    }
 
     try {
       const formData = new FormData();
@@ -164,7 +173,11 @@ function AdminProdutos() {
               placeholder="Descrição"
               value={form.descricao}
               onChange={alterar}
+              maxLength={DESCRICAO_PRODUTO_MAX_LENGTH}
             />
+            <span className={styles.contadorDescricao}>
+              {form.descricao.length} / {DESCRICAO_PRODUTO_MAX_LENGTH}
+            </span>
 
             <input
               name="linha"

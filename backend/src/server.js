@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import multer from "multer";
 import { parseAllowedOrigins, validateEnv } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
@@ -82,7 +83,17 @@ app.use((err, req, res, next) => {
 
   if (err.message === "Tipo de arquivo não permitido") {
     return res.status(400).json({
-      message: err.message,
+      message: "Tipo de arquivo não permitido",
+    });
+  }
+
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE"
+      ? "Arquivo muito grande. Envie uma imagem de até 5MB."
+      : "Arquivo de upload inválido";
+
+    return res.status(400).json({
+      message,
     });
   }
 

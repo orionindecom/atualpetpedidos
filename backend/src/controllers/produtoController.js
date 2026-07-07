@@ -4,7 +4,24 @@ import {
   isOptionalString,
   sendServerError,
 } from "../utils/validation.js";
-import { uploadImageBuffer } from "../utils/cloudinaryUpload.js";
+import {
+  ImageUploadError,
+  uploadImageBuffer,
+} from "../utils/cloudinaryUpload.js";
+
+const DESCRICAO_PRODUTO_MAX_LENGTH = 300;
+
+const sendProductValidationError = (res) => (
+  res.status(400).json({
+    message: `Dados do produto inválidos. A descrição deve ter no máximo ${DESCRICAO_PRODUTO_MAX_LENGTH} caracteres.`,
+  })
+);
+
+const sendImageUploadError = (res, error) => (
+  res.status(error.statusCode).json({
+    message: error.message,
+  })
+);
 
 export const cadastrarProduto = async (req, res) => {
   try {
@@ -12,13 +29,11 @@ export const cadastrarProduto = async (req, res) => {
 
     if (
       !isNonEmptyString(nome, 160) ||
-      !isOptionalString(descricao, 1000) ||
+      !isOptionalString(descricao, DESCRICAO_PRODUTO_MAX_LENGTH) ||
       !isNonEmptyString(linha, 120) ||
       !isNonEmptyString(categoria, 120)
     ) {
-      return res.status(400).json({
-        message: "Dados do produto inválidos",
-      });
+      return sendProductValidationError(res);
     }
 
     const fotoUrl = req.file ? await uploadImageBuffer(req.file) : "";
@@ -36,6 +51,10 @@ export const cadastrarProduto = async (req, res) => {
       produto,
     });
   } catch (error) {
+    if (error instanceof ImageUploadError) {
+      return sendImageUploadError(res, error);
+    }
+
     return sendServerError(res);
   }
 };
@@ -58,13 +77,11 @@ export const atualizarProduto = async (req, res) => {
 
     if (
       !isOptionalString(nome, 160) ||
-      !isOptionalString(descricao, 1000) ||
+      !isOptionalString(descricao, DESCRICAO_PRODUTO_MAX_LENGTH) ||
       !isOptionalString(linha, 120) ||
       !isOptionalString(categoria, 120)
     ) {
-      return res.status(400).json({
-        message: "Dados do produto inválidos",
-      });
+      return sendProductValidationError(res);
     }
 
     const produto = await Produto.findById(req.params.id);
@@ -95,6 +112,10 @@ export const atualizarProduto = async (req, res) => {
       produto,
     });
   } catch (error) {
+    if (error instanceof ImageUploadError) {
+      return sendImageUploadError(res, error);
+    }
+
     return sendServerError(res);
   }
 };

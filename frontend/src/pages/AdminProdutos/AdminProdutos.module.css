@@ -56,6 +56,13 @@
   resize: vertical;
 }
 
+.contadorDescricao {
+  margin-top: -6px;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: right;
+}
+
 .form input:focus,
 .form textarea:focus {
   outline: none;

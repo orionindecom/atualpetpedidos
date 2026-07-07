@@ -11,6 +11,7 @@ const produtoSchema = new mongoose.Schema(
     descricao: {
       type: String,
       trim: true,
+      maxlength: 300,
     },
 
     linha: {
