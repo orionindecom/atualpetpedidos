@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuthSession } from "../utils/authSession";
 
 const normalizeBaseURL = (url) => url.replace(/\/+$/, "");
 const configuredBaseURL = import.meta.env.VITE_API_URL?.trim();
@@ -23,5 +24,20 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if ([401, 403].includes(error.response?.status)) {
+      clearAuthSession();
+
+      if (!window.location.pathname.includes("/login")) {
+        window.location.replace("/login");
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

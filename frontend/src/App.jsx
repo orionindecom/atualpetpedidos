@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Catalogo from "./pages/Catalogo/Catalogo";
 import MeusPedidos from "./pages/MeusPedidos/MeusPedidos";
@@ -10,23 +10,93 @@ import AdminTabelas from "./pages/AdminTabelas/AdminTabelas";
 import AdminPedidos from "./pages/AdminPedidos/AdminPedidos";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import PrecosClienteFinal from "./pages/PrecosClienteFinal/PrecosClienteFinal";
+import {
+  HomeRedirect,
+  NotFoundRoute,
+  RoleRoute,
+} from "./components/RouteGuards/RouteGuards";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/catalogo" element={<Catalogo />} />
-        <Route path="/meus-pedidos" element={<MeusPedidos />} />
-        <Route path="/precos-cliente-final" element={<PrecosClienteFinal />} />
-        <Route path="/clientes" element={<AdminClientes />} />
+        <Route path="/admin/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
-        <Route path="/produtos" element={<AdminProdutos />} />
-        <Route path="/precos" element={<AdminPrecos />} />
-        <Route path="/tabelas" element={<AdminTabelas />} />
-        <Route path="/pedidos" element={<AdminPedidos />} />
-        <Route path="/admin" element={<Dashboard />} />
+        <Route
+          path="/catalogo"
+          element={(
+            <RoleRoute role="cliente">
+              <Catalogo />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/meus-pedidos"
+          element={(
+            <RoleRoute role="cliente">
+              <MeusPedidos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/precos-cliente-final"
+          element={(
+            <RoleRoute role="cliente">
+              <PrecosClienteFinal />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/clientes"
+          element={(
+            <RoleRoute role="admin">
+              <AdminClientes />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/produtos"
+          element={(
+            <RoleRoute role="admin">
+              <AdminProdutos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/precos"
+          element={(
+            <RoleRoute role="admin">
+              <AdminPrecos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/tabelas"
+          element={(
+            <RoleRoute role="admin">
+              <AdminTabelas />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/pedidos"
+          element={(
+            <RoleRoute role="admin">
+              <AdminPedidos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/admin"
+          element={(
+            <RoleRoute role="admin">
+              <Dashboard />
+            </RoleRoute>
+          )}
+        />
+        <Route path="*" element={<NotFoundRoute />} />
       </Routes>
     </BrowserRouter>
   );
