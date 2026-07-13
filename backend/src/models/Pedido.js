@@ -156,4 +156,8 @@ const pedidoSchema = new mongoose.Schema(
   }
 );
 
+pedidoSchema.index({ clienteId: 1, createdAt: -1 });
+pedidoSchema.index({ status: 1, createdAt: -1 });
+pedidoSchema.index({ createdAt: -1 });
+
 export default mongoose.model("Pedido", pedidoSchema);

@@ -30,6 +30,8 @@ const tabelaPrecoSchema = new mongoose.Schema(
   }
 );
 
+tabelaPrecoSchema.index({ tipo: 1, ativa: 1, updatedAt: -1 });
+
 export default mongoose.model(
   "TabelaPreco",
   tabelaPrecoSchema

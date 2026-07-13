@@ -33,29 +33,37 @@ export const definirPrecoProduto = async (req, res) => {
       });
     }
 
-    const precoExistente = await PrecoProduto.findOne({
+    const filtroPreco = {
       produtoId,
       tabelaPrecoId,
-    });
+    };
+    let resultado;
 
-    if (precoExistente) {
-      precoExistente.valor = valorNumerico;
-      await precoExistente.save();
+    try {
+      resultado = await PrecoProduto.updateOne(
+        filtroPreco,
+        { $set: { valor: valorNumerico } },
+        { upsert: true, runValidators: true }
+      );
+    } catch (error) {
+      if (error?.code !== 11000) {
+        throw error;
+      }
 
-      return res.status(200).json({
-        message: "Preço atualizado com sucesso",
-        preco: precoExistente,
-      });
+      resultado = await PrecoProduto.updateOne(
+        filtroPreco,
+        { $set: { valor: valorNumerico } },
+        { runValidators: true }
+      );
     }
 
-    const preco = await PrecoProduto.create({
-      produtoId,
-      tabelaPrecoId,
-      valor: valorNumerico,
-    });
+    const preco = await PrecoProduto.findOne(filtroPreco).lean();
+    const criado = resultado.upsertedCount > 0;
 
-    return res.status(201).json({
-      message: "Preço cadastrado com sucesso",
+    return res.status(criado ? 201 : 200).json({
+      message: criado
+        ? "Preço cadastrado com sucesso"
+        : "Preço atualizado com sucesso",
       preco,
     });
   } catch (error) {

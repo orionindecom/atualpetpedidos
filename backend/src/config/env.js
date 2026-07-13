@@ -23,6 +23,15 @@ const requiredCloudinaryVars = [
   "CLOUDINARY_API_SECRET",
 ];
 
+const numericEnvRules = [
+  ["MONGO_MAX_POOL_SIZE", 1, 500],
+  ["MONGO_MIN_POOL_SIZE", 0, 500],
+  ["MONGO_MAX_IDLE_TIME_MS", 1000, 600000],
+  ["MONGO_SERVER_SELECTION_TIMEOUT_MS", 1000, 120000],
+  ["MONGO_CONNECT_TIMEOUT_MS", 1000, 120000],
+  ["MONGO_SOCKET_TIMEOUT_MS", 1000, 600000],
+];
+
 export const parseAllowedOrigins = () => {
   const configuredOrigins = parseOriginsList(getConfiguredOrigins());
 
@@ -38,6 +47,13 @@ export const parseAllowedOrigins = () => {
 export const validateEnv = () => {
   const missing = [];
 
+  if (
+    process.env.MONGO_AUTO_INDEX !== undefined &&
+    !["true", "false"].includes(process.env.MONGO_AUTO_INDEX)
+  ) {
+    missing.push("MONGO_AUTO_INDEX como true ou false");
+  }
+
   if (!process.env.MONGO_URI) {
     missing.push("MONGO_URI");
   }
@@ -52,6 +68,25 @@ export const validateEnv = () => {
     }
   }
 
+  for (const [envName, minimum, maximum] of numericEnvRules) {
+    if (process.env[envName] === undefined) {
+      continue;
+    }
+
+    const value = Number(process.env[envName]);
+
+    if (!Number.isInteger(value) || value < minimum || value > maximum) {
+      missing.push(`${envName} entre ${minimum} e ${maximum}`);
+    }
+  }
+
+  const minPoolSize = Number(process.env.MONGO_MIN_POOL_SIZE || 0);
+  const maxPoolSize = Number(process.env.MONGO_MAX_POOL_SIZE || 10);
+
+  if (minPoolSize > maxPoolSize) {
+    missing.push("MONGO_MIN_POOL_SIZE menor ou igual a MONGO_MAX_POOL_SIZE");
+  }
+
   if (
     process.env.NODE_ENV === "production" &&
     parseAllowedOrigins().length === 0
@@ -60,9 +95,8 @@ export const validateEnv = () => {
   }
 
   if (missing.length > 0) {
-    console.error(
+    throw new Error(
       `Configuração obrigatória ausente ou inválida: ${missing.join(", ")}`
     );
-    process.exit(1);
   }
 };

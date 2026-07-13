@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import multer from "multer";
+import compression from "compression";
+import mongoose from "mongoose";
 import { parseAllowedOrigins, validateEnv } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
@@ -18,10 +20,7 @@ import catalogoRoutes from "./routes/catalogoRoutes.js";
 import pedidoRoutes from "./routes/pedidoRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 
-dotenv.config();
-
-validateEnv();
-connectDB();
+dotenv.config({ quiet: true });
 
 const app = express();
 
@@ -46,7 +45,26 @@ app.use(
   })
 );
 app.use(express.json({ limit: "1mb" }));
+app.use(compression());
 app.use(sanitizeRequest);
+
+app.get("/health/live", (req, res) => {
+  return res.status(200).json({ status: "ok" });
+});
+
+app.get("/health/ready", async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ status: "indisponível" });
+    }
+
+    await mongoose.connection.db.command({ ping: 1 }, { maxTimeMS: 1000 });
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    return res.status(503).json({ status: "indisponível" });
+  }
+});
+
 app.use(generalLimiter);
 app.use(
   "/uploads",
@@ -68,6 +86,10 @@ app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });
+});
+
+app.use((req, res) => {
+  return res.status(404).json({ message: "Rota não encontrada" });
 });
 
 app.use((err, req, res, next) => {
@@ -103,7 +125,51 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+let server;
+let shuttingDown = false;
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+const shutdown = (signal) => {
+  if (shuttingDown) {
+    return;
+  }
+
+  shuttingDown = true;
+  console.log(`Encerramento iniciado por ${signal}`);
+
+  const forceExitTimer = setTimeout(() => {
+    console.error("Tempo limite de encerramento excedido");
+    process.exit(1);
+  }, 10000);
+  forceExitTimer.unref();
+
+  server.close(async () => {
+    await mongoose.disconnect();
+    clearTimeout(forceExitTimer);
+    process.exit(0);
+  });
+};
+
+const startServer = async () => {
+  validateEnv();
+  await connectDB();
+
+  server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+
+  server.requestTimeout = 30000;
+  server.headersTimeout = 15000;
+  server.keepAliveTimeout = 5000;
+
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
+};
+
+startServer().catch((error) => {
+  const message = error?.message?.startsWith("Configuração obrigatória")
+    ? error.message
+    : "Falha ao iniciar o servidor";
+
+  console.error(message);
+  process.exit(1);
 });

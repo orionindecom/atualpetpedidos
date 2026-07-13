@@ -80,4 +80,6 @@ const usuarioSchema = new mongoose.Schema(
     }
 );
 
+usuarioSchema.index({ tipo: 1, statusCadastro: 1, ativo: 1, createdAt: -1 });
+
 export default mongoose.model("Usuario", usuarioSchema);

@@ -30,8 +30,12 @@ export function HomeRedirect() {
 
 export function RoleRoute({ role, children }) {
   const location = useLocation();
-  const [isAllowed, setIsAllowed] = useState(null);
+  const [validation, setValidation] = useState({
+    key: null,
+    isAllowed: null,
+  });
   const session = getAuthSession();
+  const validationKey = `${role}:${location.pathname}:${session?.token || ""}`;
 
   useEffect(() => {
     let isActive = true;
@@ -40,23 +44,22 @@ export function RoleRoute({ role, children }) {
       const currentSession = getAuthSession();
 
       if (!currentSession || currentSession.usuario.tipo !== role) {
-        if (isActive) {
-          setIsAllowed(false);
-        }
         return;
       }
+
+      setValidation({ key: validationKey, isAllowed: null });
 
       try {
         await api.get(validationEndpoint[role]);
 
         if (isActive) {
-          setIsAllowed(true);
+          setValidation({ key: validationKey, isAllowed: true });
         }
       } catch {
         clearAuthSession();
 
         if (isActive) {
-          setIsAllowed(false);
+          setValidation({ key: validationKey, isAllowed: false });
         }
       }
     };
@@ -66,7 +69,7 @@ export function RoleRoute({ role, children }) {
     return () => {
       isActive = false;
     };
-  }, [role, location.pathname]);
+  }, [role, location.pathname, validationKey]);
 
   if (!session) {
     clearAuthSession();
@@ -82,11 +85,11 @@ export function RoleRoute({ role, children }) {
     );
   }
 
-  if (isAllowed === null) {
+  if (validation.key !== validationKey || validation.isAllowed === null) {
     return <AccessChecking />;
   }
 
-  if (!isAllowed) {
+  if (!validation.isAllowed) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

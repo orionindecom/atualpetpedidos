@@ -28,45 +28,95 @@ const validarItens = (itens) => (
   itens.length <= 200
 );
 
+const MAX_TENTATIVAS_NUMERO_PEDIDO = 5;
+
+const criarPedidoComNumeroUnico = async (dadosPedido) => {
+  for (
+    let tentativa = 1;
+    tentativa <= MAX_TENTATIVAS_NUMERO_PEDIDO;
+    tentativa += 1
+  ) {
+    try {
+      return await Pedido.create({
+        ...dadosPedido,
+        numeroPedido: await gerarNumeroPedido(),
+      });
+    } catch (error) {
+      const colisaoNumeroPedido =
+        error?.code === 11000 &&
+        (error?.keyPattern?.numeroPedido || error?.keyValue?.numeroPedido);
+
+      if (!colisaoNumeroPedido || tentativa === MAX_TENTATIVAS_NUMERO_PEDIDO) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Não foi possível gerar um número de pedido único");
+};
+
 const montarItensPedido = async (itens, tabelaPrecoId) => {
   const itensPedido = [];
   let valorTotal = 0;
 
-  for (const item of itens) {
-    if (!isValidObjectId(item?.produtoId)) {
-      continue;
-    }
+  const itensValidos = itens
+    .map((item) => ({
+      produtoId: item?.produtoId,
+      quantidade: toPositiveNumber(item?.quantidade),
+    }))
+    .filter(
+      (item) =>
+        isValidObjectId(item.produtoId) &&
+        item.quantidade &&
+        item.quantidade <= 999999
+    );
 
-    const quantidade = toPositiveNumber(item.quantidade);
+  if (itensValidos.length === 0) {
+    return { itensPedido, valorTotal };
+  }
 
-    if (!quantidade || quantidade > 999999) {
-      continue;
-    }
-
-    const produto = await Produto.findById(item.produtoId);
-
-    if (!produto || !produto.ativo) {
-      continue;
-    }
-
-    const preco = await PrecoProduto.findOne({
-      produtoId: produto._id,
+  const produtoIds = [...new Set(itensValidos.map((item) => item.produtoId))];
+  const [produtos, precos] = await Promise.all([
+    Produto.find({
+      _id: { $in: produtoIds },
+      ativo: true,
+    })
+      .select("_id nome")
+      .lean()
+      .maxTimeMS(5000),
+    PrecoProduto.find({
+      produtoId: { $in: produtoIds },
       tabelaPrecoId,
-    });
+    })
+      .select("produtoId valor")
+      .lean()
+      .maxTimeMS(5000),
+  ]);
 
-    if (!preco) {
+  const produtosPorId = new Map(
+    produtos.map((produto) => [String(produto._id), produto])
+  );
+  const precosPorProduto = new Map(
+    precos.map((preco) => [String(preco.produtoId), preco.valor])
+  );
+
+  for (const item of itensValidos) {
+    const produto = produtosPorId.get(String(item.produtoId));
+    const valorUnitario = precosPorProduto.get(String(item.produtoId));
+
+    if (!produto || valorUnitario === undefined) {
       continue;
     }
 
-    const subtotal = preco.valor * quantidade;
+    const subtotal = valorUnitario * item.quantidade;
 
     valorTotal += subtotal;
 
     itensPedido.push({
       produtoId: produto._id,
       nomeProduto: produto.nome,
-      quantidade,
-      valorUnitario: preco.valor,
+      quantidade: item.quantidade,
+      valorUnitario,
       subtotal,
     });
   }
@@ -117,9 +167,7 @@ export const criarPedido = async (req, res) => {
 
     const agora = new Date();
 
-    const pedido = await Pedido.create({
-      numeroPedido: await gerarNumeroPedido(),
-
+    const pedido = await criarPedidoComNumeroUnico({
       clienteId: cliente._id,
       nomeResponsavel: cliente.nomeResponsavel,
       nomeFantasiaCliente: cliente.nomeFantasia,

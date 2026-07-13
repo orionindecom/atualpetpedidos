@@ -140,7 +140,12 @@ function PrecosClienteFinal() {
             {produtosFiltrados.map((produto) => (
               <article className={styles.card} key={produto.id}>
                 {produto.fotoUrl && (
-                  <img src={produto.fotoUrl} alt={produto.nome} />
+                  <img
+                    src={produto.fotoUrl}
+                    alt={produto.nome}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 )}
 
                 <div>

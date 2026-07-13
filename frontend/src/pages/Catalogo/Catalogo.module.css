@@ -255,6 +255,45 @@
   gap: 34px;
 }
 
+.estadoCatalogo,
+.erroCatalogo {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6b7280;
+  text-align: center;
+}
+
+.erroCatalogo {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.mostrarMais {
+  align-self: center;
+  min-width: 180px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid #f97316;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #c2410c;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mostrarMais:hover {
+  background: #fff7ed;
+}
+
+.mostrarMais:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .secaoLinha {
   display: flex;
   flex-direction: column;

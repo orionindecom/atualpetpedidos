@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+import { assertMutationAllowed } from "../utils/scriptSafety.js";
+
+dotenv.config({ quiet: true });
+
 const API_URL = (process.env.API_URL || "http://localhost:5000").replace(
   /\/$/,
   ""
@@ -435,6 +440,11 @@ await run("pedido com preco manipulado pelo frontend", async () => {
       "Defina CLIENT_TOKEN/credenciais do cliente e PRODUCT_ID com preco na tabela do cliente."
     );
   }
+
+  assertMutationAllowed({
+    action: "criar pedido no smoke test",
+    confirmationVariable: "CONFIRM_MUTATING_TESTS",
+  });
 
   const { response, body } = await request("/api/pedidos", {
     method: "POST",

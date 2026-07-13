@@ -1,26 +1,170 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import styles from "./Catalogo.module.css";
 import Navbar from "../../components/Navbar/Navbar";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
+import { normalizeCatalogResponse } from "../../utils/catalogResponse";
+
+const LIMITE_CATALOGO = 12;
+
+const mesclarProdutosSemDuplicar = (atuais, novos) => {
+    const produtosPorId = new Map(atuais.map((produto) => [produto.id, produto]));
+
+    novos.forEach((produto) => produtosPorId.set(produto.id, produto));
+    return [...produtosPorId.values()];
+};
 
 function Catalogo() {
     const [produtos, setProdutos] = useState([]);
+    const [produtosConhecidos, setProdutosConhecidos] = useState({});
     const [quantidades, setQuantidades] = useState({});
     const [pedidoCriado, setPedidoCriado] = useState(null);
 
     const [busca, setBusca] = useState("");
+    const [buscaAplicada, setBuscaAplicada] = useState("");
     const [linhaFiltro, setLinhaFiltro] = useState("");
     const [categoriaFiltro, setCategoriaFiltro] = useState("");
+    const [filtrosDisponiveis, setFiltrosDisponiveis] = useState({
+        linhas: [],
+        categorias: [],
+    });
+    const [paginacao, setPaginacao] = useState({
+        pagina: 1,
+        temMais: false,
+        total: 0,
+    });
+    const [carregando, setCarregando] = useState(true);
+    const [carregandoMais, setCarregandoMais] = useState(false);
+    const [erroCatalogo, setErroCatalogo] = useState("");
+    const consultaVersao = useRef(0);
 
     useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setBuscaAplicada(busca.trim());
+        }, 300);
+
+        return () => window.clearTimeout(timer);
+    }, [busca]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        consultaVersao.current += 1;
+        const versaoAtual = consultaVersao.current;
+
         async function carregarCatalogo() {
-            const response = await api.get("/catalogo");
-            setProdutos(response.data);
+            setCarregando(true);
+            setErroCatalogo("");
+            setProdutos([]);
+
+            try {
+                const response = await api.get("/catalogo", {
+                    params: {
+                        pagina: 1,
+                        limite: LIMITE_CATALOGO,
+                        busca: buscaAplicada || undefined,
+                        linha: linhaFiltro || undefined,
+                        categoria: categoriaFiltro || undefined,
+                    },
+                    signal: controller.signal,
+                });
+
+                if (versaoAtual !== consultaVersao.current) {
+                    return;
+                }
+
+                const catalogo = normalizeCatalogResponse(response.data, {
+                    pagina: 1,
+                    limite: LIMITE_CATALOGO,
+                    busca: buscaAplicada,
+                    linha: linhaFiltro,
+                    categoria: categoriaFiltro,
+                });
+                const novosProdutos = catalogo.produtos;
+                setProdutos(novosProdutos);
+                setProdutosConhecidos((anteriores) => {
+                    const atualizados = { ...anteriores };
+                    novosProdutos.forEach((produto) => {
+                        atualizados[produto.id] = produto;
+                    });
+                    return atualizados;
+                });
+                setPaginacao(catalogo.paginacao);
+                setFiltrosDisponiveis(catalogo.filtros);
+            } catch (error) {
+                if (error.code !== "ERR_CANCELED") {
+                    setErroCatalogo(
+                        error.response?.data?.message ||
+                        "Não foi possível carregar o catálogo."
+                    );
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setCarregando(false);
+                }
+            }
         }
 
         carregarCatalogo();
-    }, []);
+        return () => controller.abort();
+    }, [buscaAplicada, linhaFiltro, categoriaFiltro]);
+
+    const mostrarMais = async () => {
+        if (carregandoMais || !paginacao.temMais) {
+            return;
+        }
+
+        setCarregandoMais(true);
+        setErroCatalogo("");
+        const versaoAtual = consultaVersao.current;
+
+        try {
+            const response = await api.get("/catalogo", {
+                params: {
+                    pagina: paginacao.pagina + 1,
+                    limite: LIMITE_CATALOGO,
+                    busca: buscaAplicada || undefined,
+                    linha: linhaFiltro || undefined,
+                    categoria: categoriaFiltro || undefined,
+                },
+            });
+
+            if (versaoAtual !== consultaVersao.current) {
+                return;
+            }
+
+            const catalogo = normalizeCatalogResponse(response.data, {
+                pagina: paginacao.pagina + 1,
+                limite: LIMITE_CATALOGO,
+                busca: buscaAplicada,
+                linha: linhaFiltro,
+                categoria: categoriaFiltro,
+            });
+            const novosProdutos = catalogo.produtos;
+
+            setProdutos((atuais) =>
+                mesclarProdutosSemDuplicar(atuais, novosProdutos)
+            );
+            setProdutosConhecidos((anteriores) => {
+                const atualizados = { ...anteriores };
+                novosProdutos.forEach((produto) => {
+                    atualizados[produto.id] = produto;
+                });
+                return atualizados;
+            });
+            setPaginacao(catalogo.paginacao);
+        } catch (error) {
+            if (versaoAtual !== consultaVersao.current) {
+                return;
+            }
+
+            setErroCatalogo(
+                error.response?.data?.message ||
+                "Não foi possível carregar mais produtos."
+            );
+        } finally {
+            setCarregandoMais(false);
+        }
+    };
 
     const moeda = (valor) =>
         valor.toLocaleString("pt-BR", {
@@ -35,24 +179,8 @@ function Catalogo() {
         });
     };
 
-    const linhas = [...new Set(produtos.map((p) => p.linha).filter(Boolean))];
-    const categorias = [
-        ...new Set(produtos.map((p) => p.categoria).filter(Boolean)),
-    ];
-
-    const produtosFiltrados = produtos.filter((produto) => {
-        const combinaBusca = produto.nome
-            .toLowerCase()
-            .includes(busca.toLowerCase());
-
-        const combinaLinha = linhaFiltro ? produto.linha === linhaFiltro : true;
-
-        const combinaCategoria = categoriaFiltro
-            ? produto.categoria === categoriaFiltro
-            : true;
-
-        return combinaBusca && combinaLinha && combinaCategoria;
-    });
+    const linhas = filtrosDisponiveis.linhas || [];
+    const categorias = filtrosDisponiveis.categorias || [];
     const ordemLinhas = [
         "Dream Color",
         "The Luxe",
@@ -69,7 +197,7 @@ function Catalogo() {
         "Cuidados Especiais",
     ];
 
-    const produtosPorLinha = produtosFiltrados.reduce((grupos, produto) => {
+    const produtosPorLinha = produtos.reduce((grupos, produto) => {
         const linha = produto.linha || "Sem linha";
 
         if (!grupos[linha]) {
@@ -96,9 +224,10 @@ function Catalogo() {
             return a.nome.localeCompare(b.nome);
         });
     });
-    const itensSelecionados = produtos.filter(
-        (produto) => Number(quantidades[produto.id]) > 0
-    );
+    const itensSelecionados = Object.entries(quantidades)
+        .filter(([, quantidade]) => Number(quantidade) > 0)
+        .map(([produtoId]) => produtosConhecidos[produtoId])
+        .filter(Boolean);
 
     const totalPedido = itensSelecionados.reduce(
         (total, produto) =>
@@ -193,6 +322,20 @@ function Catalogo() {
 
                 <div className={styles.layout}>
                     <div className={styles.secoes}>
+                        {carregando && (
+                            <p className={styles.estadoCatalogo}>Carregando produtos...</p>
+                        )}
+
+                        {!carregando && erroCatalogo && produtos.length === 0 && (
+                            <p className={styles.estadoCatalogo}>{erroCatalogo}</p>
+                        )}
+
+                        {!carregando && !erroCatalogo && produtos.length === 0 && (
+                            <p className={styles.estadoCatalogo}>
+                                Nenhum produto encontrado.
+                            </p>
+                        )}
+
                         {[
                             ...ordemLinhas.filter((linha) => produtosPorLinha[linha]),
                             ...Object.keys(produtosPorLinha).filter(
@@ -205,13 +348,18 @@ function Catalogo() {
                                 <section className={styles.secaoLinha} key={linha}>
                                     <div className={styles.tituloLinha}>
                                         <h2>{linha}</h2>
-                                        <span>{produtosLinha.length} produtos</span>
+                                        <span>{produtosLinha.length} carregados</span>
                                     </div>
                                     <div className={styles.grid}>
                                         {produtosLinha.map((produto) => (
                                             <div className={styles.card} key={produto.id}>
                                                 {produto.fotoUrl && (
-                                                    <img src={produto.fotoUrl} alt={produto.nome} />
+                                                    <img
+                                                        src={produto.fotoUrl}
+                                                        alt={produto.nome}
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                    />
                                                 )}
 
                                                 <h3>{produto.nome}</h3>
@@ -242,6 +390,21 @@ function Catalogo() {
                                 </section>
                             );
                         })}
+
+                        {erroCatalogo && produtos.length > 0 && (
+                            <p className={styles.erroCatalogo}>{erroCatalogo}</p>
+                        )}
+
+                        {paginacao.temMais && (
+                            <button
+                                type="button"
+                                className={styles.mostrarMais}
+                                onClick={mostrarMais}
+                                disabled={carregandoMais}
+                            >
+                                {carregandoMais ? "Carregando..." : "Mostrar mais"}
+                            </button>
+                        )}
                     </div>
 
                     <aside className={styles.resumo}>

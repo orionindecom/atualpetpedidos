@@ -6,7 +6,14 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "node --test",
+    "audit:db": "node src/scripts/dbAudit.js",
+    "db:create-indexes": "node src/scripts/createIndexes.js",
+    "smoke:catalog": "node src/scripts/catalogPaginationSmokeTest.js"
+  },
+  "engines": {
+    "node": ">=22.12 <25"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
@@ -14,6 +21,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

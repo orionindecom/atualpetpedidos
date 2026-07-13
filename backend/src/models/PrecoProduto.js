@@ -25,6 +25,11 @@ const precoProdutoSchema = new mongoose.Schema(
   }
 );
 
+precoProdutoSchema.index(
+  { tabelaPrecoId: 1, produtoId: 1 },
+  { unique: true }
+);
+
 export default mongoose.model(
   "PrecoProduto",
   precoProdutoSchema

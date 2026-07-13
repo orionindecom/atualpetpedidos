@@ -13,6 +13,7 @@ const apiBaseURL = normalizeBaseURL(
 
 const api = axios.create({
   baseURL: apiBaseURL,
+  timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {

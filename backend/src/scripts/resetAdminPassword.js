@@ -6,11 +6,14 @@ import {
   isStrongEnoughPassword,
   isValidEmail,
 } from "../utils/validation.js";
+import { assertMutationAllowed } from "../utils/scriptSafety.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const resetAdminPassword = async () => {
   try {
+    assertMutationAllowed({ action: "redefinir senha de administrador" });
+
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
 

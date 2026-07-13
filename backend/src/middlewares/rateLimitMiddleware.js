@@ -1,13 +1,22 @@
 const stores = new Map();
+const MAX_KEYS_PER_STORE = 100000;
 
-const getClientKey = (req) => {
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const ip = Array.isArray(forwardedFor)
-    ? forwardedFor[0]
-    : forwardedFor?.split(",")[0]?.trim();
+const getClientKey = (req) => req.ip || req.socket?.remoteAddress || "unknown";
 
-  return ip || req.ip || req.socket?.remoteAddress || "unknown";
+const cleanupExpiredEntries = () => {
+  const now = Date.now();
+
+  for (const store of stores.values()) {
+    for (const [key, entry] of store.entries()) {
+      if (entry.resetAt <= now) {
+        store.delete(key);
+      }
+    }
+  }
 };
+
+const cleanupTimer = setInterval(cleanupExpiredEntries, 60 * 1000);
+cleanupTimer.unref();
 
 export const rateLimit = ({
   windowMs,
@@ -26,16 +35,35 @@ export const rateLimit = ({
     const key = getClientKey(req);
     const current = store.get(key);
 
+    if (!current && store.size >= MAX_KEYS_PER_STORE) {
+      cleanupExpiredEntries();
+
+      if (store.size >= MAX_KEYS_PER_STORE) {
+        store.delete(store.keys().next().value);
+      }
+    }
+
     if (!current || current.resetAt <= now) {
-      store.set(key, {
+      const entry = {
         count: 1,
         resetAt: now + windowMs,
-      });
+      };
+
+      store.set(key, entry);
+      res.setHeader("RateLimit-Limit", String(max));
+      res.setHeader("RateLimit-Remaining", String(Math.max(max - 1, 0)));
+      res.setHeader("RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
 
       return next();
     }
 
     current.count += 1;
+    res.setHeader("RateLimit-Limit", String(max));
+    res.setHeader(
+      "RateLimit-Remaining",
+      String(Math.max(max - current.count, 0))
+    );
+    res.setHeader("RateLimit-Reset", String(Math.ceil(current.resetAt / 1000)));
 
     if (current.count > max) {
       const retryAfter = Math.ceil((current.resetAt - now) / 1000);
@@ -90,4 +118,3 @@ export const uploadLimiter = rateLimit({
   message: "Muitos uploads enviados. Tente novamente mais tarde.",
   keyPrefix: "upload",
 });
-
