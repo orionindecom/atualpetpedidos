@@ -1,5 +1,6 @@
 import PrecoProduto from "../models/PrecoProduto.js";
 import TabelaPreco from "../models/TabelaPreco.js";
+import { criarEstagiosOrdenacaoCatalogo } from "../utils/catalogOrdering.js";
 import { sendServerError } from "../utils/validation.js";
 
 const PAGINA_PADRAO = 1;
@@ -55,6 +56,30 @@ export const formatCatalogResponse = ({
   filtros,
 }) => (legacy ? produtos : { produtos, paginacao, filtros });
 
+export const criarPipelineProdutosCatalogo = ({
+  filtroProduto,
+  legacy,
+  inicio,
+  limite,
+  ordenarPorLinha,
+}) => [
+  { $match: filtroProduto },
+  ...criarEstagiosOrdenacaoCatalogo({ ordenarPorLinha }),
+  ...(legacy ? [] : [{ $skip: inicio }, { $limit: limite }]),
+  {
+    $project: {
+      _id: 0,
+      id: "$produto._id",
+      nome: "$produto.nome",
+      descricao: "$produto.descricao",
+      linha: "$produto.linha",
+      categoria: "$produto.categoria",
+      fotoUrl: "$produto.fotoUrl",
+      preco: "$valor",
+    },
+  },
+];
+
 const tiposClienteFinalPermitidos = new Set([
   "cliente_final_internet",
   "cliente_final_loja",
@@ -96,30 +121,13 @@ export const listarCatalogoCliente = async (req, res) => {
     }
 
     const inicio = (consulta.pagina - 1) * consulta.limite;
-    const produtosPipeline = [
-      { $match: filtroProduto },
-      {
-        $sort: {
-          "produto.linha": 1,
-          "produto.categoria": 1,
-          "produto.nome": 1,
-          _id: 1,
-        },
-      },
-      ...(legacy ? [] : [{ $skip: inicio }, { $limit: consulta.limite }]),
-      {
-        $project: {
-          _id: 0,
-          id: "$produto._id",
-          nome: "$produto.nome",
-          descricao: "$produto.descricao",
-          linha: "$produto.linha",
-          categoria: "$produto.categoria",
-          fotoUrl: "$produto.fotoUrl",
-          preco: "$valor",
-        },
-      },
-    ];
+    const produtosPipeline = criarPipelineProdutosCatalogo({
+      filtroProduto,
+      legacy,
+      inicio,
+      limite: consulta.limite,
+      ordenarPorLinha: !consulta.linha,
+    });
     const pipeline = [
       {
         $match: {
@@ -165,6 +173,11 @@ export const listarCatalogoCliente = async (req, res) => {
       PrecoProduto.aggregate(pipeline).option({
         allowDiskUse: true,
         maxTimeMS: 5000,
+        collation: {
+          locale: "pt",
+          strength: 1,
+          numericOrdering: true,
+        },
       }),
       TabelaPreco.findById(usuario.tabelaPrecoId)
         .select("nome")
