@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Catalogo from "./pages/Catalogo/Catalogo";
@@ -15,8 +16,11 @@ import {
   NotFoundRoute,
   RoleRoute,
 } from "./components/RouteGuards/RouteGuards";
+import { registrarBloqueioRodaInputsNumericos } from "./utils/numberInputWheel";
 
 function App() {
+  useEffect(() => registrarBloqueioRodaInputsNumericos(), []);
+
   return (
     <BrowserRouter>
       <Routes>
