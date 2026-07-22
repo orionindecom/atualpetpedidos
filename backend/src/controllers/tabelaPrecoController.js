@@ -5,6 +5,7 @@ import {
   isOptionalString,
   sendServerError,
 } from "../utils/validation.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
 
 const tiposTabelaPermitidos = new Set([
   "distribuidor",
@@ -47,9 +48,20 @@ export const criarTabela = async (req, res) => {
 };
 export const listarTabelas = async (req, res) => {
   try {
-    const tabelas = await TabelaPreco.find().sort({ createdAt: -1 });
+    const tabelasRaw = await measureStage(req, "query.tabelas", () =>
+      TabelaPreco.find().sort({ createdAt: -1 }).lean()
+    );
+    const tabelas = measureStageSync(req, "process.tabelas", () =>
+      tabelasRaw.map((tabela) => ({
+        ...tabela,
+        tipo: tabela.tipo ?? "distribuidor",
+        ativa: tabela.ativa ?? true,
+      }))
+    );
 
-    return res.status(200).json(tabelas);
+    return measureStageSync(req, "response.tabelas", () =>
+      res.status(200).json(tabelas)
+    );
   } catch (error) {
     return sendServerError(res);
   }

@@ -1,6 +1,7 @@
 import PrecoProduto from "../models/PrecoProduto.js";
 import TabelaPreco from "../models/TabelaPreco.js";
 import { criarEstagiosOrdenacaoCatalogo } from "../utils/catalogOrdering.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
 import { sendServerError } from "../utils/validation.js";
 
 const PAGINA_PADRAO = 1;
@@ -170,40 +171,55 @@ export const listarCatalogoCliente = async (req, res) => {
     ];
 
     const [resultadoAgregacao, tabela] = await Promise.all([
-      PrecoProduto.aggregate(pipeline).option({
-        allowDiskUse: true,
-        maxTimeMS: 5000,
-        collation: {
-          locale: "pt",
-          strength: 1,
-          numericOrdering: true,
-        },
-      }),
-      TabelaPreco.findById(usuario.tabelaPrecoId)
-        .select("nome")
-        .lean()
-        .maxTimeMS(3000),
+      measureStage(req, "query.catalogo", () =>
+        PrecoProduto.aggregate(pipeline).option({
+          allowDiskUse: true,
+          maxTimeMS: 5000,
+          collation: {
+            locale: "pt",
+            strength: 1,
+            numericOrdering: true,
+          },
+        })
+      ),
+      measureStage(req, "query.tabela_catalogo", () =>
+        TabelaPreco.findById(usuario.tabelaPrecoId)
+          .select("nome")
+          .lean()
+          .maxTimeMS(3000)
+      ),
     ]);
 
-    const resultado = resultadoAgregacao[0] || {};
-    const total = resultado.total?.[0]?.quantidade || 0;
-    const produtos = (resultado.produtos || []).map((produto) => ({
-      ...produto,
-      tabela: tabela?.nome || "",
-    }));
-    const totalPaginas = Math.ceil(total / consulta.limite);
+    const { produtos, paginacao, filtros } = measureStageSync(
+      req,
+      "process.catalogo",
+      () => {
+        const resultado = resultadoAgregacao[0] || {};
+        const total = resultado.total?.[0]?.quantidade || 0;
+        const produtosProcessados = (resultado.produtos || []).map(
+          (produto) => ({
+            ...produto,
+            tabela: tabela?.nome || "",
+          })
+        );
+        const totalPaginas = Math.ceil(total / consulta.limite);
 
-    const paginacao = {
-      pagina: consulta.pagina,
-      limite: consulta.limite,
-      total,
-      totalPaginas,
-      temMais: consulta.pagina < totalPaginas,
-    };
-    const filtros = {
-      linhas: (resultado.linhas || []).map((item) => item._id),
-      categorias: (resultado.categorias || []).map((item) => item._id),
-    };
+        return {
+          produtos: produtosProcessados,
+          paginacao: {
+            pagina: consulta.pagina,
+            limite: consulta.limite,
+            total,
+            totalPaginas,
+            temMais: consulta.pagina < totalPaginas,
+          },
+          filtros: {
+            linhas: (resultado.linhas || []).map((item) => item._id),
+            categorias: (resultado.categorias || []).map((item) => item._id),
+          },
+        };
+      }
+    );
 
     return res.status(200).json(formatCatalogResponse({
       legacy,
@@ -226,10 +242,12 @@ export const listarPrecosClienteFinal = async (req, res) => {
       });
     }
 
-    const tabela = await TabelaPreco.findOne({
-      tipo,
-      ativa: true,
-    }).sort({ updatedAt: -1 });
+    const tabela = await measureStage(req, "query.tabela_cliente_final", () =>
+      TabelaPreco.findOne({
+        tipo,
+        ativa: true,
+      }).sort({ updatedAt: -1 })
+    );
 
     if (!tabela) {
       return res.status(200).json({
@@ -238,23 +256,25 @@ export const listarPrecosClienteFinal = async (req, res) => {
       });
     }
 
-    const precos = await PrecoProduto.find({
-      tabelaPrecoId: tabela._id,
-    }).populate("produtoId");
+    const precos = await measureStage(req, "query.precos_cliente_final", () =>
+      PrecoProduto.find({ tabelaPrecoId: tabela._id }).populate("produtoId")
+    );
 
-    const produtos = precos
-      .filter((item) => item.produtoId && item.produtoId.ativo)
-      .map((item) => ({
-        id: item.produtoId._id,
-        nome: item.produtoId.nome,
-        descricao: item.produtoId.descricao,
-        linha: item.produtoId.linha,
-        categoria: item.produtoId.categoria,
-        fotoUrl: item.produtoId.fotoUrl,
-        preco: item.valor,
-        tabela: tabela.nome,
-        tipoTabela: tabela.tipo,
-      }));
+    const produtos = measureStageSync(req, "process.cliente_final", () =>
+      precos
+        .filter((item) => item.produtoId && item.produtoId.ativo)
+        .map((item) => ({
+          id: item.produtoId._id,
+          nome: item.produtoId.nome,
+          descricao: item.produtoId.descricao,
+          linha: item.produtoId.linha,
+          categoria: item.produtoId.categoria,
+          fotoUrl: item.produtoId.fotoUrl,
+          preco: item.valor,
+          tabela: tabela.nome,
+          tipoTabela: tabela.tipo,
+        }))
+    );
 
     return res.status(200).json({
       tabela: {

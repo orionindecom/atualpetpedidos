@@ -27,8 +27,10 @@ function AdminPedidos() {
   ];
 
   const carregarDados = async () => {
-    const pedidosResponse = await api.get("/pedidos");
-    const produtosResponse = await api.get("/produtos");
+    const [pedidosResponse, produtosResponse] = await Promise.all([
+      api.get("/pedidos"),
+      api.get("/produtos"),
+    ]);
 
     setPedidos(pedidosResponse.data);
     setProdutos(produtosResponse.data);
@@ -36,8 +38,10 @@ function AdminPedidos() {
 
   useEffect(() => {
     async function carregarDadosIniciais() {
-      const pedidosResponse = await api.get("/pedidos");
-      const produtosResponse = await api.get("/produtos");
+      const [pedidosResponse, produtosResponse] = await Promise.all([
+        api.get("/pedidos"),
+        api.get("/produtos"),
+      ]);
 
       setPedidos(pedidosResponse.data);
       setProdutos(produtosResponse.data);

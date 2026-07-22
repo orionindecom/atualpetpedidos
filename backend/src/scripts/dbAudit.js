@@ -9,6 +9,7 @@ const collections = [
   "tabelaprecos",
   "precoprodutos",
   "pedidos",
+  "materiaismarketing",
 ];
 
 const run = async () => {

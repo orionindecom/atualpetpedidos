@@ -27,8 +27,10 @@ function AdminClientes() {
   const [busca, setBusca] = useState("");
 
   const carregarDados = async () => {
-    const clientesResponse = await api.get("/clientes");
-    const tabelasResponse = await api.get("/tabelas");
+    const [clientesResponse, tabelasResponse] = await Promise.all([
+      api.get("/clientes"),
+      api.get("/tabelas"),
+    ]);
 
     setClientes(clientesResponse.data);
     setTabelas(tabelasResponse.data);
@@ -36,8 +38,10 @@ function AdminClientes() {
 
   useEffect(() => {
     async function carregarDadosIniciais() {
-      const clientesResponse = await api.get("/clientes");
-      const tabelasResponse = await api.get("/tabelas");
+      const [clientesResponse, tabelasResponse] = await Promise.all([
+        api.get("/clientes"),
+        api.get("/tabelas"),
+      ]);
 
       setClientes(clientesResponse.data);
       setTabelas(tabelasResponse.data);

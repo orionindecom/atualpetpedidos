@@ -15,8 +15,10 @@ function AdminPrecos() {
 
     useEffect(() => {
         async function carregarDados() {
-            const tabelasResponse = await api.get("/tabelas");
-            const produtosResponse = await api.get("/produtos");
+            const [tabelasResponse, produtosResponse] = await Promise.all([
+                api.get("/tabelas"),
+                api.get("/produtos"),
+            ]);
 
             setTabelas(tabelasResponse.data);
             setProdutos(produtosResponse.data);

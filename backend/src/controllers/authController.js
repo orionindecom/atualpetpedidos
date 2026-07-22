@@ -8,6 +8,7 @@ import {
   isValidEmail,
   sendServerError,
 } from "../utils/validation.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -110,9 +111,11 @@ export const login = async (req, res) => {
       });
     }
 
-    const usuario = await Usuario.findOne({
-      email: email.trim().toLowerCase(),
-    });
+    const usuario = await measureStage(req, "query.login_usuario", () =>
+      Usuario.findOne({
+        email: email.trim().toLowerCase(),
+      })
+    );
 
     if (!usuario) {
       return res.status(401).json({
@@ -120,7 +123,9 @@ export const login = async (req, res) => {
       });
     }
 
-    const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+    const senhaCorreta = await measureStage(req, "cpu.bcrypt", () =>
+      bcrypt.compare(senha, usuario.senha)
+    );
 
     if (!senhaCorreta) {
       return res.status(401).json({
@@ -141,9 +146,11 @@ export const login = async (req, res) => {
     }
 
     usuario.ultimoLogin = new Date();
-    await usuario.save();
+    await measureStage(req, "query.login_atualizar", () => usuario.save());
 
-    const token = gerarToken(usuario);
+    const token = measureStageSync(req, "cpu.jwt_sign", () =>
+      gerarToken(usuario)
+    );
 
     return res.status(200).json({
       message: "Login realizado com sucesso",

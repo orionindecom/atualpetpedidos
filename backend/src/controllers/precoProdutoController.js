@@ -1,11 +1,52 @@
 import PrecoProduto from "../models/PrecoProduto.js";
 import Produto from "../models/Produto.js";
 import TabelaPreco from "../models/TabelaPreco.js";
+import { Types } from "mongoose";
 import {
   isValidObjectId,
   sendServerError,
   toPositiveNumber,
 } from "../utils/validation.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
+
+export const criarPipelinePrecosPorTabela = (tabelaPrecoId) => [
+  { $match: { tabelaPrecoId: new Types.ObjectId(tabelaPrecoId) } },
+  {
+    $lookup: {
+      from: "produtos",
+      localField: "produtoId",
+      foreignField: "_id",
+      as: "produto",
+    },
+  },
+  {
+    $set: {
+      produtoId: {
+        $ifNull: [
+          {
+            $arrayElemAt: [
+              {
+                $map: {
+                  input: "$produto",
+                  as: "produtoRelacionado",
+                  in: {
+                    $mergeObjects: [
+                      { ativo: true },
+                      "$$produtoRelacionado",
+                    ],
+                  },
+                },
+              },
+              0,
+            ],
+          },
+          null,
+        ],
+      },
+    },
+  },
+  { $unset: "produto" },
+];
 
 export const definirPrecoProduto = async (req, res) => {
   try {
@@ -74,11 +115,13 @@ export const listarPrecosPorTabela = async (req, res) => {
   try {
     const { tabelaPrecoId } = req.params;
 
-    const precos = await PrecoProduto.find({
-      tabelaPrecoId,
-    }).populate("produtoId");
+    const precos = await measureStage(req, "query.precos_lookup", () =>
+      PrecoProduto.aggregate(criarPipelinePrecosPorTabela(tabelaPrecoId))
+    );
 
-    return res.status(200).json(precos);
+    return measureStageSync(req, "response.precos", () =>
+      res.status(200).json(precos)
+    );
   } catch (error) {
     return sendServerError(res);
   }

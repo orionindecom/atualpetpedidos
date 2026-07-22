@@ -38,11 +38,17 @@ function Navbar() {
     { to: "/precos", label: "Preços", group: "Comercial" },
     { to: "/clientes", label: "Clientes", group: "Relacionamento" },
     { to: "/pedidos", label: "Pedidos", group: "Operação" },
+    {
+      to: "/admin/materiais-marketing",
+      label: "Materiais de Marketing",
+      group: "Conteúdo",
+    },
   ];
 
   const clienteLinks = [
     { to: "/catalogo", label: "Catálogo" },
     { to: "/precos-cliente-final", label: "Preços Cliente Final" },
+    { to: "/materiais-marketing", label: "Materiais de Marketing" },
     { to: "/meus-pedidos", label: "Meus Pedidos" },
   ];
 

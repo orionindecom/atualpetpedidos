@@ -8,6 +8,7 @@ import {
   ImageUploadError,
   uploadImageBuffer,
 } from "../utils/cloudinaryUpload.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
 
 const DESCRICAO_PRODUTO_MAX_LENGTH = 300;
 
@@ -61,11 +62,13 @@ export const cadastrarProduto = async (req, res) => {
 
 export const listarProdutos = async (req, res) => {
   try {
-    const produtos = await Produto.find({
-      ativo: true,
-    });
+    const produtos = await measureStage(req, "query.produtos", () =>
+      Produto.find({ ativo: true }).lean()
+    );
 
-    return res.status(200).json(produtos);
+    return measureStageSync(req, "response.produtos", () =>
+      res.status(200).json(produtos)
+    );
   } catch (error) {
     return sendServerError(res);
   }

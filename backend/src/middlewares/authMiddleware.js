@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import Usuario from "../models/Usuario.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -25,11 +26,16 @@ export const proteger = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, getJwtSecret(), {
-      algorithms: ["HS256"],
-    });
+    const decoded = measureStageSync(req, "auth.jwt", () =>
+      jwt.verify(token, getJwtSecret(), {
+        algorithms: ["HS256"],
+      })
+    );
 
-    req.usuario = await Usuario.findById(decoded.id).select("-senha");
+    req.usuario = await measureStage(req, "auth.usuario", () =>
+      Usuario.findById(decoded.id)
+        .select("_id tipo tabelaPrecoId statusCadastro ativo tokenVersion")
+    );
 
     if (!req.usuario) {
       return res.status(401).json({

@@ -11,6 +11,8 @@ import AdminTabelas from "./pages/AdminTabelas/AdminTabelas";
 import AdminPedidos from "./pages/AdminPedidos/AdminPedidos";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import PrecosClienteFinal from "./pages/PrecosClienteFinal/PrecosClienteFinal";
+import MateriaisMarketing from "./pages/MateriaisMarketing/MateriaisMarketing";
+import AdminMateriaisMarketing from "./pages/AdminMateriaisMarketing/AdminMateriaisMarketing";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -49,6 +51,14 @@ function App() {
           element={(
             <RoleRoute role="cliente">
               <PrecosClienteFinal />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/materiais-marketing"
+          element={(
+            <RoleRoute role="cliente">
+              <MateriaisMarketing />
             </RoleRoute>
           )}
         />
@@ -97,6 +107,14 @@ function App() {
           element={(
             <RoleRoute role="admin">
               <Dashboard />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/admin/materiais-marketing"
+          element={(
+            <RoleRoute role="admin">
+              <AdminMateriaisMarketing />
             </RoleRoute>
           )}
         />

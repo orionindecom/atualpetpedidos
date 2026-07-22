@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import { parseAllowedOrigins, validateEnv } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
+import { performanceMiddleware } from "./utils/performance.js";
 import {
   sanitizeRequest,
   securityHeaders,
@@ -19,6 +20,8 @@ import precoProdutoRoutes from "./routes/precoProdutoRoutes.js";
 import catalogoRoutes from "./routes/catalogoRoutes.js";
 import pedidoRoutes from "./routes/pedidoRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import adminMaterialMarketingRoutes from "./routes/adminMaterialMarketingRoutes.js";
+import materialMarketingRoutes from "./routes/materialMarketingRoutes.js";
 
 dotenv.config({ quiet: true });
 
@@ -28,6 +31,7 @@ const allowedOrigins = parseAllowedOrigins();
 
 app.set("trust proxy", 1);
 
+app.use(performanceMiddleware);
 app.use(securityHeaders);
 app.use(
   cors({
@@ -38,7 +42,7 @@ app.use(
 
       return callback(new Error("Origem não autorizada pelo CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     optionsSuccessStatus: 204,
@@ -83,6 +87,8 @@ app.use("/api/precos", precoProdutoRoutes);
 app.use("/api/catalogo", catalogoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/admin/materiais-marketing", adminMaterialMarketingRoutes);
+app.use("/api/materiais-marketing", materialMarketingRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });

@@ -6,17 +6,67 @@ import {
   isValidObjectId,
   sendServerError,
 } from "../utils/validation.js";
+import { measureStage, measureStageSync } from "../utils/performance.js";
+
+export const criarPipelineClientes = ({ pendentes = false } = {}) => {
+  const match = { tipo: "cliente" };
+
+  if (pendentes) {
+    match.statusCadastro = "pendente";
+  }
+
+  return [
+    { $match: match },
+    { $sort: { createdAt: -1 } },
+    {
+      $lookup: {
+        from: "tabelaprecos",
+        localField: "tabelaPrecoId",
+        foreignField: "_id",
+        as: "tabelaPrecoRelacionada",
+      },
+    },
+    {
+      $set: {
+        statusCadastro: { $ifNull: ["$statusCadastro", "pendente"] },
+        ativo: { $ifNull: ["$ativo", true] },
+        tabelaPrecoId: {
+          $ifNull: [
+            {
+              $arrayElemAt: [
+                {
+                  $map: {
+                    input: "$tabelaPrecoRelacionada",
+                    as: "tabela",
+                    in: {
+                      $mergeObjects: [
+                        { tipo: "distribuidor", ativa: true },
+                        "$$tabela",
+                      ],
+                    },
+                  },
+                },
+                0,
+              ],
+            },
+            null,
+          ],
+        },
+      },
+    },
+    { $unset: ["senha", "tokenVersion", "tabelaPrecoRelacionada"] },
+  ];
+};
 
 export const listarClientesPendentes = async (req, res) => {
   try {
-    const clientes = await Usuario.find({
-      tipo: "cliente",
-      statusCadastro: "pendente",
-    })
-      .select("-senha -tokenVersion")
-      .populate("tabelaPrecoId");
+    const clientes = await measureStage(req, "query.clientes_pendentes", () =>
+      Usuario.aggregate(criarPipelineClientes({ pendentes: true }))
+    );
 
-    return res.status(200).json(clientes);
+    return measureStageSync(req, "response.clientes_pendentes", () =>
+      res.status(200).json(clientes)
+    );
   } catch (error) {
     return sendServerError(res);
   }
@@ -105,14 +155,13 @@ export const redefinirSenhaCliente = async (req, res) => {
 
 export const listarClientes = async (req, res) => {
   try {
-    const clientes = await Usuario.find({
-      tipo: "cliente",
-    })
-      .select("-senha -tokenVersion")
-      .populate("tabelaPrecoId")
-      .sort({ createdAt: -1 });
+    const clientes = await measureStage(req, "query.clientes", () =>
+      Usuario.aggregate(criarPipelineClientes())
+    );
 
-    return res.status(200).json(clientes);
+    return measureStageSync(req, "response.clientes", () =>
+      res.status(200).json(clientes)
+    );
   } catch (error) {
     return sendServerError(res);
   }

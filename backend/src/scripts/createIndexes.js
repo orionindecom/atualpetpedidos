@@ -26,6 +26,7 @@ const run = async () => {
     import("../models/TabelaPreco.js"),
     import("../models/PrecoProduto.js"),
     import("../models/Pedido.js"),
+    import("../models/MaterialMarketing.js"),
   ]);
 
   for (const { default: model } of models) {
