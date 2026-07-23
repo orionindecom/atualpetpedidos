@@ -5,8 +5,14 @@ import {
   parseMaterialQuery,
   validateMaterialPayload,
 } from "../utils/materialMarketingValidation.js";
+import {
+  deleteImageByPublicId,
+  ImageUploadError,
+  uploadImageBufferDetails,
+} from "../utils/cloudinaryUpload.js";
 import { sendServerError } from "../utils/validation.js";
 
+const MATERIAL_IMAGE_FOLDER = "atualpet/materiais-marketing";
 const CLIENT_FIELDS =
   "_id titulo descricao categoria tipo marca linha linkExterno imagemCapaUrl destaque ordem createdAt updatedAt";
 
@@ -16,12 +22,50 @@ const sendValidationError = (res, errors) =>
     errors,
   });
 
+const sanitizeMaterial = (material) => {
+  const safe = material?.toObject
+    ? material.toObject()
+    : { ...material };
+  delete safe.imagemCapaPublicId;
+  return safe;
+};
+
+const isRemovalRequested = (value) => value === true || value === "true";
+
+const uploadCover = (file) => uploadImageBufferDetails(file, {
+  errorMessage: "Não foi possível enviar a imagem de capa do material",
+  folder: MATERIAL_IMAGE_FOLDER,
+  requirePublicId: true,
+});
+
+const removeCoverBestEffort = async (publicId) => {
+  if (!publicId) return;
+
+  try {
+    await deleteImageByPublicId(publicId, {
+      allowedFolder: MATERIAL_IMAGE_FOLDER,
+    });
+  } catch (error) {
+    console.error("[materiais-marketing] Falha ao limpar imagem de capa", {
+      name: error?.name,
+      code: error?.cause?.http_code || error?.code,
+    });
+  }
+};
+
 const logAndSendError = (res, error, operation) => {
   console.error(`[materiais-marketing] Falha em ${operation}`, {
     name: error?.name,
     code: error?.code,
   });
   return sendServerError(res);
+};
+
+const handleControllerError = (res, error, operation) => {
+  if (error instanceof ImageUploadError) {
+    return res.status(error.statusCode).json({ message: error.message });
+  }
+  return logAndSendError(res, error, operation);
 };
 
 const listMaterials = async (req, res, { admin }) => {
@@ -44,7 +88,7 @@ const listMaterials = async (req, res, { admin }) => {
   if (!admin) {
     materialQuery = materialQuery.select(CLIENT_FIELDS);
   } else {
-    materialQuery = materialQuery.select("-__v");
+    materialQuery = materialQuery.select("-__v -imagemCapaPublicId");
   }
 
   materialQuery = materialQuery.lean().maxTimeMS(5000);
@@ -98,7 +142,7 @@ export const listarMateriaisAdmin = async (req, res) => {
 export const buscarMaterialAdmin = async (req, res) => {
   try {
     const material = await MaterialMarketing.findById(req.params.id)
-      .select("-__v")
+      .select("-__v -imagemCapaPublicId")
       .lean();
 
     if (!material) {
@@ -112,6 +156,8 @@ export const buscarMaterialAdmin = async (req, res) => {
 };
 
 export const criarMaterial = async (req, res) => {
+  let uploadedImage = null;
+
   try {
     const validation = validateMaterialPayload(req.body);
 
@@ -119,23 +165,39 @@ export const criarMaterial = async (req, res) => {
       return sendValidationError(res, validation.errors);
     }
 
-    const material = await MaterialMarketing.create({
-      ...validation.data,
-      criadoPor: req.usuario._id,
-    });
+    if (req.file) uploadedImage = await uploadCover(req.file);
+
+    let material;
+    try {
+      material = await MaterialMarketing.create({
+        ...validation.data,
+        imagemCapaUrl: uploadedImage?.secureUrl || "",
+        imagemCapaPublicId: uploadedImage?.publicId || "",
+        criadoPor: req.usuario._id,
+      });
+    } catch (error) {
+      await removeCoverBestEffort(uploadedImage?.publicId);
+      throw error;
+    }
 
     return res.status(201).json({
       message: "Material criado com sucesso",
-      material,
+      material: sanitizeMaterial(material),
     });
   } catch (error) {
-    return logAndSendError(res, error, "criar material");
+    return handleControllerError(res, error, "criar material");
   }
 };
 
 export const atualizarMaterial = async (req, res) => {
+  let uploadedImage = null;
+
   try {
-    const validation = validateMaterialPayload(req.body, { partial: true });
+    const removalRequested = isRemovalRequested(req.body?.removerImagemCapa);
+    const validation = validateMaterialPayload(req.body, {
+      allowEmpty: Boolean(req.file || removalRequested),
+      partial: true,
+    });
 
     if (!validation.valid) {
       return sendValidationError(res, validation.errors);
@@ -147,18 +209,37 @@ export const atualizarMaterial = async (req, res) => {
       return res.status(404).json({ message: "Material não encontrado" });
     }
 
+    const previousPublicId = material.imagemCapaPublicId;
     for (const [field, value] of Object.entries(validation.data)) {
       material[field] = value;
     }
 
-    await material.save();
+    if (req.file) {
+      uploadedImage = await uploadCover(req.file);
+      material.imagemCapaUrl = uploadedImage.secureUrl;
+      material.imagemCapaPublicId = uploadedImage.publicId;
+    } else if (removalRequested) {
+      material.imagemCapaUrl = "";
+      material.imagemCapaPublicId = "";
+    }
+
+    try {
+      await material.save();
+    } catch (error) {
+      await removeCoverBestEffort(uploadedImage?.publicId);
+      throw error;
+    }
+
+    if ((uploadedImage || removalRequested) && previousPublicId) {
+      await removeCoverBestEffort(previousPublicId);
+    }
 
     return res.status(200).json({
       message: "Material atualizado com sucesso",
-      material,
+      material: sanitizeMaterial(material),
     });
   } catch (error) {
-    return logAndSendError(res, error, "atualizar material");
+    return handleControllerError(res, error, "atualizar material");
   }
 };
 
@@ -183,7 +264,7 @@ export const alterarStatusMaterial = async (req, res) => {
       message: material.ativo
         ? "Material ativado com sucesso"
         : "Material desativado com sucesso",
-      material,
+      material: sanitizeMaterial(material),
     });
   } catch (error) {
     return logAndSendError(res, error, "alterar status do material");
@@ -198,6 +279,7 @@ export const excluirMaterial = async (req, res) => {
       return res.status(404).json({ message: "Material não encontrado" });
     }
 
+    await removeCoverBestEffort(material.imagemCapaPublicId);
     return res.status(200).json({ message: "Material excluído com sucesso" });
   } catch (error) {
     return logAndSendError(res, error, "excluir material");

@@ -1,12 +1,22 @@
 import multer from "multer";
 
-const allowedMimeTypes = new Set([
+export const IMAGE_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
+
+export const allowedImageMimeTypes = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
 ]);
 
-const hasImageSignature = (file) => {
+const allowedImageExtensions = new Set(["jpg", "jpeg", "png", "webp"]);
+
+export const hasAllowedImageExtension = (filename = "") => {
+  const normalized = String(filename).trim().toLowerCase();
+  if (!normalized.includes(".")) return true;
+  return allowedImageExtensions.has(normalized.split(".").pop());
+};
+
+export const hasImageSignature = (file) => {
   const buffer = file?.buffer;
 
   if (!buffer || buffer.length < 12) {
@@ -43,11 +53,14 @@ const hasImageSignature = (file) => {
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: IMAGE_UPLOAD_MAX_BYTES,
     files: 1,
   },
   fileFilter(req, file, callback) {
-    if (!allowedMimeTypes.has(file.mimetype)) {
+    if (
+      !allowedImageMimeTypes.has(file.mimetype) ||
+      !hasAllowedImageExtension(file.originalname)
+    ) {
       return callback(new Error("Tipo de arquivo não permitido"));
     }
 
@@ -58,6 +71,15 @@ const upload = multer({
 export const validarAssinaturaImagem = (req, res, next) => {
   if (!req.file) {
     return next();
+  }
+
+  if (
+    req.file.size > IMAGE_UPLOAD_MAX_BYTES ||
+    req.file.buffer?.length > IMAGE_UPLOAD_MAX_BYTES
+  ) {
+    return res.status(400).json({
+      message: "Arquivo muito grande. Envie uma imagem de até 5MB.",
+    });
   }
 
   if (!hasImageSignature(req.file)) {

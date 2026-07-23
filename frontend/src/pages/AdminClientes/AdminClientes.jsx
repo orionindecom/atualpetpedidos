@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios";
+import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminClientes.module.css";
 
@@ -154,17 +155,17 @@ const reativarCliente = async (clienteId) => {
             <p>Gerencie aprovações, tabelas de preço, senhas e status dos clientes.</p>
           </div>
 
-          <div className={styles.buscaBox}>
-            <label htmlFor="buscaClientes">Buscar cliente</label>
-            <input
-              id="buscaClientes"
-              type="search"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Nome, fantasia, razão social ou CNPJ"
-            />
-          </div>
         </div>
+
+        <FilterToolbar
+          layout="stacked"
+          searchLabel="Buscar cliente"
+          searchPlaceholder="Buscar por cliente, CNPJ ou razão social..."
+          searchValue={busca}
+          onSearchChange={(event) => setBusca(event.target.value)}
+          onSubmit={(event) => event.preventDefault()}
+          onClear={() => setBusca("")}
+        />
 
         {clientes.length === 0 && <p>Não há clientes cadastrados.</p>}
 

@@ -55,31 +55,6 @@
   color: #ffffff;
 }
 
-.filtros {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.filtros input,
-.filtros select {
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #1f2937;
-  font-size: 15px;
-}
-
-.filtros input:focus,
-.filtros select:focus {
-  outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
-}
-
 .tabelaInfo {
   width: fit-content;
   margin-bottom: 20px;
@@ -182,9 +157,6 @@
     flex: 1;
   }
 
-  .filtros {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 520px) {

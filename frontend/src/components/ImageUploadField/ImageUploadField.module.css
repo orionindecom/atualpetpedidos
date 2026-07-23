@@ -1,0 +1,131 @@
+.field {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-secondary);
+}
+
+.heading {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heading label {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.heading p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+
+.selectButton,
+.removeButton {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.selectButton {
+  border: 1px solid var(--brand-primary-strong);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+}
+
+.selectButton:hover {
+  background: var(--brand-primary-soft);
+}
+
+.removeButton {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--danger);
+}
+
+.field .fileInput {
+  width: 1px;
+  min-width: 1px;
+  height: 1px;
+  min-height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  position: absolute;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.field .fileInput:focus-visible + .preview {
+  outline: 3px solid rgba(113, 196, 192, 0.22);
+  outline-offset: 2px;
+}
+
+.preview {
+  width: min(320px, 100%);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  background: var(--surface-primary);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  text-align: center;
+}
+
+.preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.error {
+  margin-top: 8px;
+  color: var(--danger);
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .heading,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .selectButton,
+  .removeButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .preview {
+    width: 100%;
+  }
+}

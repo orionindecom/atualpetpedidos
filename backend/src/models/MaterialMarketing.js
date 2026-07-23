@@ -50,6 +50,12 @@ const materialMarketingSchema = new mongoose.Schema(
       maxlength: 2048,
       default: "",
     },
+    imagemCapaPublicId: {
+      type: String,
+      trim: true,
+      maxlength: 512,
+      default: "",
+    },
     destaque: {
       type: Boolean,
       default: false,

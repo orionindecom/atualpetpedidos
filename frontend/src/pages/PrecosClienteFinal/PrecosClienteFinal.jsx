@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios";
+import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./PrecosClienteFinal.module.css";
 
@@ -61,6 +62,12 @@ function PrecosClienteFinal() {
     return combinaBusca && combinaLinha && combinaCategoria;
   });
 
+  const limparFiltros = () => {
+    setBusca("");
+    setLinhaFiltro("");
+    setCategoriaFiltro("");
+  };
+
   return (
     <>
       <Navbar />
@@ -89,15 +96,17 @@ function PrecosClienteFinal() {
           </div>
         </div>
 
-        <section className={styles.filtros}>
-          <input
-            type="text"
-            placeholder="Buscar produto..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
-
+        <FilterToolbar
+          activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}
+          searchLabel="Buscar preços de produtos"
+          searchPlaceholder="Buscar por produto, linha ou categoria..."
+          searchValue={busca}
+          onSearchChange={(event) => setBusca(event.target.value)}
+          onSubmit={(event) => event.preventDefault()}
+          onClear={limparFiltros}
+        >
           <select
+            aria-label="Filtrar por linha"
             value={linhaFiltro}
             onChange={(e) => setLinhaFiltro(e.target.value)}
           >
@@ -110,6 +119,7 @@ function PrecosClienteFinal() {
           </select>
 
           <select
+            aria-label="Filtrar por categoria"
             value={categoriaFiltro}
             onChange={(e) => setCategoriaFiltro(e.target.value)}
           >
@@ -120,7 +130,7 @@ function PrecosClienteFinal() {
               </option>
             ))}
           </select>
-        </section>
+        </FilterToolbar>
 
         {dados.tabela && (
           <div className={styles.tabelaInfo}>

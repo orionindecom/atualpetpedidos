@@ -1,3 +1,5 @@
+@import "./styles/brand.css";
+
 * {
   box-sizing: border-box;
 }
@@ -10,21 +12,25 @@ body,
   margin: 0;
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f5f7fa;
-  color: #1f2937;
+  overflow-x: clip;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 body.admin-layout [class*="container"] {
-  padding-left: max(40px, calc(260px + 40px));
+  padding-left: max(36px, calc(264px + 36px));
 }
 
 button,
-input {
-  font-family: inherit;
-}
-
+input,
 select,
 textarea {
   font-family: inherit;
@@ -34,7 +40,20 @@ button {
   min-height: 40px;
 }
 
-@media (max-width: 1000px) {
+a,
+button,
+input,
+select,
+textarea {
+  letter-spacing: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
   body.admin-layout [class*="container"] {
     padding-left: 18px;
   }

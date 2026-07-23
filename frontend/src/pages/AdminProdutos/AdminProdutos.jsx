@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminProdutos.module.css";
 
@@ -149,6 +150,13 @@ function AdminProdutos() {
     return combinaBusca && combinaLinha && combinaCategoria;
   });
 
+  const aplicarFiltros = (event) => event.preventDefault();
+  const limparFiltros = () => {
+    setBusca("");
+    setLinhaFiltro("");
+    setCategoriaFiltro("");
+  };
+
   return (
     <>
       <Navbar />
@@ -219,15 +227,17 @@ function AdminProdutos() {
           <div className={styles.lista}>
             <h2>Produtos Cadastrados</h2>
 
-            <div className={styles.filtros}>
-              <input
-                type="text"
-                placeholder="Buscar produto..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-
+            <FilterToolbar
+              activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}
+              searchLabel="Buscar produtos cadastrados"
+              searchPlaceholder="Buscar por produto, linha ou categoria..."
+              searchValue={busca}
+              onSearchChange={(event) => setBusca(event.target.value)}
+              onSubmit={aplicarFiltros}
+              onClear={limparFiltros}
+            >
               <select
+                aria-label="Filtrar por linha"
                 value={linhaFiltro}
                 onChange={(e) => setLinhaFiltro(e.target.value)}
               >
@@ -241,6 +251,7 @@ function AdminProdutos() {
               </select>
 
               <select
+                aria-label="Filtrar por categoria"
                 value={categoriaFiltro}
                 onChange={(e) => setCategoriaFiltro(e.target.value)}
               >
@@ -252,7 +263,7 @@ function AdminProdutos() {
                   </option>
                 ))}
               </select>
-            </div>
+            </FilterToolbar>
 
             {produtosFiltrados.map((produto) => (
               <div className={styles.card} key={produto._id}>

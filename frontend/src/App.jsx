@@ -13,6 +13,9 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import PrecosClienteFinal from "./pages/PrecosClienteFinal/PrecosClienteFinal";
 import MateriaisMarketing from "./pages/MateriaisMarketing/MateriaisMarketing";
 import AdminMateriaisMarketing from "./pages/AdminMateriaisMarketing/AdminMateriaisMarketing";
+import Treinamentos from "./pages/Treinamentos/Treinamentos";
+import TreinamentoDetalhe from "./pages/TreinamentoDetalhe/TreinamentoDetalhe";
+import AdminTreinamentos from "./pages/AdminTreinamentos/AdminTreinamentos";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -59,6 +62,22 @@ function App() {
           element={(
             <RoleRoute role="cliente">
               <MateriaisMarketing />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/treinamentos"
+          element={(
+            <RoleRoute role="cliente">
+              <Treinamentos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/treinamentos/:id"
+          element={(
+            <RoleRoute role="cliente">
+              <TreinamentoDetalhe />
             </RoleRoute>
           )}
         />
@@ -115,6 +134,14 @@ function App() {
           element={(
             <RoleRoute role="admin">
               <AdminMateriaisMarketing />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/admin/treinamentos"
+          element={(
+            <RoleRoute role="admin">
+              <AdminTreinamentos />
             </RoleRoute>
           )}
         />

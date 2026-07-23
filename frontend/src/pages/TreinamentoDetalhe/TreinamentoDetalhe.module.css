@@ -1,0 +1,325 @@
+.container {
+  width: min(1220px, 100%);
+  min-height: calc(100vh - 78px);
+  margin: 0 auto;
+  padding: 30px 32px 64px;
+}
+
+.backButton {
+  min-height: 36px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  color: var(--brand-accent-ink);
+}
+
+.badges {
+  margin-top: 14px;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 11px;
+}
+
+.badges span {
+  color: var(--brand-primary-ink);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badges strong {
+  font-weight: 700;
+}
+
+.badges strong:first-of-type {
+  color: var(--brand-accent-ink);
+}
+
+.playerSection {
+  width: 100%;
+}
+
+.playerShell {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: var(--radius-small);
+  background: #090d0c;
+}
+
+.playerFrame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.watermark {
+  max-width: min(260px, 45%);
+  padding: 7px 9px;
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-small);
+  background: rgba(3, 12, 18, 0.2);
+  color: rgba(255, 255, 255, 0.46);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  transition: inset 0.6s ease, transform 0.6s ease;
+}
+
+.watermark strong,
+.watermark span,
+.watermark small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watermark strong {
+  font-size: 12px;
+}
+
+.watermark span,
+.watermark small {
+  font-size: 9px;
+}
+
+.topLeft { top: 12%; left: 4%; }
+.topRight { top: 12%; right: 4%; }
+.middleLeft { bottom: 14%; left: 4%; }
+.middleRight { right: 4%; bottom: 14%; }
+
+.fullscreenButton {
+  min-height: 36px;
+  padding: 0 11px;
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: var(--radius-small);
+  background: rgba(23, 33, 31, 0.8);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.playerShell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  display: grid;
+  place-items: center;
+}
+
+.playerShell:fullscreen .playerFrame {
+  width: min(100vw, calc(100vh * 16 / 9));
+}
+
+.progressSection {
+  width: 100%;
+  margin-top: 20px;
+  padding: 18px 0;
+  border-block: 1px solid var(--border-default);
+  display: grid;
+  grid-template-columns: minmax(150px, auto) 1fr;
+  align-items: center;
+  gap: 28px;
+}
+
+.progressSection > div:first-child span,
+.progressSection > div:first-child strong {
+  display: block;
+}
+
+.progressSection > div:first-child span {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.progressSection > div:first-child strong {
+  margin-top: 3px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.progressValue {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.progressTrack {
+  height: 5px;
+  overflow: hidden;
+  background: var(--surface-secondary);
+}
+
+.progressTrack span {
+  height: 100%;
+  background: var(--brand-primary-strong);
+  display: block;
+}
+
+.progressValue > strong {
+  min-width: 38px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: right;
+}
+
+.progressSection > small {
+  grid-column: 1 / -1;
+  color: var(--danger);
+}
+
+.content {
+  width: 100%;
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: 2fr minmax(260px, 1fr);
+  gap: 48px;
+}
+
+.content h2 {
+  margin: 0 0 12px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.content p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.content aside {
+  padding-left: 22px;
+  border-left: 2px solid var(--brand-primary-strong);
+}
+
+.content aside strong {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.content aside p {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.loading,
+.stateBox {
+  padding: 64px 20px;
+  border-block: 1px solid var(--border-default);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.stateBox h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 30px;
+  letter-spacing: 0;
+}
+
+.stateBox p {
+  margin: 8px 0 0;
+}
+
+.stateBox button {
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 0 16px;
+  border: 1px solid var(--brand-accent);
+  border-radius: var(--radius-medium);
+  background: var(--brand-accent);
+  color: var(--text-on-brand);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feedback {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--danger);
+  background: #fff7f5;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .container {
+    min-height: calc(100vh - 72px);
+    padding: 22px 16px 48px;
+  }
+
+  .progressSection,
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .progressSection {
+    gap: 14px;
+  }
+
+  .content {
+    gap: 26px;
+  }
+
+  .content aside {
+    padding: 18px 0 0;
+    border-top: 2px solid var(--brand-primary-strong);
+    border-left: 0;
+  }
+
+  .watermark {
+    max-width: 52%;
+    padding: 5px 6px;
+  }
+
+  .watermark strong {
+    font-size: 10px;
+  }
+
+  .watermark span,
+  .watermark small {
+    font-size: 8px;
+  }
+
+  .fullscreenButton {
+    min-height: 34px;
+    top: 7px;
+    right: 7px;
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watermark {
+    transition: none;
+  }
+}

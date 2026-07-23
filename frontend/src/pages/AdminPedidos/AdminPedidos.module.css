@@ -11,25 +11,6 @@
   color: #111827;
 }
 
-.filtros {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.filtros input,
-.filtros select {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #1f2937;
-}
-
-.filtros input {
-  flex: 1;
-}
-
 .lista {
   display: flex;
   flex-direction: column;
@@ -200,14 +181,6 @@
   color: #6b7280;
 }
 
-.buscaProduto {
-  padding: 13px 14px;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
-  margin-bottom: 16px;
-  color: #111827;
-}
-
 .listaProdutosModal {
   overflow-y: auto;
   display: flex;
@@ -253,10 +226,6 @@
 @media (max-width: 768px) {
   .container {
     padding: 24px 18px;
-  }
-
-  .filtros {
-    flex-direction: column;
   }
 
   .card {

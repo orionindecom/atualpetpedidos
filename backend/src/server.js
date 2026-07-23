@@ -22,6 +22,8 @@ import pedidoRoutes from "./routes/pedidoRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import adminMaterialMarketingRoutes from "./routes/adminMaterialMarketingRoutes.js";
 import materialMarketingRoutes from "./routes/materialMarketingRoutes.js";
+import adminTreinamentoRoutes from "./routes/adminTreinamentoRoutes.js";
+import treinamentoRoutes from "./routes/treinamentoRoutes.js";
 
 dotenv.config({ quiet: true });
 
@@ -89,6 +91,8 @@ app.use("/api/pedidos", pedidoRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin/materiais-marketing", adminMaterialMarketingRoutes);
 app.use("/api/materiais-marketing", materialMarketingRoutes);
+app.use("/api/admin/treinamentos", adminTreinamentoRoutes);
+app.use("/api/treinamentos", treinamentoRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });

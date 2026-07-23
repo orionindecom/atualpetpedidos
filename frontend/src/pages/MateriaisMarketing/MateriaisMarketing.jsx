@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import {
+  FilterToolbar,
+  LoadMoreButton,
+} from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import {
   appendUniqueMaterials,
@@ -42,6 +46,9 @@ function MateriaisMarketing() {
   const [copiadoId, setCopiadoId] = useState("");
   const [feedback, setFeedback] = useState("");
   const [imagensComErro, setImagensComErro] = useState(new Set());
+  const filtrosAtivos = Object.entries(filtrosAplicados).filter(
+    ([key, value]) => key !== "busca" && Boolean(value)
+  ).length;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -124,13 +131,15 @@ function MateriaisMarketing() {
           <p>Encontre imagens, campanhas e documentos para apoiar suas vendas.</p>
         </header>
 
-        <form className={styles.filters} onSubmit={aplicarFiltros}>
-          <input
-            aria-label="Buscar materiais"
-            placeholder="Buscar material"
-            value={filtros.busca}
-            onChange={(event) => setFiltros({ ...filtros, busca: event.target.value })}
-          />
+        <FilterToolbar
+          activeFilterCount={filtrosAtivos}
+          searchLabel="Buscar materiais"
+          searchPlaceholder="Buscar por título, categoria ou marca..."
+          searchValue={filtros.busca}
+          onSearchChange={(event) => setFiltros({ ...filtros, busca: event.target.value })}
+          onSubmit={aplicarFiltros}
+          onClear={limparFiltros}
+        >
           <select aria-label="Filtrar por categoria" value={filtros.categoria} onChange={(event) => setFiltros({ ...filtros, categoria: event.target.value })}>
             <option value="">Todas as categorias</option>
             {opcoes.categorias.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -147,11 +156,7 @@ function MateriaisMarketing() {
             <option value="">Todas as linhas</option>
             {opcoes.linhas.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
-          <div className={styles.filterActions}>
-            <button type="submit" className={styles.primaryButton}>Buscar</button>
-            <button type="button" className={styles.secondaryButton} onClick={limparFiltros}>Limpar</button>
-          </div>
-        </form>
+        </FilterToolbar>
 
         {feedback && <div className={styles.feedback} role="status">{feedback}</div>}
 
@@ -227,16 +232,10 @@ function MateriaisMarketing() {
         {erro && materiais.length > 0 && <div className={styles.feedback} role="alert">{erro}</div>}
 
         {paginacao.temProximaPagina && (
-          <div className={styles.loadMore}>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              disabled={carregandoMais}
-              onClick={() => setPagina((value) => value + 1)}
-            >
-              {carregandoMais ? "Carregando..." : "Mostrar mais"}
-            </button>
-          </div>
+          <LoadMoreButton
+            loading={carregandoMais}
+            onClick={() => setPagina((value) => value + 1)}
+          />
         )}
       </main>
     </>

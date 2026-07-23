@@ -1,0 +1,204 @@
+.toolbar {
+  margin-bottom: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-default);
+  display: grid;
+  grid-template-columns: minmax(300px, 1.35fr) minmax(520px, 2fr);
+  gap: 12px;
+}
+
+.toolbar[data-layout="stacked"] {
+  grid-template-columns: 1fr;
+}
+
+.searchRow,
+.searchBox,
+.filterControls,
+.filterActions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchBox {
+  width: 100%;
+}
+
+.searchBox input,
+.filterFields select {
+  width: 100%;
+  min-width: 0;
+  height: var(--control-height);
+  padding: 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.searchBox input:focus,
+.filterFields select:focus {
+  border-color: var(--brand-primary-strong);
+  outline: 3px solid rgba(113, 196, 192, 0.22);
+  outline-offset: 0;
+}
+
+.filterControls {
+  align-items: stretch;
+}
+
+.filterFields {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+}
+
+.filterActions {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.filterToggle {
+  min-height: var(--control-height);
+  padding: 0 16px;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton {
+  border: 1px solid var(--brand-accent);
+  background: var(--brand-accent);
+  color: var(--text-on-brand);
+}
+
+.primaryButton:hover:not(:disabled) {
+  border-color: var(--brand-accent-strong);
+  background: var(--brand-accent-strong);
+}
+
+.secondaryButton,
+.filterToggle {
+  border: 1px solid var(--brand-primary-strong);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.secondaryButton:hover:not(:disabled),
+.filterToggle:hover {
+  background: var(--brand-primary-soft);
+}
+
+.ghostButton {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.ghostButton:hover {
+  color: var(--brand-accent-ink);
+}
+
+.filterToggle {
+  display: none;
+}
+
+.srOnly {
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  position: absolute;
+  border: 0;
+  clip: rect(0 0 0 0);
+}
+
+.pagination,
+.loadMore {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.pagination span {
+  min-width: 72px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.loadMore .primaryButton {
+  min-width: 180px;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+@media (max-width: 1180px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .searchRow {
+    align-items: stretch;
+  }
+
+  .filterToggle {
+    display: block;
+  }
+
+  .filterControls {
+    padding-top: 4px;
+    display: grid;
+  }
+
+  .filterControls[data-open="false"] {
+    display: none;
+  }
+
+  .filterFields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filterActions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .searchRow,
+  .filterFields {
+    grid-template-columns: 1fr;
+  }
+
+  .searchRow {
+    display: grid;
+  }
+
+  .filterActions {
+    align-items: stretch;
+  }
+}

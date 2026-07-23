@@ -182,7 +182,6 @@
 .inativar:hover {
   background: #b91c1c !important;
 }
-
 .ativar {
   background: #16a34a !important;
 }
@@ -212,22 +211,6 @@
     width: 100%;
   }
 }
-.filtros {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.filtros input,
-.filtros select {
-  padding: 11px 12px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background: #f9fafb;
-  color: #1f2937;
-}
-
 .editar {
   background: #f97316 !important;
 }
@@ -244,8 +227,3 @@
   background: #b91c1c !important;
 }
 
-@media (max-width: 900px) {
-  .filtros {
-    grid-template-columns: 1fr;
-  }
-}

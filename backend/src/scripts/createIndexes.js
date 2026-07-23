@@ -27,6 +27,8 @@ const run = async () => {
     import("../models/PrecoProduto.js"),
     import("../models/Pedido.js"),
     import("../models/MaterialMarketing.js"),
+    import("../models/Treinamento.js"),
+    import("../models/ProgressoTreinamento.js"),
   ]);
 
   for (const { default: model } of models) {

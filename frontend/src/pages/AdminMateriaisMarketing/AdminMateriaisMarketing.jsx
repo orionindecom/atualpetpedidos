@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import ImageUploadField from "../../components/ImageUploadField/ImageUploadField";
+import {
+  FilterToolbar,
+  PaginationControls,
+} from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import {
   normalizeMaterialResponse,
   openMaterialLink,
 } from "../../utils/materialMarketing";
+import { buildImageFormData } from "../../utils/imageUpload";
 import styles from "./AdminMateriaisMarketing.module.css";
 
 const categoriasSugeridas = [
@@ -50,7 +56,6 @@ const formularioVazio = {
   marca: "",
   linha: "",
   linkExterno: "",
-  imagemCapaUrl: "",
   destaque: false,
   ordem: "0",
   ativo: true,
@@ -79,7 +84,6 @@ const criarFormulario = (material) => {
     marca: material.marca || "",
     linha: material.linha || "",
     linkExterno: material.linkExterno || "",
-    imagemCapaUrl: material.imagemCapaUrl || "",
     destaque: Boolean(material.destaque),
     ordem: String(material.ordem ?? 0),
     ativo: material.ativo !== false,
@@ -97,7 +101,6 @@ const prepararPayload = (form) => ({
   marca: form.marca,
   linha: form.linha,
   linkExterno: form.linkExterno,
-  imagemCapaUrl: form.imagemCapaUrl,
   destaque: form.destaque,
   ordem: Number(form.ordem),
   ativo: form.ativo,
@@ -117,6 +120,8 @@ function MaterialFormModal({ material, onClose, onSaved }) {
   const [form, setForm] = useState(() => criarFormulario(material));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [coverFile, setCoverFile] = useState(null);
+  const [removeCover, setRemoveCover] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -149,10 +154,17 @@ function MaterialFormModal({ material, onClose, onSaved }) {
     setSubmitting(true);
     setErrors({});
     try {
+      const requestBody = buildImageFormData(payload, {
+        file: coverFile,
+        fileField: "imagemCapa",
+        remove: removeCover,
+        removeField: "removerImagemCapa",
+      });
+
       if (material) {
-        await api.put(`/admin/materiais-marketing/${material._id}`, payload);
+        await api.put(`/admin/materiais-marketing/${material._id}`, requestBody);
       } else {
-        await api.post("/admin/materiais-marketing", payload);
+        await api.post("/admin/materiais-marketing", requestBody);
       }
       onSaved(material ? "Material atualizado com sucesso" : "Material criado com sucesso");
     } catch (error) {
@@ -303,20 +315,16 @@ function MaterialFormModal({ material, onClose, onSaved }) {
             </p>
           </div>
 
-          <div className={styles.fullField}>
-            <label htmlFor="imagemCapaUrl">URL da imagem de capa</label>
-            <input
-              id="imagemCapaUrl"
-              name="imagemCapaUrl"
-              type="url"
-              inputMode="url"
-              value={form.imagemCapaUrl}
-              onChange={updateField}
-              maxLength={2048}
-              placeholder="https://..."
-            />
-            {errors.imagemCapaUrl && <small>{errors.imagemCapaUrl}</small>}
-          </div>
+          <ImageUploadField
+            name="imagemCapa"
+            label="Imagem de capa do material"
+            file={coverFile}
+            currentUrl={material?.imagemCapaUrl || ""}
+            removed={removeCover}
+            onFileChange={setCoverFile}
+            onRemoveChange={setRemoveCover}
+            error={errors.imagemCapa}
+          />
 
           <div>
             <label htmlFor="ordem">Ordem</label>
@@ -372,6 +380,9 @@ function AdminMateriaisMarketing() {
   const [modalMaterial, setModalMaterial] = useState(undefined);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("");
   const [imagensComErro, setImagensComErro] = useState(new Set());
+  const filtrosAtivos = Object.entries(filtrosAplicados).filter(
+    ([key, value]) => key !== "busca" && Boolean(value)
+  ).length;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -476,13 +487,16 @@ function AdminMateriaisMarketing() {
           </div>
         )}
 
-        <form className={styles.filters} onSubmit={aplicarFiltros}>
-          <input
-            aria-label="Buscar materiais"
-            placeholder="Buscar por título, descrição, marca ou linha"
-            value={filtros.busca}
-            onChange={(event) => setFiltros({ ...filtros, busca: event.target.value })}
-          />
+        <FilterToolbar
+          activeFilterCount={filtrosAtivos}
+          layout="stacked"
+          searchLabel="Buscar materiais"
+          searchPlaceholder="Buscar por título, categoria ou marca..."
+          searchValue={filtros.busca}
+          onSearchChange={(event) => setFiltros({ ...filtros, busca: event.target.value })}
+          onSubmit={aplicarFiltros}
+          onClear={limparFiltros}
+        >
           <select aria-label="Filtrar por categoria" value={filtros.categoria} onChange={(event) => setFiltros({ ...filtros, categoria: event.target.value })}>
             <option value="">Todas as categorias</option>
             {opcoes.categorias.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -509,11 +523,7 @@ function AdminMateriaisMarketing() {
             <option value="true">Em destaque</option>
             <option value="false">Sem destaque</option>
           </select>
-          <div className={styles.filterActions}>
-            <button type="submit" className={styles.primaryButton}>Filtrar</button>
-            <button type="button" className={styles.secondaryButton} onClick={limparFiltros}>Limpar</button>
-          </div>
-        </form>
+        </FilterToolbar>
 
         <div className={styles.listHeader}>
           <strong>{paginacao.totalItens} materiais</strong>
@@ -580,13 +590,13 @@ function AdminMateriaisMarketing() {
           </section>
         )}
 
-        {paginacao.totalPaginas > 1 && (
-          <nav className={styles.pagination} aria-label="Paginação de materiais">
-            <button type="button" className={styles.secondaryButton} disabled={pagina <= 1 || carregando} onClick={() => setPagina((value) => value - 1)}>Anterior</button>
-            <span>{pagina} / {paginacao.totalPaginas}</span>
-            <button type="button" className={styles.secondaryButton} disabled={pagina >= paginacao.totalPaginas || carregando} onClick={() => setPagina((value) => value + 1)}>Próxima</button>
-          </nav>
-        )}
+        <PaginationControls
+          currentPage={pagina}
+          totalPages={paginacao.totalPaginas}
+          disabled={carregando}
+          onPrevious={() => setPagina((value) => value - 1)}
+          onNext={() => setPagina((value) => value + 1)}
+        />
       </main>
 
       {modalMaterial !== undefined && (

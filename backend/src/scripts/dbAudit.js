@@ -10,6 +10,8 @@ const collections = [
   "precoprodutos",
   "pedidos",
   "materiaismarketing",
+  "treinamentos",
+  "progressostreinamentos",
 ];
 
 const run = async () => {

@@ -1,0 +1,22 @@
+.youtubePlayer,
+.unsupported {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #111827;
+}
+
+.youtubePlayer > div,
+.youtubePlayer iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.unsupported {
+  padding: 24px;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}

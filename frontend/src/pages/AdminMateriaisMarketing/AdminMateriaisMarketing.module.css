@@ -91,18 +91,6 @@ button:disabled {
   color: #a12828;
 }
 
-.filters {
-  padding: 16px;
-  border: 1px solid #dce2e9;
-  border-radius: 8px;
-  background: #ffffff;
-  display: grid;
-  grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(140px, 1fr));
-  gap: 10px;
-}
-
-.filters input,
-.filters select,
 .form input,
 .form select,
 .form textarea {
@@ -116,23 +104,12 @@ button:disabled {
   font: inherit;
 }
 
-.filters input:focus,
-.filters select:focus,
 .form input:focus,
 .form select:focus,
 .form textarea:focus {
   outline: none;
   border-color: #0f9488;
   box-shadow: 0 0 0 3px rgba(15, 148, 136, 0.12);
-}
-
-.filterActions {
-  display: flex;
-  gap: 8px;
-}
-
-.filterActions button {
-  flex: 1;
 }
 
 .listHeader {
@@ -317,21 +294,6 @@ button:disabled {
   to { background-position: -200% 0; }
 }
 
-.pagination {
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-.pagination span {
-  min-width: 72px;
-  color: #475467;
-  font-weight: 800;
-  text-align: center;
-}
-
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -453,12 +415,6 @@ button:disabled {
   gap: 10px;
 }
 
-@media (max-width: 1180px) {
-  .filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 760px) {
   .container {
     padding: 24px 16px 40px;
@@ -474,7 +430,6 @@ button:disabled {
     font-size: 27px;
   }
 
-  .filters,
   .form {
     grid-template-columns: 1fr;
   }
@@ -514,17 +469,8 @@ button:disabled {
 }
 
 @media (max-width: 480px) {
-  .filters {
-    padding: 12px;
-  }
-
-  .filterActions,
   .cardActions {
     grid-template-columns: 1fr;
-  }
-
-  .filterActions {
-    display: grid;
   }
 
   .listHeader {

@@ -11,31 +11,8 @@
   color: #111827;
 }
 
-.filtros {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: #ffffff;
-  border: 1px solid #d7dde5;
-  border-radius: 18px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-  display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(260px, 420px) 1fr;
-  gap: 14px;
-  align-items: center;
-}
-
-.filtros select {
-  width: 100%;
-  max-width: 420px;
-  padding: 13px 14px;
-  border-radius: 11px;
-  border: 1px solid #cbd5e1;
-  background: #f9fafb;
-  color: #1f2937;
-  font-size: 15px;
-}
-
 .tabelaAtual {
+  margin-bottom: 24px;
   min-height: 48px;
   padding: 10px 14px;
   border: 1px solid #bae6fd;
@@ -56,32 +33,6 @@
 .tabelaAtual strong {
   color: #0f172a;
   font-size: 14px;
-}
-
-.filtrosProdutos {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 14px;
-}
-
-.filtrosProdutos input,
-.filtrosProdutos select {
-  padding: 13px 14px;
-  border-radius: 11px;
-  border: 1px solid #cbd5e1;
-  background: #f9fafb;
-  color: #1f2937;
-  font-size: 15px;
-}
-
-.filtros select:focus,
-.filtrosProdutos input:focus,
-.filtrosProdutos select:focus {
-  outline: none;
-  border-color: #f97316;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 .lista {
@@ -173,14 +124,6 @@
 @media (max-width: 768px) {
   .container {
     padding: 24px 18px;
-  }
-
-  .filtros {
-    grid-template-columns: 1fr;
-  }
-
-  .filtrosProdutos {
-    grid-template-columns: 1fr;
   }
 
   .card {

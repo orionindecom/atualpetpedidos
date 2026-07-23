@@ -1,0 +1,43 @@
+:root {
+  --font-display: "Manrope", Arial, sans-serif;
+  --font-body: "DM Sans", Arial, sans-serif;
+
+  --brand-primary: #71c4c0;
+  --brand-primary-strong: #469f9b;
+  --brand-primary-ink: #2f7773;
+  --brand-primary-soft: #e8f7f6;
+  --brand-accent: #ed7b0a;
+  --brand-accent-strong: #c95f00;
+  --brand-accent-ink: #a84f00;
+  --brand-accent-soft: #fff1e3;
+
+  --surface-page: #f8faf9;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f1f4f3;
+  --surface-elevated: #ffffff;
+
+  --text-primary: #17211f;
+  --text-secondary: #374441;
+  --text-muted: #66736f;
+  --text-on-brand: #17211f;
+  --text-on-dark: #f5f8f7;
+
+  --border-default: #d7dedc;
+  --border-strong: #aab8b4;
+  --border-focus: #ed7b0a;
+
+  --success: #27745e;
+  --warning: #9a5b0e;
+  --danger: #a73524;
+  --info: #246a73;
+
+  --radius-small: 2px;
+  --radius-medium: 4px;
+  --radius-large: 8px;
+
+  --shadow-small: 0 4px 14px rgba(23, 33, 31, 0.05);
+  --shadow-medium: 0 18px 50px rgba(23, 33, 31, 0.09);
+
+  --content-max-width: 1380px;
+  --control-height: 46px;
+}

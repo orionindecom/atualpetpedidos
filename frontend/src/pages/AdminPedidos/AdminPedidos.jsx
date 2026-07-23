@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminPedidos.module.css";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
@@ -204,15 +205,20 @@ function AdminPedidos() {
 
         {pedidos.length === 0 && <p>Nenhum pedido encontrado.</p>}
 
-        <div className={styles.filtros}>
-          <input
-            type="text"
-            placeholder="Buscar pedido ou cliente..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
-
+        <FilterToolbar
+          activeFilterCount={statusFiltro ? 1 : 0}
+          searchLabel="Buscar pedidos"
+          searchPlaceholder="Buscar por número do pedido ou cliente..."
+          searchValue={busca}
+          onSearchChange={(event) => setBusca(event.target.value)}
+          onSubmit={(event) => event.preventDefault()}
+          onClear={() => {
+            setBusca("");
+            setStatusFiltro("");
+          }}
+        >
           <select
+            aria-label="Filtrar por status"
             value={statusFiltro}
             onChange={(e) => setStatusFiltro(e.target.value)}
           >
@@ -224,7 +230,7 @@ function AdminPedidos() {
               </option>
             ))}
           </select>
-        </div>
+        </FilterToolbar>
 
         <div className={styles.lista}>
           {pedidosFiltrados.map((pedido) => (
@@ -313,12 +319,14 @@ function AdminPedidos() {
                 <span>Total de itens: {quantidadeTotalModal}</span>
               </div>
 
-              <input
-                className={styles.buscaProduto}
-                type="text"
-                placeholder="Buscar produto..."
-                value={buscaProduto}
-                onChange={(e) => setBuscaProduto(e.target.value)}
+              <FilterToolbar
+                layout="stacked"
+                searchLabel="Buscar produtos do pedido"
+                searchPlaceholder="Buscar por produto..."
+                searchValue={buscaProduto}
+                onSearchChange={(event) => setBuscaProduto(event.target.value)}
+                onSubmit={(event) => event.preventDefault()}
+                onClear={() => setBuscaProduto("")}
               />
 
               <div className={styles.listaProdutosModal}>

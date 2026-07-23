@@ -34,7 +34,9 @@ export const proteger = async (req, res, next) => {
 
     req.usuario = await measureStage(req, "auth.usuario", () =>
       Usuario.findById(decoded.id)
-        .select("_id tipo tabelaPrecoId statusCadastro ativo tokenVersion")
+        .select(
+          "_id tipo tabelaPrecoId statusCadastro ativo tokenVersion nomeResponsavel nomeFantasia"
+        )
     );
 
     if (!req.usuario) {

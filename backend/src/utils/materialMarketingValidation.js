@@ -39,7 +39,6 @@ const camposTexto = {
 export const CAMPOS_MATERIAL_PERMITIDOS = new Set([
   ...Object.keys(camposTexto),
   "linkExterno",
-  "imagemCapaUrl",
   "destaque",
   "ordem",
   "ativo",
@@ -98,6 +97,12 @@ const parsePositiveInteger = (value, fallback) => {
 
 const parseBoolean = (value) => {
   if (value === undefined || value === "") return null;
+  if (value === true || value === "true") return true;
+  if (value === false || value === "false") return false;
+  return undefined;
+};
+
+const parsePayloadBoolean = (value) => {
   if (value === true || value === "true") return true;
   if (value === false || value === "false") return false;
   return undefined;
@@ -191,7 +196,11 @@ export const MATERIAL_SORT = {
 
 export const validateMaterialPayload = (
   body = {},
-  { partial = false, nodeEnv = process.env.NODE_ENV } = {}
+  {
+    allowEmpty = false,
+    partial = false,
+    nodeEnv = process.env.NODE_ENV,
+  } = {}
 ) => {
   const source = body && typeof body === "object" && !Array.isArray(body)
     ? body
@@ -225,7 +234,7 @@ export const validateMaterialPayload = (
     }
   }
 
-  for (const [field, required] of [["linkExterno", true], ["imagemCapaUrl", false]]) {
+  for (const [field, required] of [["linkExterno", true]]) {
     const supplied = Object.hasOwn(source, field);
 
     if (!supplied) {
@@ -249,10 +258,12 @@ export const validateMaterialPayload = (
   for (const field of ["destaque", "ativo"]) {
     if (!Object.hasOwn(source, field)) continue;
 
-    if (typeof source[field] !== "boolean") {
+    const parsed = parsePayloadBoolean(source[field]);
+
+    if (parsed === undefined) {
       errors[field] = "Informe verdadeiro ou falso";
     } else {
-      data[field] = source[field];
+      data[field] = parsed;
     }
   }
 
@@ -266,7 +277,12 @@ export const validateMaterialPayload = (
     }
   }
 
-  if (partial && Object.keys(data).length === 0 && Object.keys(errors).length === 0) {
+  if (
+    partial &&
+    !allowEmpty &&
+    Object.keys(data).length === 0 &&
+    Object.keys(errors).length === 0
+  ) {
     errors.formulario = "Informe ao menos um campo válido";
   }
 

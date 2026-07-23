@@ -26,37 +26,6 @@
   color: #667085;
 }
 
-.filters {
-  padding: 14px;
-  border: 1px solid #dce2e9;
-  border-radius: 8px;
-  background: #ffffff;
-  display: grid;
-  grid-template-columns: minmax(240px, 2fr) repeat(4, minmax(130px, 1fr)) auto;
-  gap: 9px;
-}
-
-.filters input,
-.filters select {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1f2937;
-  font: inherit;
-}
-
-.filters input:focus,
-.filters select:focus {
-  outline: none;
-  border-color: #0f9488;
-  box-shadow: 0 0 0 3px rgba(15, 148, 136, 0.12);
-}
-
-.filterActions,
 .cardActions {
   display: flex;
   gap: 8px;
@@ -282,22 +251,6 @@ button:disabled {
   to { background-position: -200% 0; }
 }
 
-.loadMore {
-  padding-top: 26px;
-  display: flex;
-  justify-content: center;
-}
-
-.loadMore button {
-  min-width: 180px;
-}
-
-@media (max-width: 1180px) {
-  .filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 760px) {
   .container {
     padding: 24px 16px 40px;
@@ -307,17 +260,8 @@ button:disabled {
     font-size: 27px;
   }
 
-  .filters,
   .grid {
     grid-template-columns: 1fr;
-  }
-
-  .filters {
-    padding: 12px;
-  }
-
-  .filterActions button {
-    flex: 1;
   }
 
   .card {

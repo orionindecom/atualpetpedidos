@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./AdminPrecos.module.css";
 
@@ -111,6 +112,15 @@ function AdminPrecos() {
         (tabela) => tabela._id === tabelaSelecionada
     );
 
+    const limparFiltros = () => {
+        setBusca("");
+        setLinhaFiltro("");
+        setCategoriaFiltro("");
+        setTipoTabelaFiltro("");
+        setTabelaSelecionada("");
+        setPrecos({});
+    };
+
     return (
         <>
             <Navbar />
@@ -118,8 +128,23 @@ function AdminPrecos() {
             <div className={styles.container}>
                 <h1>Preços por Tabela</h1>
 
-                <div className={styles.filtros}>
+                <FilterToolbar
+                    activeFilterCount={[
+                        tipoTabelaFiltro,
+                        tabelaSelecionada,
+                        linhaFiltro,
+                        categoriaFiltro,
+                    ].filter(Boolean).length}
+                    layout="stacked"
+                    searchLabel="Buscar produtos da tabela"
+                    searchPlaceholder="Buscar por produto, linha ou categoria..."
+                    searchValue={busca}
+                    onSearchChange={(event) => setBusca(event.target.value)}
+                    onSubmit={(event) => event.preventDefault()}
+                    onClear={limparFiltros}
+                >
                     <select
+                        aria-label="Filtrar por tipo de tabela"
                         value={tipoTabelaFiltro}
                         onChange={(e) => {
                             setTipoTabelaFiltro(e.target.value);
@@ -138,6 +163,7 @@ function AdminPrecos() {
                     </select>
 
                     <select
+                        aria-label="Selecionar tabela de preço"
                         value={tabelaSelecionada}
                         onChange={(e) => carregarPrecosTabela(e.target.value)}
                     >
@@ -150,26 +176,8 @@ function AdminPrecos() {
                             </option>
                         ))}
                     </select>
-
-                    {tabelaAtual && (
-                        <div className={styles.tabelaAtual}>
-                            <span>
-                                {tiposTabela[tabelaAtual.tipo || "distribuidor"]}
-                            </span>
-                            <strong>{tabelaAtual.nome}</strong>
-                        </div>
-                    )}
-                </div>
-
-                <div className={styles.filtrosProdutos}>
-                    <input
-                        type="text"
-                        placeholder="Buscar produto..."
-                        value={busca}
-                        onChange={(e) => setBusca(e.target.value)}
-                    />
-
                     <select
+                        aria-label="Filtrar por linha"
                         value={linhaFiltro}
                         onChange={(e) => setLinhaFiltro(e.target.value)}
                     >
@@ -183,6 +191,7 @@ function AdminPrecos() {
                     </select>
 
                     <select
+                        aria-label="Filtrar por categoria"
                         value={categoriaFiltro}
                         onChange={(e) => setCategoriaFiltro(e.target.value)}
                     >
@@ -194,7 +203,16 @@ function AdminPrecos() {
                             </option>
                         ))}
                     </select>
-                </div>
+                </FilterToolbar>
+
+                {tabelaAtual && (
+                    <div className={styles.tabelaAtual}>
+                        <span>
+                            {tiposTabela[tabelaAtual.tipo || "distribuidor"]}
+                        </span>
+                        <strong>{tabelaAtual.nome}</strong>
+                    </div>
+                )}
 
                 {tabelaSelecionada && (
                     <div className={styles.lista}>

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import styles from "./Catalogo.module.css";
+import {
+    FilterToolbar,
+    LoadMoreButton,
+} from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import { normalizeCatalogResponse } from "../../utils/catalogResponse";
@@ -224,6 +228,26 @@ function Catalogo() {
         }
     };
 
+    const aplicarFiltros = (event) => {
+        event.preventDefault();
+        const proximaBusca = busca.trim();
+
+        if (proximaBusca !== buscaAplicada) {
+            reiniciarConsulta();
+            setBuscaAplicada(proximaBusca);
+        }
+    };
+
+    const limparFiltros = () => {
+        if (busca || buscaAplicada || linhaFiltro || categoriaFiltro) {
+            reiniciarConsulta();
+        }
+        setBusca("");
+        setBuscaAplicada("");
+        setLinhaFiltro("");
+        setCategoriaFiltro("");
+    };
+
     const moeda = (valor) =>
         valor.toLocaleString("pt-BR", {
             style: "currency",
@@ -312,15 +336,17 @@ function Catalogo() {
                     <p>Informe as quantidades desejadas e gere seu pedido.</p>
                 </div>
 
-                <div className={styles.filtros}>
-                    <input
-                        type="text"
-                        placeholder="Buscar produto..."
-                        value={busca}
-                        onChange={(e) => setBusca(e.target.value)}
-                    />
-
+                <FilterToolbar
+                    activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}
+                    searchLabel="Buscar produtos no catálogo"
+                    searchPlaceholder="Buscar por produto, linha ou categoria..."
+                    searchValue={busca}
+                    onSearchChange={(event) => setBusca(event.target.value)}
+                    onSubmit={aplicarFiltros}
+                    onClear={limparFiltros}
+                >
                     <select
+                        aria-label="Filtrar por linha"
                         value={linhaFiltro}
                         onChange={alterarLinhaFiltro}
                     >
@@ -334,6 +360,7 @@ function Catalogo() {
                     </select>
 
                     <select
+                        aria-label="Filtrar por categoria"
                         value={categoriaFiltro}
                         onChange={alterarCategoriaFiltro}
                     >
@@ -345,7 +372,7 @@ function Catalogo() {
                             </option>
                         ))}
                     </select>
-                </div>
+                </FilterToolbar>
 
                 <div className={styles.layout}>
                     <div className={styles.secoes}>
@@ -418,14 +445,10 @@ function Catalogo() {
                         )}
 
                         {paginacao.temMais && (
-                            <button
-                                type="button"
-                                className={styles.mostrarMais}
+                            <LoadMoreButton
+                                loading={carregandoMais}
                                 onClick={mostrarMais}
-                                disabled={carregandoMais}
-                            >
-                                {carregandoMais ? "Carregando..." : "Mostrar mais"}
-                            </button>
+                            />
                         )}
                     </div>
 

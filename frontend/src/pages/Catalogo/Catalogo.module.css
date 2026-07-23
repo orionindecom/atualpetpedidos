@@ -131,37 +131,9 @@
   font-weight: 700;
 }
 
-.filtros {
-  width: 100%;
-  margin-bottom: 28px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 16px;
-}
-
-.filtros input,
-.filtros select {
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #1f2937;
-  font-size: 15px;
-  outline: none;
-}
-
-.filtros input:focus,
-.filtros select:focus {
-  border-color: #f97316;
-}
-
 @media (max-width: 768px) {
   .container {
     padding: 24px 18px;
-  }
-
-  .filtros {
-    grid-template-columns: 1fr;
   }
 }
 .layout {
@@ -269,29 +241,6 @@
 .erroCatalogo {
   border-color: #fecaca;
   color: #b91c1c;
-}
-
-.mostrarMais {
-  align-self: center;
-  min-width: 180px;
-  min-height: 46px;
-  padding: 0 22px;
-  border: 1px solid #f97316;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #c2410c;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.mostrarMais:hover {
-  background: #fff7ed;
-}
-
-.mostrarMais:disabled {
-  cursor: wait;
-  opacity: 0.6;
 }
 
 .secaoLinha {
