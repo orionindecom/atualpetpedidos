@@ -4,7 +4,7 @@ import MaterialMarketing from "../src/models/MaterialMarketing.js";
 import adminRouter from "../src/routes/adminMaterialMarketingRoutes.js";
 import clientRouter from "../src/routes/materialMarketingRoutes.js";
 import { proteger } from "../src/middlewares/authMiddleware.js";
-import { somenteAdmin } from "../src/middlewares/adminMiddleware.js";
+import { somenteGestorConteudo } from "../src/middlewares/adminMiddleware.js";
 import {
   alterarStatusMaterial,
   atualizarMaterial,
@@ -12,6 +12,7 @@ import {
 } from "../src/controllers/materialMarketingController.js";
 import {
   buildMaterialFilter,
+  isSafeDriveUrl,
   isSafeExternalUrl,
   MATERIAL_SORT,
   parseMaterialQuery,
@@ -58,15 +59,15 @@ test("rota do cliente exige autenticacao", async () => {
   const clientRoute = clientRouter.stack.find((layer) => layer.route?.path === "/");
   assert.deepEqual(
     clientRoute.route.stack.map((layer) => layer.name),
-    ["proteger", "listarMateriaisCliente"]
+    ["proteger", "somenteCliente", "listarMateriaisCliente"]
   );
 });
 
-test("cliente nao passa pelo middleware administrativo", () => {
+test("cliente nao passa pelo middleware de gestao de conteudo", () => {
   const res = createResponse();
   let nextCalled = false;
 
-  somenteAdmin({ usuario: { tipo: "cliente" } }, res, () => {
+  somenteGestorConteudo({ usuario: { tipo: "cliente" } }, res, () => {
     nextCalled = true;
   });
 
@@ -74,7 +75,7 @@ test("cliente nao passa pelo middleware administrativo", () => {
   assert.equal(nextCalled, false);
   assert.deepEqual(
     adminRouter.stack.slice(0, 2).map((layer) => layer.name),
-    ["proteger", "somenteAdmin"]
+    ["proteger", "somenteGestorConteudo"]
   );
 });
 
@@ -92,6 +93,20 @@ test("valida URLs e recusa protocolos inseguros", () => {
   assert.equal(isSafeExternalUrl("http://example.com", { nodeEnv: "production" }), false);
   assert.equal(isSafeExternalUrl("javascript:alert(1)", { nodeEnv: "development" }), false);
   assert.equal(isSafeExternalUrl("data:text/plain,teste", { nodeEnv: "development" }), false);
+});
+
+test("material aceita somente links seguros do Google Drive", () => {
+  assert.equal(isSafeDriveUrl("https://drive.google.com/file/d/abc/view"), true);
+  assert.equal(isSafeDriveUrl("https://docs.google.com/document/d/abc/edit"), true);
+  assert.equal(isSafeDriveUrl("https://drive.google.com.evil.example/file"), false);
+  assert.equal(isSafeDriveUrl("https://example.com/material.pdf"), false);
+
+  const invalid = validateMaterialPayload({
+    ...validPayload,
+    linkExterno: "https://example.com/material.pdf",
+  });
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.errors.linkExterno, /Google Drive/);
 });
 
 test("valida obrigatorios, limite e campos desconhecidos", () => {

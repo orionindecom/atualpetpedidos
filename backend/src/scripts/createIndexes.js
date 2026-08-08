@@ -27,6 +27,7 @@ const run = async () => {
     import("../models/PrecoProduto.js"),
     import("../models/Pedido.js"),
     import("../models/MaterialMarketing.js"),
+    import("../models/BannerMarketing.js"),
     import("../models/Treinamento.js"),
     import("../models/ProgressoTreinamento.js"),
   ]);

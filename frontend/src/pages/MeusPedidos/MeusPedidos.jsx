@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
+import OrderProgress from "../../components/OrderProgress/OrderProgress";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
+import {
+  formatCurrency,
+  formatOrderDate,
+  formatOrderDateTime,
+  formatOrderStatus,
+} from "../../utils/orderLogistics";
 
 // Mapeia o valor de status para os sufixos das classes CSS
 const statusClasse = (status = "") => {
@@ -18,6 +25,8 @@ const statusClasse = (status = "") => {
 
 function MeusPedidos() {
   const [pedidos, setPedidos] = useState([]);
+  const [pedidoExpandido, setPedidoExpandido] = useState(null);
+  const [confirmandoRecebimento, setConfirmandoRecebimento] = useState(null);
 
   useEffect(() => {
     async function carregarPedidos() {
@@ -28,18 +37,6 @@ function MeusPedidos() {
     carregarPedidos();
   }, []);
 
-  const moeda = (valor) =>
-    valor.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-
-  const data = (pedido) => {
-    const dia = String(pedido.dia).padStart(2, "0");
-    const mes = String(pedido.mes).padStart(2, "0");
-    return `${dia}/${mes}/${pedido.ano}`;
-  };
-
   const baixarPdf = async (pedido) => {
     try {
       await abrirOuBaixarPdfPedido({
@@ -49,6 +46,22 @@ function MeusPedidos() {
     } catch (error) {
       console.error(error);
       alert("Não foi possível abrir ou baixar o PDF do pedido.");
+    }
+  };
+
+  const confirmarRecebimento = async (pedido) => {
+    if (!window.confirm("Confirma que este pedido foi recebido?")) return;
+
+    setConfirmandoRecebimento(pedido._id);
+    try {
+      const response = await api.patch(`/pedidos/${pedido._id}/confirmar-recebimento`);
+      setPedidos((current) => current.map((item) => (
+        item._id === pedido._id ? response.data.pedido : item
+      )));
+    } catch (error) {
+      alert(error.response?.data?.message || "Não foi possível confirmar o recebimento.");
+    } finally {
+      setConfirmandoRecebimento(null);
     }
   };
 
@@ -69,18 +82,61 @@ function MeusPedidos() {
                 className={`${styles.card} ${sc ? styles["status" + sc] : ""}`}
                 key={pedido._id}
               >
-                <div>
+                <div className={styles.summary}>
                   <h3>{pedido.numeroPedido}</h3>
-                  <p>Data: {data(pedido)}</p>
+                  <p>Data: {formatOrderDate(pedido.dataPedido || pedido.createdAt)}</p>
                   <p className={sc ? styles["statusBadge" + sc] : ""}>
-                    Status: {pedido.status}
+                    Status: {formatOrderStatus(pedido.status)}
                   </p>
-                  <p>Total: {moeda(pedido.valorTotal)}</p>
+                  <p>Total: {formatCurrency(pedido.valorTotal)}</p>
                 </div>
 
-                <button onClick={() => baixarPdf(pedido)}>
-                  Baixar PDF
-                </button>
+                <div className={styles.actions}>
+                  <button
+                    type="button"
+                    className={styles.trackingButton}
+                    aria-expanded={pedidoExpandido === pedido._id}
+                    onClick={() => setPedidoExpandido((current) => (
+                      current === pedido._id ? null : pedido._id
+                    ))}
+                  >
+                    {pedidoExpandido === pedido._id ? "Ocultar andamento" : "Ver andamento"}
+                  </button>
+                  <button type="button" className={styles.pdfButton} onClick={() => baixarPdf(pedido)}>
+                    Baixar PDF
+                  </button>
+                  {pedido.status === "enviado" && (
+                    <button
+                      type="button"
+                      className={styles.confirmReceiptButton}
+                      disabled={confirmandoRecebimento === pedido._id}
+                      onClick={() => confirmarRecebimento(pedido)}
+                    >
+                      {confirmandoRecebimento === pedido._id
+                        ? "Confirmando..."
+                        : "Confirmar recebimento"}
+                    </button>
+                  )}
+                </div>
+
+                {pedidoExpandido === pedido._id && (
+                  <section className={styles.trackingPanel} aria-label={`Andamento do pedido ${pedido.numeroPedido}`}>
+                    <OrderProgress status={pedido.status} />
+
+                    <div className={styles.shippingData}>
+                      <div><span>Nota fiscal</span><strong>{pedido.numeroNotaFiscal || "Ainda não informada"}</strong></div>
+                      <div><span>Transportadora</span><strong>{pedido.transportadora || "Ainda não informada"}</strong></div>
+                      <div><span>Código de rastreio</span><strong>{pedido.codigoRastreio || "Ainda não informado"}</strong></div>
+                      <div><span>Data de envio</span><strong>{formatOrderDate(pedido.dataEnvio, "Ainda não enviada")}</strong></div>
+                      <div><span>Data de entrega</span><strong>{formatOrderDateTime(pedido.dataEntrega, "Ainda não confirmada")}</strong></div>
+                      {pedido.linkRastreio?.startsWith("https://") && (
+                        <a href={pedido.linkRastreio} target="_blank" rel="noreferrer">
+                          Acompanhar entrega
+                        </a>
+                      )}
+                    </div>
+                  </section>
+                )}
               </div>
             );
           })}

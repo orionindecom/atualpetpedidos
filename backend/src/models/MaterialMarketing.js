@@ -56,6 +56,19 @@ const materialMarketingSchema = new mongoose.Schema(
       maxlength: 512,
       default: "",
     },
+    audienciaTipo: {
+      type: String,
+      enum: ["todos", "especificos"],
+      default: "todos",
+    },
+    distribuidoresIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+    }],
+    dataPublicacao: {
+      type: Date,
+      default: Date.now,
+    },
     destaque: {
       type: Boolean,
       default: false,
@@ -88,6 +101,13 @@ materialMarketingSchema.index({
   ordem: 1,
   createdAt: -1,
   _id: 1,
+});
+materialMarketingSchema.index({
+  ativo: 1,
+  audienciaTipo: 1,
+  distribuidoresIds: 1,
+  dataPublicacao: -1,
+  ordem: 1,
 });
 
 export default mongoose.model("MaterialMarketing", materialMarketingSchema);

@@ -6,6 +6,7 @@ import {
     LoadMoreButton,
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import DistributorBanners from "../../components/DistributorBanners/DistributorBanners";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import { normalizeCatalogResponse } from "../../utils/catalogResponse";
 import {
@@ -335,6 +336,8 @@ function Catalogo() {
                     <h1>Catálogo AtualPet</h1>
                     <p>Informe as quantidades desejadas e gere seu pedido.</p>
                 </div>
+
+                <DistributorBanners />
 
                 <FilterToolbar
                     activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}

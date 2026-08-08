@@ -6,21 +6,19 @@ import TabelaPreco from "../models/TabelaPreco.js";
 import { gerarNumeroPedido } from "../utils/gerarNumeroPedido.js";
 import { gerarPdfPedido } from "../services/pdfService.js";
 import {
+  buildClientReceiptConfirmationUpdate,
+  buildStatusHistoryEntry,
+  PEDIDO_STATUS,
+  sanitizeClientOrder,
+} from "../utils/pedidoLogistica.js";
+import {
   isOptionalString,
   isValidObjectId,
   sendServerError,
   toPositiveNumber,
 } from "../utils/validation.js";
 
-const statusPermitidos = new Set([
-  "novo",
-  "em_analise",
-  "separando",
-  "faturado",
-  "enviado",
-  "entregue",
-  "cancelado",
-]);
+const statusPermitidos = new Set(PEDIDO_STATUS);
 
 const validarItens = (itens) => (
   Array.isArray(itens) &&
@@ -202,9 +200,62 @@ export const listarMeusPedidos = async (req, res) => {
   try {
     const pedidos = await Pedido.find({
       clienteId: req.usuario._id,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json(pedidos);
+  } catch (error) {
+    return sendServerError(res);
+  }
+};
+
+export const confirmarRecebimento = async (req, res) => {
+  try {
+    const update = buildClientReceiptConfirmationUpdate({
+      usuario: req.usuario,
+    });
+    const pedido = await Pedido.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        clienteId: req.usuario._id,
+        status: "enviado",
+      },
+      update,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (pedido) {
+      return res.status(200).json({
+        message: "Recebimento confirmado com sucesso",
+        pedido: sanitizeClientOrder(pedido),
+      });
+    }
+
+    const pedidoExistente = await Pedido.findById(req.params.id)
+      .select("clienteId status")
+      .lean();
+
+    if (!pedidoExistente) {
+      return res.status(404).json({ message: "Pedido não encontrado" });
+    }
+
+    if (String(pedidoExistente.clienteId) !== String(req.usuario._id)) {
+      return res.status(403).json({
+        message: "Você não tem permissão para confirmar este pedido",
+      });
+    }
+
+    if (pedidoExistente.status === "entregue") {
+      return res.status(409).json({ message: "Recebimento já confirmado" });
+    }
+
+    return res.status(409).json({
+      message: "O recebimento só pode ser confirmado após o envio do pedido",
+    });
   } catch (error) {
     return sendServerError(res);
   }
@@ -222,7 +273,11 @@ export const listarTodosPedidos = async (req, res) => {
 
 export const buscarPedidoPorId = async (req, res) => {
   try {
-    const pedido = await Pedido.findById(req.params.id);
+    const query = Pedido.findById(req.params.id);
+    if (req.usuario.tipo === "admin") {
+      query.select("+historicoStatus +observacaoLogistica");
+    }
+    const pedido = await query;
 
     if (!pedido) {
       return res.status(404).json({
@@ -239,7 +294,9 @@ export const buscarPedidoPorId = async (req, res) => {
       });
     }
 
-    return res.status(200).json(pedido);
+    return res.status(200).json(
+      req.usuario.tipo === "admin" ? pedido : sanitizeClientOrder(pedido)
+    );
   } catch (error) {
     return sendServerError(res);
   }
@@ -280,7 +337,13 @@ export const atualizarStatusPedido = async (req, res) => {
       });
     }
 
-    const pedido = await Pedido.findById(req.params.id);
+    if (status === "entregue") {
+      return res.status(409).json({
+        message: "O status Entregue deve ser confirmado pelo cliente",
+      });
+    }
+
+    const pedido = await Pedido.findById(req.params.id).select("+historicoStatus");
 
     if (!pedido) {
       return res.status(404).json({
@@ -288,7 +351,16 @@ export const atualizarStatusPedido = async (req, res) => {
       });
     }
 
-    pedido.status = status;
+    if (pedido.status !== status) {
+      const statusAnterior = pedido.status;
+      pedido.status = status;
+      pedido.historicoStatus ||= [];
+      pedido.historicoStatus.push(buildStatusHistoryEntry({
+        statusAnterior,
+        novoStatus: status,
+        usuario: req.usuario,
+      }));
+    }
 
     await pedido.save();
 

@@ -127,7 +127,7 @@ function MateriaisMarketing() {
       <main className={styles.container}>
         <header className={styles.pageHeader}>
           <span>Biblioteca do distribuidor</span>
-          <h1>Materiais de Marketing</h1>
+          <h1>Materiais</h1>
           <p>Encontre imagens, campanhas e documentos para apoiar suas vendas.</p>
         </header>
 
@@ -213,7 +213,9 @@ function MateriaisMarketing() {
                       {[material.marca, material.linha].filter(Boolean).join(" • ")}
                     </strong>
                   )}
-                  <time dateTime={material.createdAt}>Publicado em {formatarData(material.createdAt)}</time>
+                  <time dateTime={material.dataPublicacao || material.createdAt}>
+                    Publicado em {formatarData(material.dataPublicacao || material.createdAt)}
+                  </time>
                 </div>
 
                 <footer className={styles.cardActions}>

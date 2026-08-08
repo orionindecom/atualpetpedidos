@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import AudienceSelector from "../../components/AudienceSelector/AudienceSelector";
 import ImageUploadField from "../../components/ImageUploadField/ImageUploadField";
 import {
   FilterToolbar,
@@ -56,9 +57,19 @@ const formularioVazio = {
   marca: "",
   linha: "",
   linkExterno: "",
+  audienciaTipo: "todos",
+  distribuidoresIds: [],
+  dataPublicacao: "",
   destaque: false,
   ordem: "0",
   ativo: true,
+};
+
+const formatarDataHoraLocal = (value = new Date()) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
 };
 
 const formatarData = (value) => {
@@ -69,7 +80,13 @@ const formatarData = (value) => {
 };
 
 const criarFormulario = (material) => {
-  if (!material) return { ...formularioVazio };
+  if (!material) {
+    return {
+      ...formularioVazio,
+      distribuidoresIds: [],
+      dataPublicacao: formatarDataHoraLocal(),
+    };
+  }
 
   const categoriaSugerida = categoriasSugeridas.includes(material.categoria);
   const tipoSugerido = tiposSugeridos.includes(material.tipo);
@@ -84,6 +101,13 @@ const criarFormulario = (material) => {
     marca: material.marca || "",
     linha: material.linha || "",
     linkExterno: material.linkExterno || "",
+    audienciaTipo: material.audienciaTipo || "todos",
+    distribuidoresIds: Array.isArray(material.distribuidoresIds)
+      ? material.distribuidoresIds.map((item) => item?._id || item)
+      : [],
+    dataPublicacao: formatarDataHoraLocal(
+      material.dataPublicacao || material.createdAt
+    ),
     destaque: Boolean(material.destaque),
     ordem: String(material.ordem ?? 0),
     ativo: material.ativo !== false,
@@ -101,6 +125,9 @@ const prepararPayload = (form) => ({
   marca: form.marca,
   linha: form.linha,
   linkExterno: form.linkExterno,
+  audienciaTipo: form.audienciaTipo,
+  distribuidoresIds: JSON.stringify(form.distribuidoresIds),
+  dataPublicacao: form.dataPublicacao,
   destaque: form.destaque,
   ordem: Number(form.ordem),
   ativo: form.ativo,
@@ -112,11 +139,18 @@ const validarFormulario = (payload) => {
   if (!payload.categoria.trim()) errors.categoria = "Informe a categoria";
   if (!payload.tipo.trim()) errors.tipo = "Informe o tipo";
   if (!payload.linkExterno.trim()) errors.linkExterno = "Informe o link externo";
+  if (!payload.dataPublicacao) errors.dataPublicacao = "Informe a data de publicação";
+  if (
+    payload.audienciaTipo === "especificos" &&
+    JSON.parse(payload.distribuidoresIds).length === 0
+  ) {
+    errors.distribuidoresIds = "Selecione ao menos um distribuidor";
+  }
   if (!Number.isInteger(payload.ordem)) errors.ordem = "Informe um número inteiro";
   return errors;
 };
 
-function MaterialFormModal({ material, onClose, onSaved }) {
+function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
   const [form, setForm] = useState(() => criarFormulario(material));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -162,9 +196,9 @@ function MaterialFormModal({ material, onClose, onSaved }) {
       });
 
       if (material) {
-        await api.put(`/admin/materiais-marketing/${material._id}`, requestBody);
+        await api.put(`${apiBase}/${material._id}`, requestBody);
       } else {
-        await api.post("/admin/materiais-marketing", requestBody);
+        await api.post(apiBase, requestBody);
       }
       onSaved(material ? "Material atualizado com sucesso" : "Material criado com sucesso");
     } catch (error) {
@@ -311,8 +345,41 @@ function MaterialFormModal({ material, onClose, onSaved }) {
             />
             {errors.linkExterno && <small>{errors.linkExterno}</small>}
             <p className={styles.helpText}>
-              Configure o arquivo ou pasta no Google Drive para que os distribuidores autorizados consigam visualizar o conteúdo.
+              Use somente um link do Google Drive e configure o arquivo ou pasta para que os distribuidores autorizados consigam visualizar.
             </p>
+          </div>
+
+          <div className={styles.fullField}>
+            <AudienceSelector
+              audienceType={form.audienciaTipo}
+              selectedIds={form.distribuidoresIds}
+              error={errors.distribuidoresIds || errors.audienciaTipo}
+              onChange={({ audienceType, selectedIds }) => {
+                setForm((current) => ({
+                  ...current,
+                  audienciaTipo: audienceType,
+                  distribuidoresIds: selectedIds,
+                }));
+                setErrors((current) => ({
+                  ...current,
+                  audienciaTipo: undefined,
+                  distribuidoresIds: undefined,
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="dataPublicacao">Data de publicação *</label>
+            <input
+              id="dataPublicacao"
+              name="dataPublicacao"
+              type="datetime-local"
+              value={form.dataPublicacao}
+              onChange={updateField}
+              required
+            />
+            {errors.dataPublicacao && <small>{errors.dataPublicacao}</small>}
           </div>
 
           <ImageUploadField
@@ -366,7 +433,10 @@ function MaterialFormModal({ material, onClose, onSaved }) {
   );
 }
 
-function AdminMateriaisMarketing() {
+function AdminMateriaisMarketing({
+  apiBase = "/admin/materiais-marketing",
+  pageTitle = "Materiais de Marketing",
+}) {
   const [materiais, setMateriais] = useState([]);
   const [paginacao, setPaginacao] = useState({ paginaAtual: 1, totalPaginas: 0, totalItens: 0 });
   const [opcoes, setOpcoes] = useState({ categorias: [], tipos: [], marcas: [], linhas: [] });
@@ -390,7 +460,7 @@ function AdminMateriaisMarketing() {
       setCarregando(true);
       setErro("");
       try {
-        const response = await api.get("/admin/materiais-marketing", {
+        const response = await api.get(apiBase, {
           params: { ...filtrosAplicados, pagina, limite: 12 },
           signal: controller.signal,
         });
@@ -408,7 +478,7 @@ function AdminMateriaisMarketing() {
     }
     carregar();
     return () => controller.abort();
-  }, [filtrosAplicados, pagina, refreshKey]);
+  }, [apiBase, filtrosAplicados, pagina, refreshKey]);
 
   const aplicarFiltros = (event) => {
     event.preventDefault();
@@ -432,7 +502,7 @@ function AdminMateriaisMarketing() {
     setAcaoEmAndamento(material._id);
     setFeedback(null);
     try {
-      const response = await api.patch(`/admin/materiais-marketing/${material._id}/status`, {
+      const response = await api.patch(`${apiBase}/${material._id}/status`, {
         ativo: !material.ativo,
       });
       setFeedback({ type: "success", message: response.data.message });
@@ -451,7 +521,7 @@ function AdminMateriaisMarketing() {
     setAcaoEmAndamento(material._id);
     setFeedback(null);
     try {
-      const response = await api.delete(`/admin/materiais-marketing/${material._id}`);
+      const response = await api.delete(`${apiBase}/${material._id}`);
       setFeedback({ type: "success", message: response.data.message });
       setPagina((current) => (materiais.length === 1 && current > 1 ? current - 1 : current));
       setRefreshKey((value) => value + 1);
@@ -473,7 +543,7 @@ function AdminMateriaisMarketing() {
         <header className={styles.pageHeader}>
           <div>
             <span>Conteúdo comercial</span>
-            <h1>Materiais de Marketing</h1>
+            <h1>{pageTitle}</h1>
             <p>Organize links de campanhas, imagens e documentos para os distribuidores.</p>
           </div>
           <button type="button" className={styles.primaryButton} onClick={() => setModalMaterial(null)}>
@@ -565,6 +635,11 @@ function AdminMateriaisMarketing() {
                   <div className={styles.badges}>
                     <span>{material.categoria}</span>
                     <span>{material.tipo}</span>
+                    <span>
+                      {material.audienciaTipo === "especificos"
+                        ? "Público específico"
+                        : "Todos os distribuidores"}
+                    </span>
                     {material.destaque && <strong>Destaque</strong>}
                     <strong className={material.ativo ? styles.activeBadge : styles.inactiveBadge}>
                       {material.ativo ? "Ativo" : "Inativo"}
@@ -574,7 +649,7 @@ function AdminMateriaisMarketing() {
                   <p>{material.descricao || "Sem descrição cadastrada."}</p>
                   <div className={styles.metadata}>
                     <span>{[material.marca, material.linha].filter(Boolean).join(" • ") || "Sem marca ou linha"}</span>
-                    <span>Publicado em {formatarData(material.createdAt)}</span>
+                    <span>Publicado em {formatarData(material.dataPublicacao || material.createdAt)}</span>
                   </div>
                 </div>
                 <footer className={styles.cardActions}>
@@ -601,6 +676,7 @@ function AdminMateriaisMarketing() {
 
       {modalMaterial !== undefined && (
         <MaterialFormModal
+          apiBase={apiBase}
           material={modalMaterial}
           onClose={() => setModalMaterial(undefined)}
           onSaved={concluirFormulario}

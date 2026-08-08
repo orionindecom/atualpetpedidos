@@ -7,7 +7,7 @@ import {
   excluirMaterial,
   listarMateriaisAdmin,
 } from "../controllers/materialMarketingController.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteGestorConteudo } from "../middlewares/adminMiddleware.js";
 import { proteger } from "../middlewares/authMiddleware.js";
 import {
   adminLimiter,
@@ -20,7 +20,7 @@ import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.use(proteger, somenteAdmin, adminLimiter);
+router.use(proteger, somenteGestorConteudo, adminLimiter);
 
 router.get("/", listarMateriaisAdmin);
 router.post(

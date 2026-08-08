@@ -16,6 +16,10 @@ import AdminMateriaisMarketing from "./pages/AdminMateriaisMarketing/AdminMateri
 import Treinamentos from "./pages/Treinamentos/Treinamentos";
 import TreinamentoDetalhe from "./pages/TreinamentoDetalhe/TreinamentoDetalhe";
 import AdminTreinamentos from "./pages/AdminTreinamentos/AdminTreinamentos";
+import AdminBanners from "./pages/AdminBanners/AdminBanners";
+import MarketingDashboard from "./pages/MarketingDashboard/MarketingDashboard";
+import LogisticaDashboard from "./pages/LogisticaDashboard/LogisticaDashboard";
+import LogisticaPedidos from "./pages/LogisticaPedidos/LogisticaPedidos";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -138,10 +142,61 @@ function App() {
           )}
         />
         <Route
+          path="/admin/banners"
+          element={(
+            <RoleRoute role="admin">
+              <AdminBanners />
+            </RoleRoute>
+          )}
+        />
+        <Route
           path="/admin/treinamentos"
           element={(
             <RoleRoute role="admin">
               <AdminTreinamentos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/marketing"
+          element={(
+            <RoleRoute role="marketing">
+              <MarketingDashboard />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/marketing/conteudos"
+          element={(
+            <RoleRoute role="marketing">
+              <AdminMateriaisMarketing
+                apiBase="/marketing/conteudos"
+                pageTitle="Conteúdos"
+              />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/marketing/banners"
+          element={(
+            <RoleRoute role="marketing">
+              <AdminBanners />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/logistica"
+          element={(
+            <RoleRoute role="logistica">
+              <LogisticaDashboard />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/logistica/pedidos"
+          element={(
+            <RoleRoute role="logistica">
+              <LogisticaPedidos />
             </RoleRoute>
           )}
         />

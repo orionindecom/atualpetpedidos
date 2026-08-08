@@ -22,8 +22,8 @@ const downloadBlob = (blobUrl, fileName) => {
   link.remove();
 };
 
-export const abrirOuBaixarPdfPedido = async ({ pedidoId, numeroPedido }) => {
-  const response = await api.get(`/pedidos/${pedidoId}/pdf`, {
+const abrirOuBaixarPdf = async ({ endpoint, fileName }) => {
+  const response = await api.get(endpoint, {
     responseType: "blob",
   });
 
@@ -31,8 +31,6 @@ export const abrirOuBaixarPdfPedido = async ({ pedidoId, numeroPedido }) => {
     type: "application/pdf",
   });
   const blobUrl = URL.createObjectURL(pdfBlob);
-  const fileName = `pedido-${sanitizeFileName(numeroPedido || pedidoId)}.pdf`;
-
   try {
     if (isMobileDevice()) {
       downloadBlob(blobUrl, fileName);
@@ -52,3 +50,17 @@ export const abrirOuBaixarPdfPedido = async ({ pedidoId, numeroPedido }) => {
     }, 30000);
   }
 };
+
+export const abrirOuBaixarPdfPedido = ({ pedidoId, numeroPedido }) => (
+  abrirOuBaixarPdf({
+    endpoint: `/pedidos/${pedidoId}/pdf`,
+    fileName: `pedido-${sanitizeFileName(numeroPedido || pedidoId)}.pdf`,
+  })
+);
+
+export const abrirOuBaixarPdfSeparacao = ({ pedidoId, numeroPedido }) => (
+  abrirOuBaixarPdf({
+    endpoint: `/logistica/pedidos/${pedidoId}/pdf-separacao`,
+    fileName: `separacao-${sanitizeFileName(numeroPedido || pedidoId)}.pdf`,
+  })
+);

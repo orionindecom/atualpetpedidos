@@ -26,6 +26,7 @@ function Dashboard() {
       novo: "Novo",
       em_analise: "Em análise",
       separando: "Separando",
+      separado: "Separado",
       faturado: "Faturado",
       enviado: "Enviado",
       entregue: "Entregue",

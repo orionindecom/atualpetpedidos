@@ -4,8 +4,10 @@ import { Writable } from "node:stream";
 import cloudinary from "../src/config/cloudinary.js";
 import Treinamento from "../src/models/Treinamento.js";
 import MaterialMarketing from "../src/models/MaterialMarketing.js";
+import BannerMarketing from "../src/models/BannerMarketing.js";
 import trainingRouter from "../src/routes/adminTreinamentoRoutes.js";
 import materialRouter from "../src/routes/adminMaterialMarketingRoutes.js";
+import bannerRouter from "../src/routes/marketingBannerRoutes.js";
 import {
   atualizarTreinamento,
   criarTreinamento,
@@ -14,6 +16,7 @@ import {
   atualizarMaterial,
   criarMaterial,
 } from "../src/controllers/materialMarketingController.js";
+import { criarBanner } from "../src/controllers/bannerMarketingController.js";
 import {
   allowedImageMimeTypes,
   hasAllowedImageExtension,
@@ -32,6 +35,7 @@ import { deleteImageByPublicId } from "../src/utils/cloudinaryUpload.js";
 const adminId = "507f1f77bcf86cd799439011";
 const trainingId = "507f1f77bcf86cd799439012";
 const materialId = "507f1f77bcf86cd799439013";
+const bannerId = "507f1f77bcf86cd799439014";
 
 const validTrainingPayload = {
   titulo: "Treinamento AtualPet",
@@ -208,10 +212,13 @@ test("remoção recusa publicId fora da pasta controlada", async (t) => {
 });
 
 test("rotas administrativas autenticam antes do upload e aplicam rate limit", () => {
-  for (const router of [trainingRouter, materialRouter]) {
+  for (const router of [trainingRouter, materialRouter, bannerRouter]) {
+    const expectedAuthorization = router === trainingRouter
+      ? "somenteAdmin"
+      : "somenteGestorConteudo";
     assert.deepEqual(router.stack.slice(0, 2).map((layer) => layer.name), [
       "proteger",
-      "somenteAdmin",
+      expectedAuthorization,
     ]);
 
     const postRoute = router.stack.find(
@@ -300,6 +307,41 @@ test("admin cria material com imagem e campos internos não vazam", async (t) =>
   assert.equal(res.statusCode, 201);
   assert.equal(received.imagemCapaPublicId, "atualpet/materiais-marketing/capa");
   assert.equal(Object.hasOwn(res.body.material, "imagemCapaPublicId"), false);
+});
+
+test("gestor cria banner com imagem validada e publicId não vaza", async (t) => {
+  mockCloudinary(t, {
+    uploadResult: {
+      secure_url: "https://res.cloudinary.com/atualpet/image/upload/banner.jpg",
+      public_id: "atualpet/banners/banner",
+    },
+  });
+  const originalCreate = BannerMarketing.create;
+  let received;
+  BannerMarketing.create = async (payload) => {
+    received = payload;
+    return { _id: bannerId, ...payload };
+  };
+  t.after(() => {
+    BannerMarketing.create = originalCreate;
+  });
+
+  const res = createResponse();
+  await criarBanner({
+    body: {
+      tituloInterno: "Campanha",
+      audienciaTipo: "todos",
+      ordem: "1",
+      ativo: "true",
+    },
+    file: imageFile,
+    usuario: { _id: adminId },
+  }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(received.imagemPublicId, "atualpet/banners/banner");
+  assert.equal(received.criadoPor, adminId);
+  assert.equal(Object.hasOwn(res.body.banner, "imagemPublicId"), false);
 });
 
 test("edição sem arquivo preserva a thumbnail e URL legada", async (t) => {

@@ -5,11 +5,15 @@ import { clearAuthSession, getAuthSession } from "../../utils/authSession";
 
 const roleHome = {
   admin: "/admin",
+  marketing: "/marketing",
+  logistica: "/logistica",
   cliente: "/catalogo",
 };
 
 const validationEndpoint = {
   admin: "/produtos",
+  marketing: "/marketing/dashboard",
+  logistica: "/logistica/dashboard",
   cliente: "/pedidos/meus",
 };
 

@@ -22,6 +22,10 @@ import pedidoRoutes from "./routes/pedidoRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import adminMaterialMarketingRoutes from "./routes/adminMaterialMarketingRoutes.js";
 import materialMarketingRoutes from "./routes/materialMarketingRoutes.js";
+import marketingRoutes from "./routes/marketingRoutes.js";
+import marketingBannerRoutes from "./routes/marketingBannerRoutes.js";
+import bannerMarketingRoutes from "./routes/bannerMarketingRoutes.js";
+import logisticaRoutes from "./routes/logisticaRoutes.js";
 import adminTreinamentoRoutes from "./routes/adminTreinamentoRoutes.js";
 import treinamentoRoutes from "./routes/treinamentoRoutes.js";
 
@@ -90,7 +94,13 @@ app.use("/api/catalogo", catalogoRoutes);
 app.use("/api/pedidos", pedidoRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin/materiais-marketing", adminMaterialMarketingRoutes);
+app.use("/api/marketing/conteudos", adminMaterialMarketingRoutes);
+app.use("/api/marketing/banners", marketingBannerRoutes);
+app.use("/api/admin/banners", marketingBannerRoutes);
+app.use("/api/marketing", marketingRoutes);
 app.use("/api/materiais-marketing", materialMarketingRoutes);
+app.use("/api/banners", bannerMarketingRoutes);
+app.use("/api/logistica", logisticaRoutes);
 app.use("/api/admin/treinamentos", adminTreinamentoRoutes);
 app.use("/api/treinamentos", treinamentoRoutes);
 

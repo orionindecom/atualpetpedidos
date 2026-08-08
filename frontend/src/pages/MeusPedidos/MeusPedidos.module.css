@@ -76,7 +76,7 @@
 
 /* ── Bloco de info (div) ── */
 
-.card > div {
+.summary {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   align-items: center;
@@ -95,7 +95,7 @@
 }
 
 /* Data — embaixo do número */
-.card > div > p:nth-child(1) {
+.summary > p:nth-of-type(1) {
   grid-column: 1;
   grid-row: 2;
   font-size: 12px;
@@ -104,7 +104,7 @@
 }
 
 /* Status badge — coluna do meio */
-.card > div > p:nth-child(2) {
+.summary > p:nth-of-type(2) {
   grid-column: 2;
   grid-row: 1 / span 2;
   margin: 0;
@@ -127,7 +127,7 @@
   border: 1px solid #e5e7eb;
 }
 
-.card > div > p:nth-child(2)::before {
+.summary > p:nth-of-type(2)::before {
   content: '';
   display: inline-block;
   width: 7px;
@@ -138,7 +138,7 @@
 }
 
 /* Total — coluna da direita */
-.card > div > p:nth-child(3) {
+.summary > p:nth-of-type(3) {
   grid-column: 3;
   grid-row: 1 / span 2;
   margin: 0;
@@ -152,7 +152,7 @@
 
 /* ── Botão ── */
 
-.card > button {
+.actions button {
   background: linear-gradient(135deg, #f97316, #ea580c);
   color: #ffffff;
   padding: 10px 20px;
@@ -166,13 +166,13 @@
   box-shadow: 0 3px 12px rgba(249, 115, 22, 0.28);
 }
 
-.card > button:hover {
+.actions button:hover {
   opacity: 0.9;
   transform: translateY(-1px);
   box-shadow: 0 5px 18px rgba(249, 115, 22, 0.4);
 }
 
-.card > button:active {
+.actions button:active {
   transform: translateY(0);
 }
 
@@ -215,22 +215,22 @@
 /* ── Responsivo ── */
 
 @media (max-width: 900px) {
-  .card > div {
+  .summary {
     grid-template-columns: 1fr 1fr;
   }
 
-  .card > div > p:nth-child(3) {
+  .summary > p:nth-of-type(3) {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
   }
 
-  .card > div > p:nth-child(2) {
+  .summary > p:nth-of-type(2) {
     grid-column: 1;
     grid-row: 2;
   }
 
-  .card > div > p:nth-child(1) {
+  .summary > p:nth-of-type(1) {
     grid-column: 1;
     grid-row: 3;
   }
@@ -251,25 +251,127 @@
     gap: 14px;
   }
 
-  .card > div {
+  .summary {
     grid-template-columns: 1fr;
   }
 
-  .card > div > p:nth-child(1),
-  .card > div > p:nth-child(2),
-  .card > div > p:nth-child(3) {
+  .summary > p:nth-of-type(1),
+  .summary > p:nth-of-type(2),
+  .summary > p:nth-of-type(3) {
     grid-column: 1;
     grid-row: unset;
     justify-self: start;
   }
 
-  .card > div > p:nth-child(3) {
+  .summary > p:nth-of-type(3) {
     font-size: 18px;
   }
 
-  .card > button {
+  .actions button {
     width: 100%;
     text-align: center;
     padding: 12px;
+  }
+}
+
+.actions {
+  min-width: 150px;
+  display: grid;
+  gap: 8px;
+}
+
+.trackingButton {
+  border: 1px solid #4aa9a4 !important;
+  background: transparent !important;
+  color: #174e4b !important;
+  box-shadow: none !important;
+}
+
+.pdfButton {
+  border: 1px solid #ea580c !important;
+}
+
+.confirmReceiptButton {
+  border: 1px solid #166534 !important;
+  background: #166534 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(22, 101, 52, 0.22) !important;
+}
+
+.confirmReceiptButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.trackingPanel {
+  grid-column: 1 / -1;
+  padding: 22px 0 4px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.shippingData {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shippingData > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.shippingData span,
+.shippingData strong {
+  overflow-wrap: anywhere;
+  display: block;
+}
+
+.shippingData span {
+  margin-bottom: 4px;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.shippingData strong {
+  color: #1f2937;
+  font-size: 12px;
+}
+
+.shippingData a {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #174e4b;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .shippingData {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .actions {
+    width: 100%;
+  }
+
+  .trackingPanel {
+    padding-top: 18px;
+  }
+
+  .shippingData {
+    grid-template-columns: 1fr;
   }
 }

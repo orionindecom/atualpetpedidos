@@ -10,11 +10,15 @@ import {
   ImageUploadError,
   uploadImageBufferDetails,
 } from "../utils/cloudinaryUpload.js";
+import {
+  buildAudienceFilter,
+  validateAudienceDistributors,
+} from "../utils/contentAudience.js";
 import { sendServerError } from "../utils/validation.js";
 
 const MATERIAL_IMAGE_FOLDER = "atualpet/materiais-marketing";
 const CLIENT_FIELDS =
-  "_id titulo descricao categoria tipo marca linha linkExterno imagemCapaUrl destaque ordem createdAt updatedAt";
+  "_id titulo descricao categoria tipo marca linha linkExterno imagemCapaUrl destaque ordem dataPublicacao createdAt updatedAt";
 
 const sendValidationError = (res, errors) =>
   res.status(400).json({
@@ -53,6 +57,35 @@ const removeCoverBestEffort = async (publicId) => {
   }
 };
 
+const publicationFilter = (now = new Date()) => ({
+  $or: [
+    { dataPublicacao: { $lte: now } },
+    { dataPublicacao: { $exists: false } },
+    { dataPublicacao: null },
+  ],
+});
+
+const combineConditions = (filter, ...conditions) => {
+  const combined = { ...filter };
+  const and = [];
+
+  if (combined.$or) {
+    and.push({ $or: combined.$or });
+    delete combined.$or;
+  }
+
+  and.push(...conditions.filter(Boolean));
+  if (and.length > 0) combined.$and = and;
+  return combined;
+};
+
+export const buildClientMaterialVisibilityFilter = (usuarioId, now = new Date()) =>
+  combineConditions(
+    { ativo: true },
+    publicationFilter(now),
+    buildAudienceFilter(usuarioId)
+  );
+
 const logAndSendError = (res, error, operation) => {
   console.error(`[materiais-marketing] Falha em ${operation}`, {
     name: error?.name,
@@ -77,8 +110,18 @@ const listMaterials = async (req, res, { admin }) => {
     });
   }
 
-  const filter = buildMaterialFilter(query, { onlyActive: !admin });
-  const filterScope = admin ? {} : { ativo: true };
+  const queryFilter = buildMaterialFilter(query, { onlyActive: !admin });
+  const visibilityFilter = admin
+    ? null
+    : buildClientMaterialVisibilityFilter(req.usuario._id);
+  const filter = admin
+    ? queryFilter
+    : combineConditions(
+      queryFilter,
+      publicationFilter(),
+      buildAudienceFilter(req.usuario._id)
+    );
+  const filterScope = admin ? {} : visibilityFilter;
   const skip = (query.pagina - 1) * query.limite;
   let materialQuery = MaterialMarketing.find(filter)
     .sort(MATERIAL_SORT)
@@ -88,7 +131,9 @@ const listMaterials = async (req, res, { admin }) => {
   if (!admin) {
     materialQuery = materialQuery.select(CLIENT_FIELDS);
   } else {
-    materialQuery = materialQuery.select("-__v -imagemCapaPublicId");
+    materialQuery = materialQuery
+      .select("-__v -imagemCapaPublicId")
+      .populate("criadoPor", "nomeResponsavel email tipo");
   }
 
   materialQuery = materialQuery.lean().maxTimeMS(5000);
@@ -143,6 +188,7 @@ export const buscarMaterialAdmin = async (req, res) => {
   try {
     const material = await MaterialMarketing.findById(req.params.id)
       .select("-__v -imagemCapaPublicId")
+      .populate("criadoPor", "nomeResponsavel email tipo")
       .lean();
 
     if (!material) {
@@ -163,6 +209,13 @@ export const criarMaterial = async (req, res) => {
 
     if (!validation.valid) {
       return sendValidationError(res, validation.errors);
+    }
+
+    const audienceIsValid = await validateAudienceDistributors(validation.data);
+    if (!audienceIsValid) {
+      return sendValidationError(res, {
+        distribuidoresIds: "Selecione distribuidores ativos e aprovados",
+      });
     }
 
     if (req.file) uploadedImage = await uploadCover(req.file);
@@ -209,6 +262,18 @@ export const atualizarMaterial = async (req, res) => {
       return res.status(404).json({ message: "Material não encontrado" });
     }
 
+    const nextAudience = {
+      audienciaTipo: validation.data.audienciaTipo ?? material.audienciaTipo,
+      distribuidoresIds:
+        validation.data.distribuidoresIds ?? material.distribuidoresIds,
+    };
+    const audienceIsValid = await validateAudienceDistributors(nextAudience);
+    if (!audienceIsValid) {
+      return sendValidationError(res, {
+        distribuidoresIds: "Selecione distribuidores ativos e aprovados",
+      });
+    }
+
     const previousPublicId = material.imagemCapaPublicId;
     for (const [field, value] of Object.entries(validation.data)) {
       material[field] = value;
@@ -233,7 +298,6 @@ export const atualizarMaterial = async (req, res) => {
     if ((uploadedImage || removalRequested) && previousPublicId) {
       await removeCoverBestEffort(previousPublicId);
     }
-
     return res.status(200).json({
       message: "Material atualizado com sucesso",
       material: sanitizeMaterial(material),

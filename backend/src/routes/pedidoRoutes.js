@@ -2,6 +2,7 @@ import express from "express";
 
 import {
   criarPedido,
+  confirmarRecebimento,
   listarMeusPedidos,
   listarTodosPedidos,
   buscarPedidoPorId,
@@ -13,6 +14,7 @@ import {
 
 import { proteger } from "../middlewares/authMiddleware.js";
 import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteCliente } from "../middlewares/clienteMiddleware.js";
 import {
   adminLimiter,
   pedidoLimiter,
@@ -24,6 +26,7 @@ const router = express.Router();
 router.post(
   "/",
   proteger,
+  somenteCliente,
   pedidoLimiter,
   criarPedido
 );
@@ -31,6 +34,7 @@ router.post(
 router.get(
   "/meus",
   proteger,
+  somenteCliente,
   listarMeusPedidos
 );
 
@@ -40,6 +44,15 @@ router.get(
   somenteAdmin,
   adminLimiter,
   listarTodosPedidos
+);
+
+router.patch(
+  "/:id/confirmar-recebimento",
+  proteger,
+  somenteCliente,
+  pedidoLimiter,
+  validateObjectIdParam(),
+  confirmarRecebimento
 );
 
 router.get(

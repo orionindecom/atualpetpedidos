@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import Usuario from "../models/Usuario.js";
 import { measureStage, measureStageSync } from "../utils/performance.js";
+import { cadastroClienteBloqueiaAcesso } from "../utils/userAccess.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -51,10 +52,7 @@ export const proteger = async (req, res, next) => {
       });
     }
 
-    if (
-      req.usuario.tipo === "cliente" &&
-      req.usuario.statusCadastro !== "aprovado"
-    ) {
+    if (cadastroClienteBloqueiaAcesso(req.usuario)) {
       return res.status(403).json({
         message: "Cadastro não aprovado",
       });

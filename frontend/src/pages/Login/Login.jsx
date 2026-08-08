@@ -22,11 +22,13 @@ function Login() {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
 
-      if (response.data.usuario.tipo === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/catalogo");
-      }
+      const homeByRole = {
+        admin: "/admin",
+        marketing: "/marketing",
+        logistica: "/logistica",
+        cliente: "/catalogo",
+      };
+      navigate(homeByRole[response.data.usuario.tipo] || "/login");
     } catch (error) {
       alert(error.response?.data?.message || "Erro ao realizar login");
     }

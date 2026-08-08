@@ -1,3 +1,5 @@
+import { validateAudiencePayload } from "./contentAudience.js";
+
 const PAGINA_PADRAO = 1;
 const LIMITE_CLIENTE_PADRAO = 12;
 const LIMITE_ADMIN_PADRAO = 20;
@@ -42,6 +44,9 @@ export const CAMPOS_MATERIAL_PERMITIDOS = new Set([
   "destaque",
   "ordem",
   "ativo",
+  "audienciaTipo",
+  "distribuidoresIds",
+  "dataPublicacao",
 ]);
 
 export const escapeRegex = (value) =>
@@ -77,6 +82,23 @@ export const isSafeExternalUrl = (
     }
 
     return url.protocol === "http:" && nodeEnv !== "production";
+  } catch {
+    return false;
+  }
+};
+
+export const isSafeDriveUrl = (value) => {
+  if (typeof value !== "string" || value.trim().length > 2048) return false;
+
+  try {
+    const url = new URL(value.trim());
+    const allowedHosts = new Set(["drive.google.com", "docs.google.com"]);
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      allowedHosts.has(url.hostname.toLowerCase())
+    );
   } catch {
     return false;
   }
@@ -199,7 +221,6 @@ export const validateMaterialPayload = (
   {
     allowEmpty = false,
     partial = false,
-    nodeEnv = process.env.NODE_ENV,
   } = {}
 ) => {
   const source = body && typeof body === "object" && !Array.isArray(body)
@@ -246,10 +267,8 @@ export const validateMaterialPayload = (
       ? source[field].trim()
       : source[field];
 
-    if (!isSafeExternalUrl(normalized, { required, nodeEnv })) {
-      errors[field] = nodeEnv === "production"
-        ? "Informe uma URL HTTPS válida"
-        : "Informe uma URL HTTP ou HTTPS válida";
+    if (!isSafeDriveUrl(normalized)) {
+      errors[field] = "Informe um link válido do Google Drive";
     } else {
       data[field] = normalized || "";
     }
@@ -276,6 +295,22 @@ export const validateMaterialPayload = (
       data.ordem = ordem;
     }
   }
+
+  if (Object.hasOwn(source, "dataPublicacao")) {
+    const date = new Date(source.dataPublicacao);
+
+    if (Number.isNaN(date.getTime())) {
+      errors.dataPublicacao = "Informe uma data de publicação válida";
+    } else {
+      data.dataPublicacao = date;
+    }
+  } else if (!partial) {
+    data.dataPublicacao = new Date();
+  }
+
+  const audience = validateAudiencePayload(source, { partial });
+  Object.assign(data, audience.data);
+  Object.assign(errors, audience.errors);
 
   if (
     partial &&

@@ -21,6 +21,7 @@ function AdminPedidos() {
     "novo",
     "em_analise",
     "separando",
+    "separado",
     "faturado",
     "enviado",
     "entregue",
@@ -68,6 +69,7 @@ function AdminPedidos() {
       novo: "Novo",
       em_analise: "Em análise",
       separando: "Separando",
+      separado: "Separado",
       faturado: "Faturado",
       enviado: "Enviado",
       entregue: "Entregue",
@@ -255,13 +257,18 @@ function AdminPedidos() {
                     }
                   >
                     {statusOptions.map((status) => (
-                      <option key={status} value={status}>
+                      <option
+                        key={status}
+                        value={status}
+                        disabled={status === "entregue" && pedido.status !== "entregue"}
+                      >
                         {formatarStatus(status)}
                       </option>
                     ))}
                   </select>
 
                   <button
+                    disabled={(statusSelecionado[pedido._id] || pedido.status) === "entregue"}
                     onClick={() =>
                       alterarStatus(
                         pedido._id,

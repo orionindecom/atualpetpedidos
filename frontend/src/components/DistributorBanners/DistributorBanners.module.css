@@ -1,0 +1,46 @@
+.banners {
+  width: 100%;
+  margin: -8px 0 24px;
+  overflow-x: auto;
+  display: grid;
+  grid-auto-columns: min(920px, 100%);
+  grid-auto-flow: column;
+  gap: 12px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.banner {
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dce2e9;
+  border-radius: 8px;
+  background: #ffffff;
+  display: block;
+  scroll-snap-align: start;
+}
+
+button.banner {
+  cursor: pointer;
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .banners {
+    margin-bottom: 18px;
+    grid-auto-columns: 92%;
+  }
+
+  .banner {
+    aspect-ratio: 16 / 6;
+  }
+}

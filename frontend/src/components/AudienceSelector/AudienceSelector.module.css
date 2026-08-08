@@ -1,0 +1,144 @@
+.selector {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.selector legend {
+  margin-bottom: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.segmented {
+  padding: 3px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f4f6f8;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.segmented label {
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #667085;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.segmented label[data-active="true"] {
+  background: #ffffff;
+  color: #10635d;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.distributorPanel {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #dce2e9;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.selectionHeader {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.selectionHeader label {
+  margin: 0;
+}
+
+.selectionHeader span,
+.message {
+  color: #667085;
+  font-size: 12px;
+}
+
+.distributorList {
+  max-height: 220px;
+  margin-top: 8px;
+  overflow-y: auto;
+  border: 1px solid #e1e6ec;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.distributorList > label {
+  min-height: 48px;
+  margin: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid #edf0f4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.distributorList > label:last-child {
+  border-bottom: 0;
+}
+
+.distributorList input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.distributorList span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.distributorList strong,
+.distributorList small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distributorList small {
+  margin: 0;
+  color: #667085;
+  font-weight: 500;
+}
+
+.message {
+  margin: 12px 0 2px;
+}
+
+.error {
+  margin-top: 6px;
+  color: #b42318;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .segmented {
+    grid-template-columns: 1fr;
+  }
+}

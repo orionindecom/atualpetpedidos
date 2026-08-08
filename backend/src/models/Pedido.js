@@ -35,6 +35,45 @@ const itemPedidoSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const historicoStatusSchema = new mongoose.Schema(
+  {
+    statusAnterior: {
+      type: String,
+      required: true,
+    },
+    novoStatus: {
+      type: String,
+      required: true,
+    },
+    alteradoEm: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    usuarioId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
+    usuarioNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    usuarioTipo: {
+      type: String,
+      enum: ["admin", "marketing", "logistica", "cliente"],
+      required: true,
+    },
+    observacao: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+  },
+  { _id: false }
+);
+
 const pedidoSchema = new mongoose.Schema(
   {
     numeroPedido: {
@@ -138,6 +177,7 @@ const pedidoSchema = new mongoose.Schema(
         "novo",
         "em_analise",
         "separando",
+        "separado",
         "faturado",
         "enviado",
         "entregue",
@@ -149,6 +189,49 @@ const pedidoSchema = new mongoose.Schema(
     observacao: {
       type: String,
       trim: true,
+    },
+
+    numeroNotaFiscal: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+
+    dataFaturamento: Date,
+
+    transportadora: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+
+    codigoRastreio: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+
+    linkRastreio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+
+    dataEnvio: Date,
+
+    dataEntrega: Date,
+
+    observacaoLogistica: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      select: false,
+    },
+
+    historicoStatus: {
+      type: [historicoStatusSchema],
+      default: undefined,
+      select: false,
     },
   },
   {

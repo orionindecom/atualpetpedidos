@@ -1,0 +1,59 @@
+.container { min-height: 100vh; padding: 36px 48px 56px; background: #f5f7fa; color: #17202a; }
+.pageHeader { margin-bottom: 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.pageHeader span, .modalHeader span { color: #0f766e; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.pageHeader h1 { margin: 5px 0 8px; font-size: 32px; }
+.pageHeader p, .modalHeader h2, .stateBox p { margin: 0; }
+.pageHeader p { color: #667085; }
+.primaryButton, .secondaryButton, .cardActions button, .modalHeader button { min-height: 42px; padding: 0 15px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+.primaryButton { border: 1px solid #e65f00; background: #f97316; color: #fff; }
+.secondaryButton, .modalHeader button, .cardActions button { border: 1px solid #cbd5e1; background: #fff; color: #344054; }
+button:disabled { cursor: not-allowed; opacity: .58; }
+.successFeedback, .errorFeedback, .formError { margin-bottom: 18px; padding: 12px 14px; border: 1px solid; border-radius: 8px; font-weight: 700; }
+.successFeedback { border-color: #86d7c5; background: #ecfdf8; color: #10634f; }
+.errorFeedback, .formError { border-color: #f2aaaa; background: #fff1f1; color: #a12828; }
+.listHeader { min-height: 54px; color: #667085; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; }
+.listHeader strong { color: #344054; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.card { min-width: 0; overflow: hidden; border: 1px solid #dce2e9; border-radius: 8px; background: #fff; display: grid; grid-template-rows: 150px 1fr auto; }
+.image { overflow: hidden; border-bottom: 1px solid #e8edf2; background: #edf4f2; }
+.image img { width: 100%; height: 100%; object-fit: cover; }
+.cardBody { min-width: 0; padding: 16px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badges span { padding: 4px 7px; border-radius: 6px; background: #edf5f3; color: #21675f; font-size: 11px; font-weight: 800; }
+.card h2 { margin: 12px 0 7px; overflow-wrap: anywhere; font-size: 18px; }
+.cardBody p { margin: 0 0 8px; color: #667085; font-size: 13px; }
+.cardBody small { color: #7c8798; }
+.cardActions { padding: 12px; border-top: 1px solid #e8edf2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cardActions button { min-width: 0; padding: 0 8px; }
+.cardActions .deleteButton { border-color: #efb1b1; color: #a12828; }
+.stateBox { padding: 42px 20px; border: 1px dashed #b9c3cf; border-radius: 8px; color: #667085; text-align: center; }
+.stateBox h2 { margin: 0 0 8px; color: #344054; font-size: 19px; }
+.skeleton { height: 340px; border: 1px solid #e1e6ec; border-radius: 8px; background: linear-gradient(90deg,#edf0f3 25%,#f7f8fa 50%,#edf0f3 75%); background-size: 200% 100%; animation: loading 1.3s infinite; }
+@keyframes loading { to { background-position: -200% 0; } }
+.modalOverlay { position: fixed; inset: 0; z-index: 200; padding: 24px; overflow-y: auto; background: rgba(15,23,42,.58); display: grid; place-items: start center; }
+.modal { width: min(760px,100%); margin: 24px 0; overflow: hidden; border-radius: 8px; background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.24); }
+.modalHeader { padding: 18px 20px; border-bottom: 1px solid #e5e9ef; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.modalHeader h2 { margin-top: 4px; font-size: 22px; }
+.form { padding: 20px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.form label { margin-bottom: 7px; color: #344054; display: block; font-size: 13px; font-weight: 800; }
+.form input, .form select { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #1f2937; font: inherit; }
+.form input:focus, .form select:focus { outline: 0; border-color: #0f9488; box-shadow: 0 0 0 3px rgba(15,148,136,.12); }
+.form small { margin-top: 5px; color: #b42318; display: block; font-size: 12px; font-weight: 700; }
+.fullField, .formError, .formActions { grid-column: 1 / -1; }
+.statusField { display: flex; align-items: flex-end; }
+.statusField label { margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.statusField input { width: 18px; min-height: 18px; height: 18px; }
+.formActions { padding-top: 16px; border-top: 1px solid #e8edf2; display: flex; justify-content: flex-end; gap: 10px; }
+@media (max-width: 760px) {
+  .container { padding: 24px 16px 40px; }
+  .pageHeader { align-items: stretch; flex-direction: column; gap: 16px; }
+  .pageHeader h1 { font-size: 27px; }
+  .grid { grid-template-columns: 1fr; }
+  .modalOverlay { padding: 0; place-items: stretch; }
+  .modal { width: 100%; min-height: 100vh; margin: 0; border-radius: 0; }
+  .form { grid-template-columns: 1fr; }
+  .fullField, .formError, .formActions { grid-column: auto; }
+  .formActions { align-items: stretch; flex-direction: column; }
+  .formActions button { width: 100%; }
+}
+@media (max-width: 480px) { .cardActions { grid-template-columns: 1fr; } .listHeader { align-items: flex-start; flex-direction: column; justify-content: center; gap: 3px; } }

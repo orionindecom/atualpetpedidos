@@ -1,0 +1,622 @@
+.container {
+  min-height: 100vh;
+  padding: 36px 48px 56px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.pageHeader {
+  margin-bottom: 12px;
+}
+
+.pageHeader > span {
+  color: var(--brand-primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pageHeader h1 {
+  margin: 5px 0 8px;
+  font-size: 32px;
+}
+
+.pageHeader p,
+.resultHeader span,
+.orderIdentity span,
+.orderMeta,
+.operationalMeta,
+.modalHeader p,
+.historySection > p {
+  color: var(--text-muted);
+}
+
+.pageHeader p,
+.modalHeader p,
+.historySection > p {
+  margin: 0;
+}
+
+.filterInput {
+  width: 100%;
+  min-width: 0;
+  height: var(--control-height);
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+select.statusFilter {
+  padding-right: 8px;
+  padding-left: 8px;
+  font-size: 13px;
+}
+
+.quickFilter {
+  min-height: var(--control-height);
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quickFilter input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-primary-strong);
+}
+
+.resultHeader {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.orderList {
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-primary);
+}
+
+.orderCard {
+  min-height: 82px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border-default);
+  display: grid;
+  grid-template-columns: minmax(170px, 1.3fr) 130px 140px minmax(180px, 1fr) 116px;
+  align-items: center;
+  gap: 16px;
+}
+
+.orderCard:last-child {
+  border-bottom: 0;
+}
+
+.orderCard:hover {
+  background: #f9fcfb;
+}
+
+.orderIdentity,
+.orderMeta,
+.operationalMeta {
+  min-width: 0;
+}
+
+.orderIdentity strong,
+.orderIdentity span,
+.orderMeta span,
+.operationalMeta span {
+  overflow: hidden;
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orderIdentity strong {
+  font-size: 14px;
+}
+
+.orderIdentity span,
+.orderMeta,
+.operationalMeta {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.statusBadge {
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.statusBadge[data-status="novo"],
+.statusBadge[data-status="em_analise"] {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.statusBadge[data-status="separando"],
+.statusBadge[data-status="separado"] {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.statusBadge[data-status="faturado"] {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.statusBadge[data-status="enviado"] {
+  border-color: #a5f3fc;
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.statusBadge[data-status="entregue"] {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.statusBadge[data-status="cancelado"] {
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #991b1b;
+}
+
+.orderCard > button,
+.formActions button,
+.modalHeader button {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modalHeaderActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modalHeader .separationPdfButton {
+  border-color: var(--brand-primary-strong);
+  color: var(--text-primary);
+}
+
+.modalHeader .separationPdfButton:hover:not(:disabled) {
+  background: var(--brand-primary-soft);
+}
+
+.modalHeader .separationPdfButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.orderCard > button {
+  border: 1px solid var(--brand-primary-strong);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.orderCard > button:hover,
+.formActions button:first-child:hover {
+  background: var(--brand-primary-soft);
+}
+
+.stateBox {
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-primary);
+  color: var(--text-secondary);
+}
+
+.modalOverlay {
+  padding: 24px;
+  overflow-y: auto;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(23, 33, 31, 0.64);
+  display: grid;
+  place-items: start center;
+}
+
+.modal {
+  width: min(1040px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--surface-primary);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+.modalHeader {
+  min-height: 92px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.modalHeader span {
+  color: var(--brand-primary-strong);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.modalHeader h2 {
+  margin: 3px 0;
+  font-size: 23px;
+}
+
+.modalHeader button {
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.modalContent {
+  max-height: calc(100vh - 140px);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.progressSection,
+.readOnlySection,
+.logisticsForm,
+.historySection {
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.readOnlySection,
+.logisticsForm,
+.historySection {
+  padding-top: 24px;
+}
+
+.progressSection h3,
+.readOnlySection h3,
+.logisticsForm h3,
+.historySection h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.itemsTable {
+  border-top: 1px solid var(--border-default);
+}
+
+.itemsTable > div {
+  min-height: 48px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-default);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px 110px 110px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.itemsTable > div span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemsTable > div span:not(:first-child),
+.itemsTable > div strong {
+  text-align: right;
+}
+
+.logisticsForm > section + section {
+  margin-top: 24px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.formGrid label {
+  min-width: 0;
+  color: var(--text-secondary);
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.readOnlyField {
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-secondary);
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.readOnlyField span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.readOnlyField strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.formGrid input,
+.formGrid select,
+.formGrid textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.formGrid textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.formGrid input:focus,
+.formGrid select:focus,
+.formGrid textarea:focus,
+.filterInput:focus {
+  border-color: var(--brand-primary-strong);
+  outline: 3px solid rgba(113, 196, 192, 0.2);
+}
+
+.wideField {
+  grid-column: span 1;
+}
+
+.fullField {
+  grid-column: 1 / -1;
+}
+
+.formActions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.formActions button:first-child {
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.formActions button:last-child {
+  min-width: 160px;
+  border: 1px solid var(--brand-accent);
+  background: var(--brand-accent);
+  color: var(--text-on-brand);
+}
+
+.formActions button:disabled,
+.orderCard > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.historySection {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.historySection ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historySection li {
+  min-height: 70px;
+  padding: 10px 0 10px 20px;
+  position: relative;
+  border-left: 2px solid var(--border-default);
+  display: grid;
+  gap: 3px;
+}
+
+.historySection li::before {
+  width: 10px;
+  height: 10px;
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: -6px;
+  border-radius: 50%;
+  background: var(--brand-primary-strong);
+}
+
+.historySection time,
+.historySection span,
+.historySection p {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.historySection p {
+  margin: 3px 0 0;
+}
+
+@media (max-width: 980px) {
+  .orderCard {
+    grid-template-columns: minmax(160px, 1fr) 130px 140px 116px;
+  }
+
+  .operationalMeta {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .container {
+    padding: 24px 18px 44px;
+  }
+
+  .pageHeader h1 {
+    font-size: 28px;
+  }
+
+  .orderList {
+    border: 0;
+    overflow: visible;
+    background: transparent;
+    display: grid;
+    gap: 10px;
+  }
+
+  .orderCard {
+    min-height: 0;
+    padding: 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--surface-primary);
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .orderIdentity {
+    grid-column: 1;
+  }
+
+  .statusBadge {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .orderMeta {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 14px;
+  }
+
+  .operationalMeta {
+    grid-column: 1 / -1;
+    display: block;
+  }
+
+  .orderCard > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .modalOverlay {
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modalHeader {
+    min-height: 0;
+    padding: 14px 18px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .modalHeader h2 {
+    font-size: 20px;
+  }
+
+  .modalHeaderActions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .modalHeaderActions button {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .modalContent {
+    max-height: calc(100vh - 142px);
+    padding: 20px 18px 36px;
+  }
+
+  .itemsTable > div {
+    grid-template-columns: 1fr auto;
+  }
+
+  .itemsTable > div span:nth-child(3),
+  .itemsTable > div strong {
+    display: none;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fullField,
+  .wideField {
+    grid-column: 1;
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+}

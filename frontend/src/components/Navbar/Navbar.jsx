@@ -15,7 +15,19 @@ const adminLinks = [
     label: "Materiais de Marketing",
     group: "Conteúdo",
   },
+  { to: "/admin/banners", label: "Banners", group: "Conteúdo" },
   { to: "/admin/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+];
+
+const marketingLinks = [
+  { to: "/marketing", label: "Dashboard", group: "Visão geral" },
+  { to: "/marketing/conteudos", label: "Conteúdos", group: "Conteúdo" },
+  { to: "/marketing/banners", label: "Banners", group: "Conteúdo" },
+];
+
+const logisticaLinks = [
+  { to: "/logistica", label: "Dashboard", group: "Visão geral" },
+  { to: "/logistica/pedidos", label: "Pedidos", group: "Operação" },
 ];
 
 const clienteLinks = [
@@ -28,7 +40,7 @@ const clienteLinks = [
   },
   {
     to: "/materiais-marketing",
-    label: "Materiais de Marketing",
+    label: "Materiais",
     group: "Conteúdo",
   },
   { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
@@ -42,17 +54,32 @@ function Navbar() {
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const isAdmin = usuario?.tipo === "admin";
-  const links = isAdmin ? adminLinks : clienteLinks;
-  const home = isAdmin ? "/admin" : "/catalogo";
+  const isMarketing = usuario?.tipo === "marketing";
+  const isLogistica = usuario?.tipo === "logistica";
+  const isBackoffice = isAdmin || isMarketing || isLogistica;
+  const links = isAdmin
+    ? adminLinks
+    : isMarketing
+      ? marketingLinks
+      : isLogistica
+        ? logisticaLinks
+        : clienteLinks;
+  const home = isAdmin
+    ? "/admin"
+    : isMarketing
+      ? "/marketing"
+      : isLogistica
+        ? "/logistica"
+        : "/catalogo";
   const userName = usuario?.nomeResponsavel || usuario?.nomeFantasia || "Minha conta";
 
   useEffect(() => {
-    document.body.classList.toggle("admin-layout", isAdmin);
+    document.body.classList.toggle("admin-layout", isBackoffice);
 
     return () => {
       document.body.classList.remove("admin-layout");
     };
-  }, [isAdmin]);
+  }, [isBackoffice]);
 
   useEffect(() => {
     if (!menuAberto) return undefined;
@@ -87,12 +114,12 @@ function Navbar() {
 
   return (
     <>
-      <header className={`${styles.navbar} ${isAdmin ? styles.admin : ""}`}>
+      <header className={`${styles.navbar} ${isBackoffice ? styles.admin : ""}`}>
         <NavLink to={home} className={styles.brand} aria-label="Ir para o início do portal">
           <img src={logo} alt="Atual Pet" width="110" height="76" />
           <div className={styles.brandCopy}>
             <strong>Portal Comercial</strong>
-            <span>{isAdmin ? "Administração" : "Distribuidores"}</span>
+            <span>{isAdmin ? "Administração" : isMarketing ? "Marketing" : isLogistica ? "Logística" : "Distribuidores"}</span>
           </div>
         </NavLink>
 
@@ -126,7 +153,7 @@ function Navbar() {
         <div className={styles.usuario}>
           <div>
             <span>{userName}</span>
-            <small>{isAdmin ? "Administrador" : "Conta aprovada"}</small>
+            <small>{isAdmin ? "Administrador" : isMarketing ? "Equipe de Marketing" : isLogistica ? "Equipe de Logística" : "Conta aprovada"}</small>
           </div>
           <button type="button" onClick={sair}>Sair</button>
         </div>
@@ -154,7 +181,7 @@ function Navbar() {
 
             <div className={styles.mobileAccount}>
               <strong>{userName}</strong>
-              <span>{isAdmin ? "Administração" : "Portal do distribuidor"}</span>
+              <span>{isAdmin ? "Administração" : isMarketing ? "Painel de Marketing" : isLogistica ? "Painel de Logística" : "Portal do distribuidor"}</span>
             </div>
 
             <div className={styles.mobileLinks}>

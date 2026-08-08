@@ -9,6 +9,7 @@ import {
   sendServerError,
 } from "../utils/validation.js";
 import { measureStage, measureStageSync } from "../utils/performance.js";
+import { cadastroClienteBloqueiaAcesso } from "../utils/userAccess.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -139,7 +140,7 @@ export const login = async (req, res) => {
       });
     }
 
-    if (usuario.tipo === "cliente" && usuario.statusCadastro !== "aprovado") {
+    if (cadastroClienteBloqueiaAcesso(usuario)) {
       return res.status(403).json({
         message: "Cadastro ainda não aprovado pelo administrador",
       });

@@ -10,6 +10,7 @@ const collections = [
   "precoprodutos",
   "pedidos",
   "materiaismarketing",
+  "bannersmarketing",
   "treinamentos",
   "progressostreinamentos",
 ];
