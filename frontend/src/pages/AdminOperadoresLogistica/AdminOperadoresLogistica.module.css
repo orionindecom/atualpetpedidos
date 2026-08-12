@@ -1,0 +1,61 @@
+.container { min-height: 100vh; padding: 36px 48px 56px; background: var(--surface-secondary); color: var(--text-primary); }
+.header { margin-bottom: 22px; }
+.header > span { color: var(--brand-primary-strong); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.header h1 { margin: 5px 0 8px; font-size: 32px; }
+.header p,
+.createPanel p,
+.listHeader p { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+.feedback { margin-bottom: 18px; padding: 12px 14px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; color: #166534; font-size: 13px; font-weight: 700; }
+.feedback[data-type="error"] { border-color: #fecaca; background: #fff5f5; color: #991b1b; }
+
+.createPanel,
+.listSection { border: 1px solid var(--border-default); border-radius: 10px; background: var(--surface-primary); }
+.createPanel { padding: 22px; display: grid; grid-template-columns: minmax(220px, .7fr) minmax(480px, 1.3fr); align-items: end; gap: 28px; }
+.createPanel h2,
+.listHeader h2 { margin: 0 0 5px; font-size: 17px; }
+.createPanel form { display: grid; grid-template-columns: 1fr 170px auto; align-items: end; gap: 12px; }
+.createPanel label,
+.editGrid label { min-width: 0; display: grid; gap: 7px; font-size: 11px; font-weight: 800; }
+.createPanel input,
+.editGrid input { width: 100%; min-width: 0; min-height: 42px; padding: 0 11px; border: 1px solid var(--border-default); border-radius: 8px; color: var(--text-primary); font: inherit; }
+.createPanel input:focus,
+.editGrid input:focus { border-color: var(--brand-primary-strong); outline: 3px solid rgba(113, 196, 192, .2); }
+.createPanel button,
+.operatorCard button { min-height: 42px; padding: 0 13px; border: 1px solid var(--border-default); border-radius: 8px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.createPanel > form > button { border-color: var(--brand-primary-strong); background: var(--brand-primary-strong); color: #fff; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+
+.listSection { margin-top: 20px; overflow: hidden; }
+.listHeader { padding: 20px 22px; border-bottom: 1px solid var(--border-default); }
+.operatorList { display: grid; }
+.operatorCard { padding: 18px 22px; border-bottom: 1px solid var(--border-default); }
+.operatorCard:last-child { border-bottom: 0; }
+.operatorCard[data-active="false"] { background: #f8fafc; }
+.operatorHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.operatorHeading > div { display: flex; align-items: center; gap: 10px; }
+.operatorHeading strong { font-size: 15px; }
+.operatorHeading span { padding: 4px 8px; border-radius: 999px; background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; }
+.operatorCard[data-active="false"] .operatorHeading span { background: #f1f5f9; color: #64748b; }
+.operatorHeading .deactivateButton { border-color: #fecaca; color: #991b1b; }
+.operatorHeading .activateButton { border-color: #86efac; color: #166534; }
+.editGrid { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.inlineControl { display: grid; grid-template-columns: minmax(140px, 1fr) auto; gap: 8px; }
+.empty { padding: 24px; color: var(--text-muted); font-size: 13px; }
+
+@media (max-width: 980px) {
+  .createPanel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .container { padding: 24px 18px 44px; }
+  .header h1 { font-size: 28px; }
+  .createPanel { padding: 18px; }
+  .createPanel form,
+  .editGrid { grid-template-columns: 1fr; }
+  .operatorCard { padding: 18px; }
+  .operatorHeading { align-items: flex-start; }
+  .operatorHeading > div { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .inlineControl { grid-template-columns: 1fr; }
+  .inlineControl button { width: 100%; }
+}

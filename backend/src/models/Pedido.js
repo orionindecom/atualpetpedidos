@@ -20,6 +20,36 @@ const itemPedidoSchema = new mongoose.Schema(
       min: 1,
     },
 
+    quantidadeSeparada: {
+      type: Number,
+      min: 0,
+      default: undefined,
+    },
+
+    situacaoSeparacao: {
+      type: String,
+      enum: ["pendente", "completo", "parcial", "indisponivel"],
+      default: undefined,
+    },
+
+    quantidadeConferida: {
+      type: Number,
+      min: 0,
+      default: undefined,
+    },
+
+    quantidadeFinal: {
+      type: Number,
+      min: 0,
+      default: undefined,
+    },
+
+    situacaoFinal: {
+      type: String,
+      enum: ["completo", "parcial", "indisponivel"],
+      default: undefined,
+    },
+
     valorUnitario: {
       type: Number,
       required: true,
@@ -65,10 +95,226 @@ const historicoStatusSchema = new mongoose.Schema(
       enum: ["admin", "marketing", "logistica", "cliente"],
       required: true,
     },
+    operadorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OperadorLogistica",
+    },
+    operadorNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
     observacao: {
       type: String,
       trim: true,
       maxlength: 500,
+    },
+  },
+  { _id: false }
+);
+
+const aprovacaoSchema = new mongoose.Schema(
+  {
+    aprovadoEm: {
+      type: Date,
+      required: true,
+    },
+    usuarioId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
+    usuarioNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    usuarioTipo: {
+      type: String,
+      enum: ["admin"],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const ocorrenciaSchema = new mongoose.Schema(
+  {
+    conteudo: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 1000,
+    },
+    criadaEm: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    usuarioId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
+    usuarioNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    usuarioTipo: {
+      type: String,
+      enum: ["admin", "logistica"],
+      required: true,
+    },
+    operadorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OperadorLogistica",
+    },
+    operadorNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    tipo: {
+      type: String,
+      enum: ["observacao", "falta_produto", "informacao_operacional"],
+      default: "observacao",
+      required: true,
+    },
+    visibilidade: {
+      type: String,
+      enum: ["interna", "cliente"],
+      default: "interna",
+      required: true,
+    },
+    produtoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Produto",
+    },
+    nomeProduto: {
+      type: String,
+      trim: true,
+      maxlength: 255,
+    },
+  },
+  { _id: false }
+);
+
+const conferenciaUsuarioSchema = new mongoose.Schema(
+  {
+    usuarioId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
+    usuarioNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    usuarioTipo: {
+      type: String,
+      enum: ["admin", "logistica"],
+      required: true,
+    },
+    operadorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OperadorLogistica",
+    },
+    operadorNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+  },
+  { _id: false }
+);
+
+const conferenciaItemSchema = new mongoose.Schema(
+  {
+    produtoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Produto",
+      required: true,
+    },
+    nomeProduto: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 255,
+    },
+    quantidadeSolicitada: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    quantidadeSeparada: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    quantidadeFaltanteSeparacao: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    quantidadeConferida: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    diferenca: {
+      type: Number,
+      required: true,
+    },
+    situacaoFinal: {
+      type: String,
+      enum: ["completo", "parcial", "indisponivel"],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const conferenciaSchema = new mongoose.Schema(
+  {
+    status: {
+      type: String,
+      enum: [
+        "pendente",
+        "em_andamento",
+        "concluida",
+        "concluida_com_divergencia",
+      ],
+      default: "pendente",
+      required: true,
+    },
+    iniciadaEm: Date,
+    iniciadoPor: {
+      type: conferenciaUsuarioSchema,
+      default: undefined,
+    },
+    concluidaEm: Date,
+    concluidoPor: {
+      type: conferenciaUsuarioSchema,
+      default: undefined,
+    },
+    observacao: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    itens: {
+      type: [conferenciaItemSchema],
+      default: undefined,
+    },
+    totalItens: {
+      type: Number,
+      min: 0,
+    },
+    totalDivergencias: {
+      type: Number,
+      min: 0,
     },
   },
   { _id: false }
@@ -174,6 +420,8 @@ const pedidoSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "aguardando_aprovacao",
+        "aprovado",
         "novo",
         "em_analise",
         "separando",
@@ -183,7 +431,22 @@ const pedidoSchema = new mongoose.Schema(
         "entregue",
         "cancelado",
       ],
-      default: "novo",
+      default: "aguardando_aprovacao",
+    },
+
+    aprovacao: {
+      type: aprovacaoSchema,
+      default: undefined,
+    },
+
+    conferenciaObrigatoria: {
+      type: Boolean,
+      default: false,
+    },
+
+    conferencia: {
+      type: conferenciaSchema,
+      default: undefined,
     },
 
     observacao: {
@@ -230,6 +493,12 @@ const pedidoSchema = new mongoose.Schema(
 
     historicoStatus: {
       type: [historicoStatusSchema],
+      default: undefined,
+      select: false,
+    },
+
+    ocorrencias: {
+      type: [ocorrenciaSchema],
       default: undefined,
       select: false,
     },

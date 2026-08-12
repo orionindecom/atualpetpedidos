@@ -1,11 +1,20 @@
 import Pedido from "../models/Pedido.js";
 import { gerarPdfSeparacaoPedido } from "../services/pdfSeparacaoService.js";
 import {
+  buildOccurrenceEntry,
   buildStatusHistoryEntry,
+  conferenciaConcluida,
+  enrichInternalOrderDetail,
+  enrichOrderSeparation,
+  getItemSeparation,
   PEDIDO_STATUS,
+  pedidoAguardandoAprovacao,
+  pedidoExigeConferencia,
+  pedidoPossuiEntregaConfirmada,
+  STATUS_APOS_CONFERENCIA,
   STATUS_CONCLUIDOS,
   transicaoLogisticaPermitida,
-  transicoesPermitidasLogistica,
+  transicoesPermitidasParaPedido,
   validateLogisticsOrderPayload,
 } from "../utils/pedidoLogistica.js";
 import { sendServerError } from "../utils/validation.js";
@@ -60,7 +69,10 @@ export const parseLogisticsOrderQuery = (query = {}) => {
   };
 };
 
-export const buildLogisticsOrderFilter = (query) => {
+export const buildLogisticsOrderFilter = (
+  query,
+  { includePendingApproval = false } = {}
+) => {
   const filter = {};
 
   if (query.busca) {
@@ -73,8 +85,19 @@ export const buildLogisticsOrderFilter = (query) => {
     ];
   }
 
-  if (query.status) filter.status = query.status;
-  else if (query.aguardandoAcao) filter.status = { $nin: STATUS_CONCLUIDOS };
+  if (query.status) {
+    filter.status = !includePendingApproval && query.status === "aguardando_aprovacao"
+      ? { $in: [] }
+      : query.status;
+  } else if (query.aguardandoAcao) {
+    filter.status = {
+      $nin: includePendingApproval
+        ? STATUS_CONCLUIDOS
+        : [...STATUS_CONCLUIDOS, "aguardando_aprovacao"],
+    };
+  } else if (!includePendingApproval) {
+    filter.status = { $ne: "aguardando_aprovacao" };
+  }
 
   if (query.dataInicio || query.dataFim) {
     filter.createdAt = {};
@@ -89,11 +112,64 @@ export const applyLogisticsOrderUpdate = ({
   pedido,
   data,
   observacaoHistorico,
+  separacaoItens,
+  conferencia,
+  novaOcorrencia,
   usuario,
+  operador,
   now = new Date(),
 }) => {
   const statusAnterior = pedido.status;
   const novoStatus = data.status ?? statusAnterior;
+  const conferenciaStatus = pedido.conferencia?.status;
+
+  if (pedidoPossuiEntregaConfirmada(pedido) && statusAnterior !== "entregue") {
+    return {
+      valid: false,
+      message: "Este pedido já possui entrega confirmada e permanece em estado terminal",
+    };
+  }
+
+  if (statusAnterior === "entregue" && novoStatus !== "entregue") {
+    return {
+      valid: false,
+      message: "Pedido entregue é um estado terminal e não pode regredir",
+    };
+  }
+
+  if (statusAnterior === "entregue") {
+    return {
+      valid: false,
+      message: "As operações deste pedido foram encerradas após a entrega",
+    };
+  }
+
+  if (
+    conferencia &&
+    (Object.keys(data).length > 0 || separacaoItens || novaOcorrencia)
+  ) {
+    return {
+      valid: false,
+      message: "A conferência deve ser registrada em uma operação própria",
+    };
+  }
+
+  if (pedidoAguardandoAprovacao(statusAnterior)) {
+    return {
+      valid: false,
+      message: "O pedido precisa ser aprovado pelo Admin antes da operação logística",
+    };
+  }
+
+  if (
+    novoStatus !== statusAnterior &&
+    ["aguardando_aprovacao", "aprovado"].includes(novoStatus)
+  ) {
+    return {
+      valid: false,
+      message: "Estados de aprovação só podem ser alterados pela ação de aprovação do Admin",
+    };
+  }
 
   if (novoStatus === "entregue" && novoStatus !== statusAnterior) {
     return {
@@ -112,8 +188,261 @@ export const applyLogisticsOrderUpdate = ({
     };
   }
 
+  if (
+    STATUS_APOS_CONFERENCIA.includes(novoStatus) &&
+    novoStatus !== statusAnterior &&
+    pedidoExigeConferencia(pedido) &&
+    !conferenciaConcluida(pedido)
+  ) {
+    return {
+      valid: false,
+      message: "Conclua a conferência de todos os itens antes de liberar o pedido para faturamento",
+    };
+  }
+
+  if (
+    usuario.tipo === "admin" &&
+    novoStatus !== statusAnterior &&
+    !transicoesPermitidasParaPedido(pedido, { admin: true }).includes(novoStatus)
+  ) {
+    return {
+      valid: false,
+      message: `Transição administrativa de ${statusAnterior} para ${novoStatus} não permitida`,
+    };
+  }
+
+  if (
+    separacaoItens &&
+    ["em_andamento", "concluida", "concluida_com_divergencia"].includes(conferenciaStatus)
+  ) {
+    return {
+      valid: false,
+      message: "A separação original não pode ser alterada após o início da conferência",
+    };
+  }
+
+  const itensPedido = Array.isArray(pedido.itens) ? pedido.itens : [];
+  const itensPorProduto = new Map(
+    itensPedido.map((item) => [String(item.produtoId), item])
+  );
+  const alteracoesSeparacao = [];
+
+  for (const separacao of separacaoItens || []) {
+    const item = itensPorProduto.get(String(separacao.produtoId));
+    if (!item) {
+      return {
+        valid: false,
+        message: "A separação contém um produto que não pertence ao pedido",
+      };
+    }
+    if (separacao.quantidadeSeparada > Number(item.quantidade)) {
+      return {
+        valid: false,
+        message: `A quantidade separada de ${item.nomeProduto} não pode exceder a solicitada`,
+      };
+    }
+    if (getItemSeparation(item).quantidadeSeparada !== separacao.quantidadeSeparada) {
+      alteracoesSeparacao.push({
+        item,
+        quantidadeSeparada: separacao.quantidadeSeparada,
+      });
+    }
+  }
+
+  if (
+    alteracoesSeparacao.length > 0 &&
+    pedidoExigeConferencia(pedido) &&
+    statusAnterior === "separado"
+  ) {
+    return {
+      valid: false,
+      message: "A separação original não pode ser alterada depois de concluída",
+    };
+  }
+
+  if (novoStatus === "separado" && novoStatus !== statusAnterior) {
+    const separacaoPorProduto = new Map(
+      (separacaoItens || []).map((item) => [
+        String(item.produtoId),
+        item.quantidadeSeparada,
+      ])
+    );
+    const possuiItemPendente = itensPedido.some((item) => {
+      const quantidade = separacaoPorProduto.has(String(item.produtoId))
+        ? separacaoPorProduto.get(String(item.produtoId))
+        : getItemSeparation(item).quantidadeSeparada;
+      return quantidade === null;
+    });
+    if (possuiItemPendente) {
+      return {
+        valid: false,
+        message: "Informe a quantidade separada de todos os itens antes de concluir a separação",
+      };
+    }
+  }
+
+  const novasOcorrencias = [];
+
+  if (conferencia) {
+    if (!pedidoExigeConferencia(pedido)) {
+      return {
+        valid: false,
+        message: "Este pedido histórico não exige conferência",
+      };
+    }
+    if (statusAnterior !== "separado") {
+      return {
+        valid: false,
+        message: "A conferência só pode começar depois da conclusão da separação",
+      };
+    }
+
+    const usuarioConferencia = {
+      usuarioId: usuario._id,
+      usuarioNome:
+        usuario.nomeResponsavel || usuario.nomeFantasia || "Usuário interno",
+      usuarioTipo: usuario.tipo,
+      ...(operador
+        ? { operadorId: operador._id, operadorNome: operador.nome }
+        : {}),
+    };
+
+    if (conferencia.acao === "iniciar") {
+      if ((conferenciaStatus || "pendente") !== "pendente") {
+        return {
+          valid: false,
+          message: conferenciaConcluida(pedido)
+            ? "A conferência deste pedido já foi concluída"
+            : "A conferência deste pedido já está em andamento",
+        };
+      }
+      pedido.conferencia = {
+        status: "em_andamento",
+        iniciadaEm: now,
+        iniciadoPor: usuarioConferencia,
+      };
+      novasOcorrencias.push(buildOccurrenceEntry({
+        conteudo: "Conferência dos itens iniciada.",
+        tipo: "informacao_operacional",
+        visibilidade: "interna",
+        usuario,
+        operador,
+        now,
+      }));
+    }
+
+    if (conferencia.acao === "concluir") {
+      if (conferenciaStatus !== "em_andamento") {
+        return {
+          valid: false,
+          message: conferenciaConcluida(pedido)
+            ? "A conferência deste pedido já foi concluída"
+            : "Inicie a conferência antes de concluí-la",
+        };
+      }
+
+      const conferenciaPorProduto = new Map(
+        conferencia.itens.map((item) => [String(item.produtoId), item])
+      );
+      if (
+        conferencia.itens.length !== itensPedido.length ||
+        itensPedido.some((item) => !conferenciaPorProduto.has(String(item.produtoId)))
+      ) {
+        return {
+          valid: false,
+          message: "Todos os itens do pedido devem ser conferidos",
+        };
+      }
+
+      const itensConferencia = [];
+      for (const item of itensPedido) {
+        const separacao = getItemSeparation(item);
+        const itemConferencia = conferenciaPorProduto.get(String(item.produtoId));
+        if (separacao.quantidadeSeparada === null) {
+          return {
+            valid: false,
+            message: "Todos os itens precisam estar separados antes da conferência",
+          };
+        }
+        if (itemConferencia.quantidadeConferida > separacao.quantidadeSeparada) {
+          return {
+            valid: false,
+            message: `A quantidade conferida de ${item.nomeProduto} não pode exceder a separada`,
+          };
+        }
+
+        const quantidadeConferida = itemConferencia.quantidadeConferida;
+        const quantidadeFaltante = Math.max(
+          separacao.quantidadeSolicitada - quantidadeConferida,
+          0
+        );
+        const situacaoFinal = quantidadeConferida === 0 && separacao.quantidadeSolicitada > 0
+          ? "indisponivel"
+          : quantidadeFaltante > 0
+            ? "parcial"
+            : "completo";
+
+        item.quantidadeConferida = quantidadeConferida;
+        item.quantidadeFinal = quantidadeConferida;
+        item.situacaoFinal = situacaoFinal;
+        itensConferencia.push({
+          produtoId: item.produtoId,
+          nomeProduto: item.nomeProduto,
+          quantidadeSolicitada: separacao.quantidadeSolicitada,
+          quantidadeSeparada: separacao.quantidadeSeparada,
+          quantidadeFaltanteSeparacao: separacao.quantidadeFaltanteSeparacao,
+          quantidadeConferida,
+          diferenca: quantidadeConferida - separacao.quantidadeSeparada,
+          situacaoFinal,
+        });
+      }
+
+      const divergencias = itensConferencia.filter((item) => item.diferenca !== 0);
+      pedido.conferencia.status = divergencias.length > 0
+        ? "concluida_com_divergencia"
+        : "concluida";
+      pedido.conferencia.concluidaEm = now;
+      pedido.conferencia.concluidoPor = usuarioConferencia;
+      pedido.conferencia.observacao = conferencia.observacao || undefined;
+      pedido.conferencia.itens = itensConferencia;
+      pedido.conferencia.totalItens = itensConferencia.length;
+      pedido.conferencia.totalDivergencias = divergencias.length;
+
+      novasOcorrencias.push(buildOccurrenceEntry({
+        conteudo: divergencias.length > 0
+          ? `Conferência concluída com ${divergencias.length} divergência(s) em ${itensConferencia.length} item(ns).`
+          : `Conferência concluída em ${itensConferencia.length} item(ns), sem divergências.`,
+        tipo: "informacao_operacional",
+        visibilidade: "interna",
+        usuario,
+        operador,
+        now,
+      }));
+      for (const divergencia of divergencias) {
+        novasOcorrencias.push(buildOccurrenceEntry({
+          conteudo: `${divergencia.nomeProduto}: separado ${divergencia.quantidadeSeparada}, conferido ${divergencia.quantidadeConferida}, diferença ${divergencia.diferenca}.`,
+          tipo: "falta_produto",
+          visibilidade: "interna",
+          usuario,
+          operador,
+          produtoId: divergencia.produtoId,
+          nomeProduto: divergencia.nomeProduto,
+          now,
+        }));
+      }
+    }
+  }
+
   for (const [field, value] of Object.entries(data)) {
     if (field !== "status") pedido[field] = value;
+  }
+
+  for (const alteracao of alteracoesSeparacao) {
+    alteracao.item.quantidadeSeparada = alteracao.quantidadeSeparada;
+    alteracao.item.situacaoSeparacao = getItemSeparation({
+      quantidade: alteracao.item.quantidade,
+      quantidadeSeparada: alteracao.quantidadeSeparada,
+    }).situacaoSeparacao;
   }
 
   if (novoStatus !== statusAnterior) {
@@ -123,19 +452,77 @@ export const applyLogisticsOrderUpdate = ({
       statusAnterior,
       novoStatus,
       usuario,
+      operador,
       observacao: observacaoHistorico,
+      now,
+    }));
+
+    if (
+      novoStatus === "separado" &&
+      pedidoExigeConferencia(pedido) &&
+      !pedido.conferencia
+    ) {
+      pedido.conferencia = { status: "pendente" };
+      novasOcorrencias.push(buildOccurrenceEntry({
+        conteudo: "Separação concluída. Pedido aguardando conferência dos itens.",
+        tipo: "informacao_operacional",
+        visibilidade: "interna",
+        usuario,
+        operador,
+        now,
+      }));
+    }
+  }
+
+  novasOcorrencias.push(...alteracoesSeparacao.map(({ item, quantidadeSeparada }) => {
+    const separacao = getItemSeparation({
+      quantidade: item.quantidade,
+      quantidadeSeparada,
+    });
+    return buildOccurrenceEntry({
+      conteudo: `${item.nomeProduto}: solicitado ${separacao.quantidadeSolicitada}, separado ${quantidadeSeparada}, faltante ${separacao.quantidadeFaltante}.`,
+      tipo: separacao.quantidadeFaltante > 0
+        ? "falta_produto"
+        : "informacao_operacional",
+      visibilidade: "interna",
+      usuario,
+      operador,
+      produtoId: item.produtoId,
+      nomeProduto: item.nomeProduto,
+      now,
+    });
+  }));
+
+  if (novaOcorrencia) {
+    novasOcorrencias.push(buildOccurrenceEntry({
+      ...novaOcorrencia,
+      usuario,
+      operador,
       now,
     }));
   }
 
-  return { valid: true, statusAlterado: novoStatus !== statusAnterior };
+  if (novasOcorrencias.length > 0) {
+    pedido.ocorrencias ||= [];
+    pedido.ocorrencias.push(...novasOcorrencias);
+  }
+
+  return {
+    valid: true,
+    statusAlterado: novoStatus !== statusAnterior,
+    separacaoAlterada: alteracoesSeparacao.length > 0,
+    conferenciaAlterada: Boolean(conferencia),
+  };
 };
 
 export const obterDashboardLogistica = async (req, res) => {
   try {
-    const aguardandoFilter = { status: { $nin: STATUS_CONCLUIDOS } };
+    const aguardandoFilter = {
+      status: { $nin: [...STATUS_CONCLUIDOS, "aguardando_aprovacao"] },
+    };
     const [statusCounts, pedidosMaisAntigos] = await Promise.all([
       Pedido.aggregate([
+        { $match: { status: { $ne: "aguardando_aprovacao" } } },
         { $group: { _id: "$status", total: { $sum: 1 } } },
       ]).option({ maxTimeMS: 5000 }),
       Pedido.find(aguardandoFilter)
@@ -155,7 +542,10 @@ export const obterDashboardLogistica = async (req, res) => {
 
     return res.status(200).json({
       metricas: {
-        recebidos: (porStatus.novo || 0) + (porStatus.em_analise || 0),
+        recebidos:
+          (porStatus.aprovado || 0) +
+          (porStatus.novo || 0) +
+          (porStatus.em_analise || 0),
         emSeparacao: porStatus.separando || 0,
         separados: porStatus.separado || 0,
         faturados: porStatus.faturado || 0,
@@ -177,7 +567,9 @@ export const listarPedidosLogistica = async (req, res) => {
     }
 
     const { pagina, limite } = parsed.data;
-    const filter = buildLogisticsOrderFilter(parsed.data);
+    const filter = buildLogisticsOrderFilter(parsed.data, {
+      includePendingApproval: req.usuario.tipo === "admin",
+    });
     const [pedidos, totalItens] = await Promise.all([
       Pedido.aggregate([
         { $match: filter },
@@ -196,6 +588,8 @@ export const listarPedidosLogistica = async (req, res) => {
             updatedAt: 1,
             transportadora: 1,
             numeroNotaFiscal: 1,
+            conferenciaObrigatoria: 1,
+            "conferencia.status": 1,
             quantidadeItens: { $size: { $ifNull: ["$itens", []] } },
           },
         },
@@ -229,17 +623,23 @@ export const listarPedidosLogistica = async (req, res) => {
 export const buscarPedidoLogistica = async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id)
-      .select("+historicoStatus +observacaoLogistica")
+      .select("+historicoStatus +observacaoLogistica +ocorrencias")
       .lean()
       .maxTimeMS(5000);
 
     if (!pedido) return res.status(404).json({ message: "Pedido não encontrado" });
 
+    if (req.usuario.tipo === "logistica" && pedidoAguardandoAprovacao(pedido)) {
+      return res.status(403).json({
+        message: "Este pedido ainda aguarda aprovação administrativa",
+      });
+    }
+
     return res.status(200).json({
-      pedido,
-      transicoesPermitidas: req.usuario.tipo === "admin"
-        ? PEDIDO_STATUS.filter((status) => status !== pedido.status)
-        : transicoesPermitidasLogistica(pedido.status),
+      pedido: enrichInternalOrderDetail(pedido),
+      transicoesPermitidas: transicoesPermitidasParaPedido(pedido, {
+        admin: req.usuario.tipo === "admin",
+      }),
     });
   } catch (error) {
     return sendServerError(res);
@@ -250,6 +650,7 @@ export const gerarPdfSeparacao = async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id)
       .select([
+        "status",
         "numeroPedido",
         "nomeFantasiaCliente",
         "razaoSocialCliente",
@@ -266,6 +667,12 @@ export const gerarPdfSeparacao = async (req, res) => {
       .maxTimeMS(5000);
 
     if (!pedido) return res.status(404).json({ message: "Pedido não encontrado" });
+
+    if (req.usuario.tipo === "logistica" && pedidoAguardandoAprovacao(pedido)) {
+      return res.status(403).json({
+        message: "Este pedido ainda aguarda aprovação administrativa",
+      });
+    }
 
     return gerarPdfSeparacaoPedido(pedido, res);
   } catch (error) {
@@ -284,14 +691,24 @@ export const atualizarPedidoLogistica = async (req, res) => {
     }
 
     const pedido = await Pedido.findById(req.params.id)
-      .select("+historicoStatus +observacaoLogistica");
+      .select("+historicoStatus +observacaoLogistica +ocorrencias");
     if (!pedido) return res.status(404).json({ message: "Pedido não encontrado" });
+
+    if (pedidoAguardandoAprovacao(pedido)) {
+      return res.status(409).json({
+        message: "O pedido precisa ser aprovado pelo Admin antes da operação logística",
+      });
+    }
 
     const result = applyLogisticsOrderUpdate({
       pedido,
       data: parsed.data,
       observacaoHistorico: parsed.observacaoHistorico,
+      separacaoItens: parsed.separacaoItens,
+      conferencia: parsed.conferencia,
+      novaOcorrencia: parsed.novaOcorrencia,
       usuario: req.usuario,
+      operador: req.operadorLogistica,
     });
     if (!result.valid) return res.status(409).json({ message: result.message });
 
@@ -299,10 +716,10 @@ export const atualizarPedidoLogistica = async (req, res) => {
 
     return res.status(200).json({
       message: "Dados logísticos atualizados",
-      pedido,
-      transicoesPermitidas: req.usuario.tipo === "admin"
-        ? PEDIDO_STATUS.filter((status) => status !== pedido.status)
-        : transicoesPermitidasLogistica(pedido.status),
+      pedido: enrichInternalOrderDetail(pedido),
+      transicoesPermitidas: transicoesPermitidasParaPedido(pedido, {
+        admin: req.usuario.tipo === "admin",
+      }),
     });
   } catch (error) {
     return sendServerError(res);

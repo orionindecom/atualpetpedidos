@@ -23,6 +23,8 @@ function Dashboard() {
 
   const formatarStatus = (status) => {
     const nomes = {
+      aguardando_aprovacao: "Aguardando aprovação",
+      aprovado: "Aprovado para Logística",
       novo: "Novo",
       em_analise: "Em análise",
       separando: "Separando",

@@ -26,6 +26,7 @@ import marketingRoutes from "./routes/marketingRoutes.js";
 import marketingBannerRoutes from "./routes/marketingBannerRoutes.js";
 import bannerMarketingRoutes from "./routes/bannerMarketingRoutes.js";
 import logisticaRoutes from "./routes/logisticaRoutes.js";
+import operadorLogisticaRoutes from "./routes/operadorLogisticaRoutes.js";
 import adminTreinamentoRoutes from "./routes/adminTreinamentoRoutes.js";
 import treinamentoRoutes from "./routes/treinamentoRoutes.js";
 
@@ -49,7 +50,7 @@ app.use(
       return callback(new Error("Origem não autorizada pelo CORS"));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Operador-Contexto"],
     credentials: true,
     optionsSuccessStatus: 204,
   })
@@ -101,6 +102,7 @@ app.use("/api/marketing", marketingRoutes);
 app.use("/api/materiais-marketing", materialMarketingRoutes);
 app.use("/api/banners", bannerMarketingRoutes);
 app.use("/api/logistica", logisticaRoutes);
+app.use("/api/admin/operadores-logistica", operadorLogisticaRoutes);
 app.use("/api/admin/treinamentos", adminTreinamentoRoutes);
 app.use("/api/treinamentos", treinamentoRoutes);
 

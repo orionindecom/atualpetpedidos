@@ -7,7 +7,9 @@ import {
   listarTodosPedidos,
   buscarPedidoPorId,
   gerarPdf,
+  gerarRelatorioPedidoAdmin,
   atualizarStatusPedido,
+  aprovarPedidoAdmin,
   atualizarPedidoAdmin,
   excluirPedidoAdmin,
 } from "../controllers/pedidoController.js";
@@ -55,11 +57,29 @@ router.patch(
   confirmarRecebimento
 );
 
+router.patch(
+  "/:id/aprovar",
+  proteger,
+  somenteAdmin,
+  adminLimiter,
+  validateObjectIdParam(),
+  aprovarPedidoAdmin
+);
+
 router.get(
   "/:id/pdf",
   proteger,
   validateObjectIdParam(),
   gerarPdf
+);
+
+router.get(
+  "/:id/relatorio",
+  proteger,
+  somenteAdmin,
+  adminLimiter,
+  validateObjectIdParam(),
+  gerarRelatorioPedidoAdmin
 );
 
 router.put(

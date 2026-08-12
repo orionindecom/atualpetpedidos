@@ -44,3 +44,17 @@ export const somenteOperacaoLogistica = (req, res, next) => {
 
   return next();
 };
+
+export const somenteLogistica = (req, res, next) => {
+  const isLogisticsAccount = measureStageSync(
+    req,
+    "auth.logistica",
+    () => temPapel(req.usuario, ["logistica"])
+  );
+
+  if (!isLogisticsAccount) {
+    return res.status(403).json({ message: "Acesso exclusivo da Logística" });
+  }
+
+  return next();
+};

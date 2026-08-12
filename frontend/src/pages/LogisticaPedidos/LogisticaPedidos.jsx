@@ -6,15 +6,19 @@ import {
   PaginationControls,
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
-import OrderProgress from "../../components/OrderProgress/OrderProgress";
+import OperatorIdentificationModal from "../../components/OperatorIdentification/OperatorIdentificationModal";
+import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
 import { abrirOuBaixarPdfSeparacao } from "../../utils/pdfPedido";
 import {
-  formatCurrency,
   formatOrderDate,
-  formatOrderDateTime,
   formatOrderStatus,
   ORDER_STATUS,
 } from "../../utils/orderLogistics";
+import {
+  buildConferencePayload,
+  buildOrderOperationsForm,
+  buildOrderOperationsPayload,
+} from "../../utils/orderOperations";
 import styles from "./LogisticaPedidos.module.css";
 
 const emptyPagination = {
@@ -23,24 +27,6 @@ const emptyPagination = {
   totalItens: 0,
   temProximaPagina: false,
 };
-
-const toDateInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
-};
-
-const buildForm = (pedido) => ({
-  status: pedido.status || "novo",
-  numeroNotaFiscal: pedido.numeroNotaFiscal || "",
-  dataFaturamento: toDateInput(pedido.dataFaturamento),
-  transportadora: pedido.transportadora || "",
-  codigoRastreio: pedido.codigoRastreio || "",
-  linkRastreio: pedido.linkRastreio || "",
-  dataEnvio: toDateInput(pedido.dataEnvio),
-  observacaoLogistica: pedido.observacaoLogistica || "",
-  observacaoHistorico: "",
-});
 
 function LogisticaPedidos() {
   const [searchParams] = useSearchParams();
@@ -63,7 +49,20 @@ function LogisticaPedidos() {
   const [form, setForm] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [conferenceBusy, setConferenceBusy] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [detailFeedback, setDetailFeedback] = useState(null);
+  const [operators, setOperators] = useState([]);
+  const [operatorContext, setOperatorContext] = useState(null);
+  const [identification, setIdentification] = useState(null);
+  const [identificationBusy, setIdentificationBusy] = useState(false);
+  const [identificationFeedback, setIdentificationFeedback] = useState("");
+
+  const requestOperators = useCallback(async () => {
+    const response = await api.get("/logistica/operadores");
+    setOperators(response.data || []);
+    return response.data || [];
+  }, []);
 
   const requestOrders = useCallback(({ signal } = {}) => (
     api.get("/logistica/pedidos", {
@@ -76,6 +75,20 @@ function LogisticaPedidos() {
       },
     })
   ), [filters, pagina]);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/logistica/operadores")
+      .then((response) => {
+        if (active) setOperators(response.data || []);
+      })
+      .catch((requestError) => {
+        if (active) {
+          setError(requestError.response?.data?.message || "Não foi possível carregar os operadores");
+        }
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,13 +115,13 @@ function LogisticaPedidos() {
   }, [requestOrders]);
 
   useEffect(() => {
-    if (!detail) return undefined;
+    if (!detail && !identification) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [detail]);
+  }, [detail, identification]);
 
   const applyFilters = (event) => {
     event.preventDefault();
@@ -131,44 +144,178 @@ function LogisticaPedidos() {
     setPagina(1);
   };
 
-  const openOrder = async (pedidoId) => {
-    setDetailLoading(true);
+  const openOrder = (pedido) => {
     setError("");
+    setIdentificationFeedback("");
+    setIdentification({
+      pedidoId: pedido._id,
+      orderNumber: pedido.numeroPedido,
+      reauthentication: false,
+    });
+  };
+
+  const identifyOperator = async ({ operatorId, pin }) => {
+    if (!identification) return false;
+    setIdentificationBusy(true);
+    setDetailLoading(!identification.reauthentication);
+    setIdentificationFeedback("");
     try {
-      const response = await api.get(`/logistica/pedidos/${pedidoId}`);
+      const identificationResponse = await api.post(
+        `/logistica/pedidos/${identification.pedidoId}/identificar`,
+        { operadorId: operatorId, pin }
+      );
+      const nextContext = {
+        token: identificationResponse.data.contextoOperacional,
+        operator: identificationResponse.data.operador,
+      };
+
+      if (identification.reauthentication && detail?._id === identification.pedidoId) {
+        setOperatorContext(nextContext);
+        setIdentification(null);
+        setDetailFeedback({
+          type: "success",
+          message: `Operador ${nextContext.operator.nome} identificado novamente.`,
+        });
+        return true;
+      }
+
+      const response = await api.get(`/logistica/pedidos/${identification.pedidoId}`, {
+        headers: { "X-Operador-Contexto": nextContext.token },
+      });
+      setOperatorContext(nextContext);
       setDetail(response.data.pedido);
       setTransitions(response.data.transicoesPermitidas || []);
-      setForm(buildForm(response.data.pedido));
+      setForm(buildOrderOperationsForm(response.data.pedido));
+      setDetailFeedback(null);
+      setIdentification(null);
+      return true;
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Não foi possível abrir o pedido");
+      setIdentificationFeedback(
+        requestError.response?.data?.message || "Não foi possível identificar o operador"
+      );
+      return false;
     } finally {
+      setIdentificationBusy(false);
       setDetailLoading(false);
     }
+  };
+
+  const requireNewIdentification = (requestError, fallbackMessage) => {
+    if (requestError.response?.status !== 428 || !detail) return false;
+
+    const message = requestError.response?.data?.message || fallbackMessage;
+    setOperatorContext(null);
+    setDetailFeedback({ type: "error", message });
+    setIdentificationFeedback(message);
+    setIdentification({
+      pedidoId: detail._id,
+      orderNumber: detail.numeroPedido,
+      reauthentication: true,
+    });
+    requestOperators().catch(() => {});
+    return true;
   };
 
   const closeOrder = () => {
     setDetail(null);
     setForm(null);
     setTransitions([]);
+    setDetailFeedback(null);
+    setOperatorContext(null);
+    setIdentification(null);
+    setIdentificationFeedback("");
   };
 
   const updateField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+      separacao: field === "status" && value === "separando"
+        ? Object.fromEntries(detail.itens.map((item) => [
+          String(item.produtoId),
+          current.separacao[String(item.produtoId)] === ""
+            ? item.quantidade
+            : current.separacao[String(item.produtoId)],
+        ]))
+        : current.separacao,
+    }));
   };
 
-  const saveOrder = async (event) => {
-    event.preventDefault();
-    setSaving(true);
+  const updateSeparation = (produtoId, value) => {
+    setForm((current) => ({
+      ...current,
+      separacao: { ...current.separacao, [produtoId]: value },
+    }));
+  };
+
+  const updateConference = (produtoId, value) => {
+    setForm((current) => ({
+      ...current,
+      conferencia: { ...current.conferencia, [produtoId]: value },
+    }));
+  };
+
+  const runConferenceAction = async (body) => {
+    setConferenceBusy(true);
+    setDetailFeedback(null);
     try {
-      const response = await api.patch(`/logistica/pedidos/${detail._id}`, form);
+      const response = await api.patch(`/logistica/pedidos/${detail._id}`, body, {
+        headers: { "X-Operador-Contexto": operatorContext?.token },
+      });
       setDetail(response.data.pedido);
       setTransitions(response.data.transicoesPermitidas || []);
-      setForm(buildForm(response.data.pedido));
+      setForm(buildOrderOperationsForm(response.data.pedido));
+      setDetailFeedback({ type: "success", message: response.data.message });
       const listResponse = await requestOrders();
       setPedidos(listResponse.data.pedidos || []);
       setPaginacao(listResponse.data.paginacao || emptyPagination);
     } catch (requestError) {
-      alert(requestError.response?.data?.message || "Não foi possível atualizar o pedido");
+      if (requireNewIdentification(
+        requestError,
+        "Identifique-se novamente para registrar a conferência"
+      )) return;
+      setDetailFeedback({
+        type: "error",
+        message: requestError.response?.data?.message || "Não foi possível registrar a conferência",
+      });
+    } finally {
+      setConferenceBusy(false);
+    }
+  };
+
+  const startConference = () => runConferenceAction({
+    conferencia: { acao: "iniciar" },
+  });
+
+  const completeConference = () => runConferenceAction(
+    buildConferencePayload(detail, form)
+  );
+
+  const saveOrder = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setDetailFeedback(null);
+    try {
+      const payload = buildOrderOperationsPayload(detail, form);
+      const response = await api.patch(`/logistica/pedidos/${detail._id}`, payload, {
+        headers: { "X-Operador-Contexto": operatorContext?.token },
+      });
+      setDetail(response.data.pedido);
+      setTransitions(response.data.transicoesPermitidas || []);
+      setForm(buildOrderOperationsForm(response.data.pedido));
+      setDetailFeedback({ type: "success", message: response.data.message });
+      const listResponse = await requestOrders();
+      setPedidos(listResponse.data.pedidos || []);
+      setPaginacao(listResponse.data.paginacao || emptyPagination);
+    } catch (requestError) {
+      if (requireNewIdentification(
+        requestError,
+        "Identifique-se novamente para atualizar o pedido"
+      )) return;
+      setDetailFeedback({
+        type: "error",
+        message: requestError.response?.data?.message || "Não foi possível atualizar o pedido",
+      });
     } finally {
       setSaving(false);
     }
@@ -180,9 +327,14 @@ function LogisticaPedidos() {
       await abrirOuBaixarPdfSeparacao({
         pedidoId: detail._id,
         numeroPedido: detail.numeroPedido,
+        contextoOperacional: operatorContext?.token,
       });
-    } catch {
-      alert("Não foi possível baixar o PDF de separação.");
+    } catch (requestError) {
+      if (requireNewIdentification(
+        requestError,
+        "Identifique-se novamente para acessar o PDF"
+      )) return;
+      setDetailFeedback({ type: "error", message: "Não foi possível baixar o PDF de separação." });
     } finally {
       setDownloadingPdf(false);
     }
@@ -194,9 +346,6 @@ function LogisticaPedidos() {
     filters.dataFim,
     filters.aguardandoAcao,
   ].filter(Boolean).length;
-  const statusOptions = detail
-    ? [detail.status, ...transitions.filter((status) => status !== detail.status)]
-    : [];
 
   return (
     <>
@@ -205,7 +354,7 @@ function LogisticaPedidos() {
         <header className={styles.pageHeader}>
           <span>Operação</span>
           <h1>Pedidos</h1>
-          <p>Consulte a fila, avance o status e registre faturamento e expedição.</p>
+          <p>Consulte a fila, registre a separação e avance o fluxo operacional.</p>
         </header>
 
         <FilterToolbar
@@ -230,7 +379,7 @@ function LogisticaPedidos() {
             }))}
           >
             <option value="">Todos os status</option>
-            {ORDER_STATUS.map((status) => (
+            {ORDER_STATUS.filter((status) => status !== "aguardando_aprovacao").map((status) => (
               <option key={status} value={status}>{formatOrderStatus(status)}</option>
             ))}
           </select>
@@ -293,9 +442,12 @@ function LogisticaPedidos() {
               </span>
               <div className={styles.operationalMeta}>
                 <span>NF: {pedido.numeroNotaFiscal || "-"}</span>
+                {pedido.conferencia?.status && (
+                  <span>Conferência: {pedido.conferencia.status.replaceAll("_", " ")}</span>
+                )}
                 <span>{pedido.transportadora || "Transportadora não informada"}</span>
               </div>
-              <button type="button" onClick={() => openOrder(pedido._id)} disabled={detailLoading}>
+              <button type="button" onClick={() => openOrder(pedido)} disabled={detailLoading}>
                 Abrir pedido
               </button>
             </article>
@@ -318,184 +470,39 @@ function LogisticaPedidos() {
       </main>
 
       {detail && form && (
-        <div className={styles.modalOverlay} onMouseDown={closeOrder}>
-          <section
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="logistics-order-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <header className={styles.modalHeader}>
-              <div>
-                <span>Pedido</span>
-                <h2 id="logistics-order-title">{detail.numeroPedido}</h2>
-                <p>{detail.nomeFantasiaCliente || detail.razaoSocialCliente || "Cliente"}</p>
-              </div>
-              <div className={styles.modalHeaderActions}>
-                <button
-                  type="button"
-                  className={styles.separationPdfButton}
-                  disabled={downloadingPdf}
-                  onClick={downloadSeparationPdf}
-                >
-                  {downloadingPdf ? "Preparando PDF..." : "Baixar PDF de separação"}
-                </button>
-                <button type="button" onClick={closeOrder}>Fechar</button>
-              </div>
-            </header>
+        <OrderDetailModal
+          detail={detail}
+          form={form}
+          transitions={transitions}
+          saving={saving}
+          conferenceBusy={conferenceBusy}
+          downloadingPdf={downloadingPdf}
+          feedback={detailFeedback}
+          activeOperator={operatorContext?.operator}
+          onClose={closeOrder}
+          onSubmit={saveOrder}
+          onFieldChange={updateField}
+          onSeparationChange={updateSeparation}
+          onConferenceChange={updateConference}
+          onStartConference={startConference}
+          onCompleteConference={completeConference}
+          onDownloadSeparationPdf={downloadSeparationPdf}
+        />
+      )}
 
-            <div className={styles.modalContent}>
-              <section className={styles.progressSection}>
-                <h3>Andamento</h3>
-                <OrderProgress status={detail.status} />
-              </section>
-
-              <section className={styles.readOnlySection}>
-                <div className={styles.sectionTitle}>
-                  <h3>Itens do pedido</h3>
-                  <strong>{formatCurrency(detail.valorTotal)}</strong>
-                </div>
-                <div className={styles.itemsTable}>
-                  {detail.itens.map((item) => (
-                    <div key={`${item.produtoId}-${item.nomeProduto}`}>
-                      <span>{item.nomeProduto}</span>
-                      <span>{item.quantidade} un.</span>
-                      <span>{formatCurrency(item.valorUnitario)}</span>
-                      <strong>{formatCurrency(item.subtotal)}</strong>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <form className={styles.logisticsForm} onSubmit={saveOrder}>
-                <section>
-                  <h3>Status e registro</h3>
-                  <div className={styles.formGrid}>
-                    <label>
-                      Status
-                      <select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>{formatOrderStatus(status)}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className={styles.wideField}>
-                      Observação desta alteração
-                      <input
-                        type="text"
-                        maxLength="500"
-                        value={form.observacaoHistorico}
-                        onChange={(event) => updateField("observacaoHistorico", event.target.value)}
-                      />
-                    </label>
-                  </div>
-                </section>
-
-                <section>
-                  <h3>Faturamento</h3>
-                  <div className={styles.formGrid}>
-                    <label>
-                      Número da nota fiscal
-                      <input
-                        type="text"
-                        maxLength="100"
-                        value={form.numeroNotaFiscal}
-                        onChange={(event) => updateField("numeroNotaFiscal", event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Data de faturamento
-                      <input
-                        type="date"
-                        value={form.dataFaturamento}
-                        onChange={(event) => updateField("dataFaturamento", event.target.value)}
-                      />
-                    </label>
-                  </div>
-                </section>
-
-                <section>
-                  <h3>Expedição e entrega</h3>
-                  <div className={styles.formGrid}>
-                    <label>
-                      Transportadora
-                      <input
-                        type="text"
-                        maxLength="120"
-                        value={form.transportadora}
-                        onChange={(event) => updateField("transportadora", event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Código de rastreio
-                      <input
-                        type="text"
-                        maxLength="120"
-                        value={form.codigoRastreio}
-                        onChange={(event) => updateField("codigoRastreio", event.target.value)}
-                      />
-                    </label>
-                    <label className={styles.wideField}>
-                      Link de rastreamento
-                      <input
-                        type="url"
-                        maxLength="500"
-                        placeholder="https://"
-                        value={form.linkRastreio}
-                        onChange={(event) => updateField("linkRastreio", event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Data de envio
-                      <input
-                        type="date"
-                        value={form.dataEnvio}
-                        onChange={(event) => updateField("dataEnvio", event.target.value)}
-                      />
-                    </label>
-                    <div className={styles.readOnlyField}>
-                      <span>Data de entrega</span>
-                      <strong>{formatOrderDateTime(detail.dataEntrega, "Ainda não confirmada")}</strong>
-                    </div>
-                    <label className={styles.fullField}>
-                      Observação logística interna
-                      <textarea
-                        maxLength="1000"
-                        rows="3"
-                        value={form.observacaoLogistica}
-                        onChange={(event) => updateField("observacaoLogistica", event.target.value)}
-                      />
-                    </label>
-                  </div>
-                </section>
-
-                <div className={styles.formActions}>
-                  <button type="button" onClick={closeOrder}>Cancelar</button>
-                  <button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar atualização"}</button>
-                </div>
-              </form>
-
-              <section className={styles.historySection}>
-                <h3>Histórico de status</h3>
-                {!detail.historicoStatus?.length ? (
-                  <p>Este pedido ainda não possui histórico registrado.</p>
-                ) : (
-                  <ol>
-                    {[...detail.historicoStatus].reverse().map((entry, index) => (
-                      <li key={`${entry.alteradoEm}-${index}`}>
-                        <time dateTime={entry.alteradoEm}>{formatOrderDateTime(entry.alteradoEm)}</time>
-                        <strong>{formatOrderStatus(entry.statusAnterior)} → {formatOrderStatus(entry.novoStatus)}</strong>
-                        <span>{entry.usuarioNome || "Usuário interno"} · {entry.usuarioTipo}</span>
-                        {entry.observacao && <p>{entry.observacao}</p>}
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </section>
-            </div>
-          </section>
-        </div>
+      {identification && (
+        <OperatorIdentificationModal
+          key={`${identification.pedidoId}-${identification.reauthentication ? "renew" : "open"}`}
+          orderNumber={identification.orderNumber}
+          operators={operators}
+          loading={identificationBusy}
+          feedback={identificationFeedback}
+          onClose={() => {
+            setIdentification(null);
+            setIdentificationFeedback("");
+          }}
+          onContinue={identifyOperator}
+        />
       )}
     </>
   );

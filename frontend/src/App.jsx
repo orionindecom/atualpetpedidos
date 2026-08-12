@@ -20,6 +20,7 @@ import AdminBanners from "./pages/AdminBanners/AdminBanners";
 import MarketingDashboard from "./pages/MarketingDashboard/MarketingDashboard";
 import LogisticaDashboard from "./pages/LogisticaDashboard/LogisticaDashboard";
 import LogisticaPedidos from "./pages/LogisticaPedidos/LogisticaPedidos";
+import AdminOperadoresLogistica from "./pages/AdminOperadoresLogistica/AdminOperadoresLogistica";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -122,6 +123,14 @@ function App() {
           element={(
             <RoleRoute role="admin">
               <AdminPedidos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/admin/operadores-logistica"
+          element={(
+            <RoleRoute role="admin">
+              <AdminOperadoresLogistica />
             </RoleRoute>
           )}
         />

@@ -58,7 +58,9 @@ export const resumoDashboard = async (req, res) => {
                 ])
             ),
             () => measureStage(req, "query.dashboard_pedidos_novos", () =>
-                Pedido.countDocuments({ status: "novo" })
+                Pedido.countDocuments({
+                    status: { $in: ["aguardando_aprovacao", "novo"] },
+                })
             ),
             () => measureStage(req, "query.dashboard_clientes_pendentes", () =>
                 Usuario.countDocuments({

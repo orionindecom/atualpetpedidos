@@ -1,4 +1,6 @@
 export const ORDER_STATUS = Object.freeze([
+  "aguardando_aprovacao",
+  "aprovado",
   "novo",
   "em_analise",
   "separando",
@@ -10,6 +12,8 @@ export const ORDER_STATUS = Object.freeze([
 ]);
 
 export const ORDER_STATUS_LABELS = Object.freeze({
+  aguardando_aprovacao: "Aguardando aprovação",
+  aprovado: "Aprovado para Logística",
   novo: "Pedido recebido",
   em_analise: "Em análise",
   separando: "Em separação",
@@ -21,7 +25,8 @@ export const ORDER_STATUS_LABELS = Object.freeze({
 });
 
 export const ORDER_PROGRESS_STEPS = Object.freeze([
-  "novo",
+  "aguardando_aprovacao",
+  "aprovado",
   "separando",
   "separado",
   "faturado",
@@ -33,7 +38,9 @@ export const formatOrderStatus = (status) => ORDER_STATUS_LABELS[status] || stat
 
 export const getOrderProgress = (status) => {
   if (status === "cancelado") return { canceled: true, currentIndex: -1 };
-  if (status === "em_analise") return { canceled: false, currentIndex: 0 };
+  if (["novo", "em_analise"].includes(status)) {
+    return { canceled: false, currentIndex: 1 };
+  }
   const currentIndex = ORDER_PROGRESS_STEPS.indexOf(status);
   return { canceled: false, currentIndex: Math.max(currentIndex, 0) };
 };

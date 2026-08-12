@@ -15,6 +15,7 @@ import {
 const statusClasse = (status = "") => {
   const s = status.toLowerCase().replace(/\s+/g, "");
   if (s.includes("nov"))         return "Novo";
+  if (s.includes("aprov"))       return "Novo";
   if (s.includes("separ"))       return "Separacao";
   if (s.includes("envi"))        return "Enviado";
   if (s.includes("entreg"))      return "Entregue";
@@ -135,6 +136,7 @@ function MeusPedidos() {
                         </a>
                       )}
                     </div>
+
                   </section>
                 )}
               </div>

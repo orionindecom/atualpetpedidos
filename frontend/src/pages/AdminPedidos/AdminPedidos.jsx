@@ -2,31 +2,44 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
 import styles from "./AdminPedidos.module.css";
-import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
+import {
+  abrirOuBaixarPdfPedido,
+  abrirOuBaixarPdfSeparacao,
+  abrirOuBaixarRelatorioPedido,
+} from "../../utils/pdfPedido";
+import { formatOrderStatus, ORDER_STATUS } from "../../utils/orderLogistics";
+import {
+  buildConferencePayload,
+  buildOrderOperationsForm,
+  buildOrderOperationsPayload,
+} from "../../utils/orderOperations";
 
 function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [produtos, setProdutos] = useState([]);
 
-  const [statusSelecionado, setStatusSelecionado] = useState({});
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("");
 
   const [modalPedido, setModalPedido] = useState(null);
   const [quantidadesModal, setQuantidadesModal] = useState({});
   const [buscaProduto, setBuscaProduto] = useState("");
+  const [detail, setDetail] = useState(null);
+  const [transitions, setTransitions] = useState([]);
+  const [operationsForm, setOperationsForm] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [savingOperations, setSavingOperations] = useState(false);
+  const [conferenceBusy, setConferenceBusy] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [downloadingSeparationPdf, setDownloadingSeparationPdf] = useState(false);
+  const [downloadingCommercialPdf, setDownloadingCommercialPdf] = useState(false);
+  const [downloadingReportPdf, setDownloadingReportPdf] = useState(false);
+  const [deletingOrder, setDeletingOrder] = useState(false);
+  const [detailFeedback, setDetailFeedback] = useState(null);
 
-  const statusOptions = [
-    "novo",
-    "em_analise",
-    "separando",
-    "separado",
-    "faturado",
-    "enviado",
-    "entregue",
-    "cancelado",
-  ];
+  const statusOptions = ORDER_STATUS;
 
   const carregarDados = async () => {
     const [pedidosResponse, produtosResponse] = await Promise.all([
@@ -64,20 +77,7 @@ function AdminPedidos() {
     return `${dia}/${mes}/${pedido.ano}`;
   };
 
-  const formatarStatus = (status) => {
-    const nomes = {
-      novo: "Novo",
-      em_analise: "Em análise",
-      separando: "Separando",
-      separado: "Separado",
-      faturado: "Faturado",
-      enviado: "Enviado",
-      entregue: "Entregue",
-      cancelado: "Cancelado",
-    };
-
-    return nomes[status] || status;
-  };
+  const formatarStatus = formatOrderStatus;
 
   const baixarPdf = async (pedido) => {
     try {
@@ -91,16 +91,168 @@ function AdminPedidos() {
     }
   };
 
-  const alterarStatus = async (pedidoId, status) => {
-    try {
-      await api.put(`/pedidos/${pedidoId}/status`, {
-        status,
-      });
+  const atualizarPedidoNaLista = (pedidoAtualizado) => {
+    setPedidos((current) => current.map((pedido) => (
+      pedido._id === pedidoAtualizado._id ? pedidoAtualizado : pedido
+    )));
+  };
 
-      carregarDados();
+  const abrirDetalhes = async (pedidoId) => {
+    setDetailLoading(true);
+    setDetailFeedback(null);
+    try {
+      const response = await api.get(`/logistica/pedidos/${pedidoId}`);
+      setDetail(response.data.pedido);
+      setTransitions(response.data.transicoesPermitidas || []);
+      setOperationsForm(buildOrderOperationsForm(response.data.pedido));
     } catch (error) {
-      console.error(error);
-      alert("Erro ao atualizar status");
+      alert(error.response?.data?.message || "Não foi possível abrir o pedido");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const fecharDetalhes = () => {
+    setDetail(null);
+    setTransitions([]);
+    setOperationsForm(null);
+    setDetailFeedback(null);
+  };
+
+  const alterarCampoOperacional = (field, value) => {
+    setOperationsForm((current) => ({
+      ...current,
+      [field]: value,
+      separacao: field === "status" && value === "separando"
+        ? Object.fromEntries(detail.itens.map((item) => [
+          String(item.produtoId),
+          current.separacao[String(item.produtoId)] === ""
+            ? item.quantidade
+            : current.separacao[String(item.produtoId)],
+        ]))
+        : current.separacao,
+    }));
+  };
+
+  const alterarSeparacao = (produtoId, value) => {
+    setOperationsForm((current) => ({
+      ...current,
+      separacao: { ...current.separacao, [produtoId]: value },
+    }));
+  };
+
+  const alterarConferencia = (produtoId, value) => {
+    setOperationsForm((current) => ({
+      ...current,
+      conferencia: { ...current.conferencia, [produtoId]: value },
+    }));
+  };
+
+  const executarAcaoConferencia = async (body) => {
+    setConferenceBusy(true);
+    setDetailFeedback(null);
+    try {
+      const response = await api.patch(`/logistica/pedidos/${detail._id}`, body);
+      setDetail(response.data.pedido);
+      setTransitions(response.data.transicoesPermitidas || []);
+      setOperationsForm(buildOrderOperationsForm(response.data.pedido));
+      atualizarPedidoNaLista(response.data.pedido);
+      setDetailFeedback({ type: "success", message: response.data.message });
+    } catch (error) {
+      setDetailFeedback({
+        type: "error",
+        message: error.response?.data?.message || "Não foi possível registrar a conferência",
+      });
+    } finally {
+      setConferenceBusy(false);
+    }
+  };
+
+  const iniciarConferencia = () => executarAcaoConferencia({
+    conferencia: { acao: "iniciar" },
+  });
+
+  const concluirConferencia = () => executarAcaoConferencia(
+    buildConferencePayload(detail, operationsForm)
+  );
+
+  const salvarOperacao = async (event) => {
+    event.preventDefault();
+    setSavingOperations(true);
+    setDetailFeedback(null);
+    try {
+      const payload = buildOrderOperationsPayload(detail, operationsForm);
+      const response = await api.patch(`/logistica/pedidos/${detail._id}`, payload);
+      setDetail(response.data.pedido);
+      setTransitions(response.data.transicoesPermitidas || []);
+      setOperationsForm(buildOrderOperationsForm(response.data.pedido));
+      atualizarPedidoNaLista(response.data.pedido);
+      setDetailFeedback({ type: "success", message: response.data.message });
+    } catch (error) {
+      setDetailFeedback({
+        type: "error",
+        message: error.response?.data?.message || "Não foi possível atualizar o pedido",
+      });
+    } finally {
+      setSavingOperations(false);
+    }
+  };
+
+  const aprovarPedido = async () => {
+    if (approving) return;
+    setApproving(true);
+    setDetailFeedback(null);
+    try {
+      const response = await api.patch(`/pedidos/${detail._id}/aprovar`);
+      setDetail(response.data.pedido);
+      setTransitions(["separando"]);
+      setOperationsForm(buildOrderOperationsForm(response.data.pedido));
+      atualizarPedidoNaLista(response.data.pedido);
+      setDetailFeedback({ type: "success", message: response.data.message });
+    } catch (error) {
+      setDetailFeedback({
+        type: "error",
+        message: error.response?.data?.message || "Não foi possível aprovar o pedido",
+      });
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const baixarPdfSeparacao = async () => {
+    setDownloadingSeparationPdf(true);
+    try {
+      await abrirOuBaixarPdfSeparacao({
+        pedidoId: detail._id,
+        numeroPedido: detail.numeroPedido,
+      });
+    } catch {
+      setDetailFeedback({ type: "error", message: "Não foi possível baixar o PDF de separação." });
+    } finally {
+      setDownloadingSeparationPdf(false);
+    }
+  };
+
+  const baixarPdfComercialDetalhe = async () => {
+    setDownloadingCommercialPdf(true);
+    try {
+      await baixarPdf(detail);
+    } finally {
+      setDownloadingCommercialPdf(false);
+    }
+  };
+
+  const baixarRelatorioPedido = async () => {
+    setDownloadingReportPdf(true);
+    try {
+      await abrirOuBaixarRelatorioPedido({
+        pedidoId: detail._id,
+        numeroPedido: detail.numeroPedido,
+      });
+    } catch {
+      setDetailFeedback({ type: "error", message: "Não foi possível baixar o relatório operacional." });
+    } finally {
+      setDownloadingReportPdf(false);
     }
   };
 
@@ -114,6 +266,12 @@ function AdminPedidos() {
     setModalPedido(pedido);
     setQuantidadesModal(mapa);
     setBuscaProduto("");
+  };
+
+  const editarPedidoDetalhado = () => {
+    const pedido = detail;
+    fecharDetalhes();
+    abrirModalEdicao(pedido);
   };
 
   const alterarQuantidadeModal = (produtoId, quantidade) => {
@@ -165,14 +323,18 @@ function AdminPedidos() {
 
     if (!confirmar) return;
 
+    setDeletingOrder(true);
     try {
       await api.delete(`/pedidos/${pedidoId}`);
 
       alert("Pedido excluído com sucesso");
+      fecharDetalhes();
       carregarDados();
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || "Erro ao excluir pedido");
+    } finally {
+      setDeletingOrder(false);
     }
   };
 
@@ -244,70 +406,59 @@ function AdminPedidos() {
                 <p>CNPJ: {pedido.cnpjCliente || "-"}</p>
                 <p>Data: {data(pedido)}</p>
 
-                <div className={styles.statusBox}>
-                  <label>Status:</label>
-
-                  <select
-                    value={statusSelecionado[pedido._id] || pedido.status}
-                    onChange={(e) =>
-                      setStatusSelecionado({
-                        ...statusSelecionado,
-                        [pedido._id]: e.target.value,
-                      })
-                    }
-                  >
-                    {statusOptions.map((status) => (
-                      <option
-                        key={status}
-                        value={status}
-                        disabled={status === "entregue" && pedido.status !== "entregue"}
-                      >
-                        {formatarStatus(status)}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    disabled={(statusSelecionado[pedido._id] || pedido.status) === "entregue"}
-                    onClick={() =>
-                      alterarStatus(
-                        pedido._id,
-                        statusSelecionado[pedido._id] || pedido.status
-                      )
-                    }
-                  >
-                    Salvar Status
-                  </button>
-                </div>
+                <span
+                  className={styles.statusBadge}
+                  data-status={pedido.entregaFinalizada ? "entregue" : pedido.status}
+                >
+                  {formatarStatus(pedido.entregaFinalizada ? "entregue" : pedido.status)}
+                </span>
 
                 <strong>Total: {moeda(pedido.valorTotal)}</strong>
               </div>
 
               <div className={styles.acoesPedido}>
                 <button
-                  className={styles.editarBtn}
-                  onClick={() => abrirModalEdicao(pedido)}
+                  className={styles.visualizarBtn}
+                  disabled={detailLoading}
+                  onClick={() => abrirDetalhes(pedido._id)}
                 >
-                  Editar Pedido
+                  Visualizar pedido
                 </button>
 
-                <button
-                  className={styles.pdfBtn}
-                  onClick={() => baixarPdf(pedido)}
-                >
-                  Baixar PDF
-                </button>
-
-                <button
-                  className={styles.perigo}
-                  onClick={() => excluirPedido(pedido._id)}
-                >
-                  Excluir Pedido
-                </button>
               </div>
             </div>
           ))}
         </div>
+
+        {detail && operationsForm && (
+          <OrderDetailModal
+            detail={detail}
+            form={operationsForm}
+            transitions={transitions}
+            isAdmin
+            saving={savingOperations}
+            conferenceBusy={conferenceBusy}
+            approving={approving}
+            downloadingPdf={downloadingSeparationPdf}
+            downloadingCommercialPdf={downloadingCommercialPdf}
+            downloadingReportPdf={downloadingReportPdf}
+            deleting={deletingOrder}
+            feedback={detailFeedback}
+            onClose={fecharDetalhes}
+            onSubmit={salvarOperacao}
+            onFieldChange={alterarCampoOperacional}
+            onSeparationChange={alterarSeparacao}
+            onConferenceChange={alterarConferencia}
+            onStartConference={iniciarConferencia}
+            onCompleteConference={concluirConferencia}
+            onApprove={aprovarPedido}
+            onDownloadSeparationPdf={baixarPdfSeparacao}
+            onDownloadCommercialPdf={baixarPdfComercialDetalhe}
+            onDownloadReportPdf={baixarRelatorioPedido}
+            onEditOrder={editarPedidoDetalhado}
+            onDeleteOrder={() => excluirPedido(detail._id)}
+          />
+        )}
 
         {modalPedido && (
           <div className={styles.modalOverlay}>

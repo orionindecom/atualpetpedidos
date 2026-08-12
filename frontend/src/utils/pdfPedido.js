@@ -22,9 +22,10 @@ const downloadBlob = (blobUrl, fileName) => {
   link.remove();
 };
 
-const abrirOuBaixarPdf = async ({ endpoint, fileName }) => {
+const abrirOuBaixarPdf = async ({ endpoint, fileName, headers }) => {
   const response = await api.get(endpoint, {
     responseType: "blob",
+    headers,
   });
 
   const pdfBlob = new Blob([response.data], {
@@ -58,9 +59,23 @@ export const abrirOuBaixarPdfPedido = ({ pedidoId, numeroPedido }) => (
   })
 );
 
-export const abrirOuBaixarPdfSeparacao = ({ pedidoId, numeroPedido }) => (
+export const abrirOuBaixarPdfSeparacao = ({
+  pedidoId,
+  numeroPedido,
+  contextoOperacional,
+}) => (
   abrirOuBaixarPdf({
     endpoint: `/logistica/pedidos/${pedidoId}/pdf-separacao`,
     fileName: `separacao-${sanitizeFileName(numeroPedido || pedidoId)}.pdf`,
+    headers: contextoOperacional
+      ? { "X-Operador-Contexto": contextoOperacional }
+      : undefined,
+  })
+);
+
+export const abrirOuBaixarRelatorioPedido = ({ pedidoId, numeroPedido }) => (
+  abrirOuBaixarPdf({
+    endpoint: `/pedidos/${pedidoId}/relatorio`,
+    fileName: `relatorio-${sanitizeFileName(numeroPedido || pedidoId)}.pdf`,
   })
 );

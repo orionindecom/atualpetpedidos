@@ -23,6 +23,8 @@ export const rateLimit = ({
   max,
   message = "Muitas requisições. Tente novamente mais tarde.",
   keyPrefix = "global",
+  keyGenerator = getClientKey,
+  skipSuccessfulRequests = false,
 }) => {
   if (!stores.has(keyPrefix)) {
     stores.set(keyPrefix, new Map());
@@ -32,7 +34,7 @@ export const rateLimit = ({
 
   return (req, res, next) => {
     const now = Date.now();
-    const key = getClientKey(req);
+    const key = keyGenerator(req);
     const current = store.get(key);
 
     if (!current && store.size >= MAX_KEYS_PER_STORE) {
@@ -54,6 +56,12 @@ export const rateLimit = ({
       res.setHeader("RateLimit-Remaining", String(Math.max(max - 1, 0)));
       res.setHeader("RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
 
+      if (skipSuccessfulRequests) {
+        res.once("finish", () => {
+          if (res.statusCode < 400) entry.count = Math.max(entry.count - 1, 0);
+        });
+      }
+
       return next();
     }
 
@@ -72,6 +80,12 @@ export const rateLimit = ({
 
       return res.status(429).json({
         message,
+      });
+    }
+
+    if (skipSuccessfulRequests) {
+      res.once("finish", () => {
+        if (res.statusCode < 400) current.count = Math.max(current.count - 1, 0);
       });
     }
 
@@ -110,6 +124,15 @@ export const pedidoLimiter = rateLimit({
   max: 60,
   message: "Muitos pedidos enviados. Tente novamente mais tarde.",
   keyPrefix: "pedido",
+});
+
+export const pinOperadorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 6,
+  message: "Muitas tentativas de PIN. Aguarde alguns minutos e tente novamente.",
+  keyPrefix: "pin-operador",
+  keyGenerator: (req) => `${req.usuario?._id || "unknown"}:${getClientKey(req)}`,
+  skipSuccessfulRequests: true,
 });
 
 export const uploadLimiter = rateLimit({

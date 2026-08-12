@@ -1,0 +1,276 @@
+.modalOverlay {
+  padding: 24px;
+  overflow-y: auto;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(23, 33, 31, 0.64);
+  display: grid;
+  place-items: start center;
+}
+
+.modal {
+  width: min(1080px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+.modalHeader {
+  min-height: 92px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.modalHeader > div:first-child > span {
+  color: var(--brand-primary-strong);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.modalHeader h2 { margin: 3px 0; font-size: 23px; }
+.modalHeader p { margin: 0; color: var(--text-muted); }
+.activeOperator {
+  width: fit-content;
+  margin-top: 7px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary-strong) !important;
+  display: block;
+  font-size: 10px !important;
+  font-weight: 800;
+  text-transform: none !important;
+}
+
+.modalHeaderActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.modalHeaderActions button,
+.approvalPanel button,
+.formActions button,
+.conferenceCallout button,
+.conferenceActions button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modalHeaderActions button:disabled,
+.approvalPanel button:disabled,
+.formActions button:disabled,
+.conferenceCallout button:disabled,
+.conferenceActions button:disabled { cursor: not-allowed; opacity: 0.58; }
+.modalHeaderActions .dangerButton { border-color: #dc2626; color: #b91c1c; }
+
+.modalContent { max-height: calc(100vh - 140px); padding: 0 24px 28px; overflow-y: auto; }
+
+.feedback {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
+}
+.feedback[data-type="error"] { border-color: #fecaca; background: #fff5f5; color: #991b1b; }
+.terminalNotice {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+}
+.terminalNotice p { margin: 4px 0 0; font-size: 12px; }
+
+.approvalPanel {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.approvalPanel p { margin: 4px 0 0; color: #9a3412; font-size: 12px; }
+.approvalPanel button { border-color: #ea580c; background: #ea580c; color: #fff; }
+
+.section,
+.operationsForm,
+.historySection { padding: 24px 0; border-bottom: 1px solid var(--border-default); }
+.section h3,
+.operationsForm h3,
+.historySection h3 { margin: 0 0 16px; font-size: 16px; }
+.approvalMeta { margin: 14px 0 0; color: var(--text-muted); font-size: 12px; }
+
+.summaryGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.summaryGrid > div,
+.readOnlyField {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+}
+.summaryGrid span,
+.summaryGrid strong,
+.readOnlyField span,
+.readOnlyField strong { display: block; overflow-wrap: anywhere; }
+.summaryGrid span,
+.readOnlyField span { margin-bottom: 4px; color: var(--text-muted); font-size: 11px; }
+.summaryGrid strong,
+.readOnlyField strong { font-size: 12px; }
+.orderNote { margin: 12px 0 0; padding: 12px; border-left: 3px solid var(--brand-primary-strong); background: var(--surface-secondary); }
+
+.sectionTitle { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.divergenceNotice { margin-bottom: 12px; padding: 10px 12px; border: 1px solid #fde68a; border-radius: 8px; background: #fffbeb; color: #92400e; font-size: 12px; }
+.itemsTable { border-top: 1px solid var(--border-default); overflow-x: auto; }
+.itemRow {
+  min-height: 62px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-default);
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) repeat(3, 90px) 130px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.customerItemRow { grid-template-columns: minmax(180px, 1fr) 90px; }
+.itemIdentity { min-width: 0; display: grid; gap: 4px; }
+.itemIdentity strong { overflow: hidden; text-overflow: ellipsis; }
+.itemIdentity span { width: fit-content; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+.itemIdentity span[data-item-status="parcial"],
+.itemIdentity span[data-item-status="indisponivel"] { color: #b45309; }
+.quantityCell,
+.priceCell { text-align: right; }
+.quantityCell span,
+.priceCell span { display: block; margin-bottom: 3px; color: var(--text-muted); font-size: 10px; }
+.quantityCell[data-shortage="true"] strong { color: #b45309; }
+.quantityCell input { width: 76px; min-height: 38px; padding: 6px 8px; border: 1px solid var(--border-default); border-radius: 7px; text-align: right; }
+.priceCell strong { display: block; }
+
+.conferenceSection { background: linear-gradient(180deg, rgba(113, 196, 192, 0.08), transparent 70%); }
+.conferenceBadge {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.conferenceBadge[data-status="concluida"] { background: #dcfce7; color: #166534; }
+.conferenceBadge[data-status="concluida_com_divergencia"] { background: #fef3c7; color: #92400e; }
+.conferenceBadge[data-status="em_andamento"] { background: #ede9fe; color: #5b21b6; }
+.legacyConference,
+.conferenceCallout,
+.conferenceNote {
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+}
+.legacyConference p,
+.conferenceCallout p,
+.conferenceNote p,
+.conferenceHint,
+.conferenceMeta { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; }
+.conferenceCallout { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.conferenceCallout button,
+.conferenceActions button { border-color: var(--brand-accent); background: var(--brand-accent); color: var(--text-on-brand); }
+.conferenceWorkspace,
+.conferenceResult { display: grid; gap: 16px; }
+.conferenceRow { grid-template-columns: minmax(180px, 1fr) repeat(5, 82px); }
+.conferenceObservation { color: var(--text-secondary); display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
+.conferenceObservation textarea {
+  width: 100%; min-height: 90px; padding: 10px 12px; resize: vertical;
+  border: 1px solid var(--border-default); border-radius: var(--radius-small);
+  background: var(--surface-primary); color: var(--text-primary); font: inherit;
+}
+.conferenceObservation textarea:focus { border-color: var(--brand-primary-strong); outline: 3px solid rgba(113, 196, 192, 0.2); }
+.conferenceActions { display: flex; justify-content: flex-end; }
+.conferenceNote p { color: var(--text-secondary); }
+
+.operationsForm > section + section { margin-top: 24px; }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.formGrid label { min-width: 0; color: var(--text-secondary); display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
+.internalOnlyNote {
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-secondary);
+  display: grid;
+  gap: 4px;
+}
+.internalOnlyNote span { color: var(--text-muted); font-size: 11px; }
+.formGrid input,
+.formGrid select,
+.formGrid textarea {
+  width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px;
+  border: 1px solid var(--border-default); border-radius: var(--radius-small);
+  background: var(--surface-primary); color: var(--text-primary); font: inherit;
+}
+.formGrid textarea { min-height: 92px; resize: vertical; }
+.formGrid input:focus,
+.formGrid select:focus,
+.formGrid textarea:focus,
+.quantityCell input:focus { border-color: var(--brand-primary-strong); outline: 3px solid rgba(113, 196, 192, 0.2); }
+.fullField { grid-column: 1 / -1; }
+.formActions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px; }
+.formActions button:last-child { min-width: 160px; border-color: var(--brand-accent); background: var(--brand-accent); color: var(--text-on-brand); }
+
+.historySection { border-bottom: 0; padding-bottom: 0; }
+.historySection > p { color: var(--text-muted); }
+.historySection ol { margin: 0; padding: 0; list-style: none; }
+.historySection li { min-height: 70px; padding: 10px 0 10px 20px; position: relative; border-left: 2px solid var(--border-default); display: grid; gap: 3px; }
+.historySection li::before { width: 10px; height: 10px; content: ""; position: absolute; top: 15px; left: -6px; border-radius: 50%; background: var(--brand-primary-strong); }
+.historySection time,
+.historySection li span,
+.historySection li p { color: var(--text-muted); font-size: 11px; }
+.historySection li p { margin: 3px 0 0; }
+.legacyNote { margin-bottom: 16px; padding: 12px 14px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--surface-secondary); }
+.legacyNote p { margin: 5px 0 0; color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+  .modalOverlay { padding: 0; }
+  .modal { width: 100%; min-height: 100vh; max-height: 100vh; border-radius: 0; }
+  .modalHeader { min-height: 0; padding: 14px 18px; align-items: flex-start; flex-wrap: wrap; }
+  .modalHeaderActions { width: 100%; }
+  .modalHeaderActions button { min-width: 145px; flex: 1; }
+  .modalContent { max-height: calc(100vh - 142px); padding: 0 18px 36px; }
+  .approvalPanel { align-items: stretch; flex-direction: column; }
+  .summaryGrid,
+  .formGrid { grid-template-columns: 1fr; }
+  .fullField { grid-column: 1; }
+  .itemRow { grid-template-columns: minmax(0, 1fr) repeat(3, 62px); gap: 8px; }
+  .customerItemRow { grid-template-columns: minmax(0, 1fr) 62px; }
+  .conferenceRow {
+    min-width: 680px;
+    grid-template-columns: minmax(180px, 1fr) repeat(5, 72px);
+  }
+  .priceCell { display: none; }
+  .quantityCell input { width: 60px; }
+  .formActions { align-items: stretch; flex-direction: column-reverse; }
+  .formActions button { width: 100%; }
+  .conferenceCallout { align-items: stretch; flex-direction: column; }
+  .conferenceCallout button,
+  .conferenceActions button { width: 100%; }
+}

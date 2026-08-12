@@ -5,11 +5,19 @@ import Produto from "../models/Produto.js";
 import TabelaPreco from "../models/TabelaPreco.js";
 import { gerarNumeroPedido } from "../utils/gerarNumeroPedido.js";
 import { gerarPdfPedido } from "../services/pdfService.js";
+import { gerarPdfRelatorioPedido } from "../services/pdfAuditoriaPedidoService.js";
 import {
   buildClientReceiptConfirmationUpdate,
   buildStatusHistoryEntry,
+  conferenciaConcluida,
+  enrichInternalOrderDetail,
+  enrichOrderSeparation,
   PEDIDO_STATUS,
+  pedidoExigeConferencia,
+  pedidoPossuiEntregaConfirmada,
   sanitizeClientOrder,
+  STATUS_APOS_CONFERENCIA,
+  transicoesPermitidasParaPedido,
 } from "../utils/pedidoLogistica.js";
 import {
   isOptionalString,
@@ -184,12 +192,14 @@ export const criarPedido = async (req, res) => {
 
       itens: itensPedido,
       valorTotal,
+      status: "aguardando_aprovacao",
+      conferenciaObrigatoria: true,
       observacao: observacao?.trim(),
     });
 
     return res.status(201).json({
       message: "Pedido criado com sucesso",
-      pedido,
+      pedido: sanitizeClientOrder(pedido),
     });
   } catch (error) {
     return sendServerError(res);
@@ -204,7 +214,7 @@ export const listarMeusPedidos = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    return res.status(200).json(pedidos);
+    return res.status(200).json(pedidos.map(sanitizeClientOrder));
   } catch (error) {
     return sendServerError(res);
   }
@@ -263,9 +273,9 @@ export const confirmarRecebimento = async (req, res) => {
 
 export const listarTodosPedidos = async (req, res) => {
   try {
-    const pedidos = await Pedido.find().sort({ createdAt: -1 });
+    const pedidos = await Pedido.find().sort({ createdAt: -1 }).lean();
 
-    return res.status(200).json(pedidos);
+    return res.status(200).json(pedidos.map(enrichOrderSeparation));
   } catch (error) {
     return sendServerError(res);
   }
@@ -275,7 +285,7 @@ export const buscarPedidoPorId = async (req, res) => {
   try {
     const query = Pedido.findById(req.params.id);
     if (req.usuario.tipo === "admin") {
-      query.select("+historicoStatus +observacaoLogistica");
+      query.select("+historicoStatus +observacaoLogistica +ocorrencias");
     }
     const pedido = await query;
 
@@ -295,7 +305,9 @@ export const buscarPedidoPorId = async (req, res) => {
     }
 
     return res.status(200).json(
-      req.usuario.tipo === "admin" ? pedido : sanitizeClientOrder(pedido)
+      req.usuario.tipo === "admin"
+        ? enrichInternalOrderDetail(pedido)
+        : sanitizeClientOrder(pedido)
     );
   } catch (error) {
     return sendServerError(res);
@@ -327,6 +339,23 @@ export const gerarPdf = async (req, res) => {
   }
 };
 
+export const gerarRelatorioPedidoAdmin = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id)
+      .select("+historicoStatus +observacaoLogistica +ocorrencias")
+      .lean()
+      .maxTimeMS(5000);
+
+    if (!pedido) {
+      return res.status(404).json({ message: "Pedido não encontrado" });
+    }
+
+    return gerarPdfRelatorioPedido(pedido, res);
+  } catch {
+    return sendServerError(res);
+  }
+};
+
 export const atualizarStatusPedido = async (req, res) => {
   try {
     const { status } = req.body;
@@ -343,11 +372,48 @@ export const atualizarStatusPedido = async (req, res) => {
       });
     }
 
+    if (["aguardando_aprovacao", "aprovado"].includes(status)) {
+      return res.status(409).json({
+        message: "Use a ação específica de aprovação para liberar o pedido",
+      });
+    }
+
     const pedido = await Pedido.findById(req.params.id).select("+historicoStatus");
 
     if (!pedido) {
       return res.status(404).json({
         message: "Pedido não encontrado",
+      });
+    }
+
+    if (pedidoPossuiEntregaConfirmada(pedido) && status !== "entregue") {
+      return res.status(409).json({
+        message: "Pedido entregue é um estado terminal e não pode regredir",
+      });
+    }
+
+    if (pedido.status === "aguardando_aprovacao" && status !== "cancelado") {
+      return res.status(409).json({
+        message: "O pedido precisa ser aprovado antes de avançar no fluxo",
+      });
+    }
+
+    if (
+      STATUS_APOS_CONFERENCIA.includes(status) &&
+      pedidoExigeConferencia(pedido) &&
+      !conferenciaConcluida(pedido)
+    ) {
+      return res.status(409).json({
+        message: "Conclua a conferência de todos os itens antes de liberar o pedido para faturamento",
+      });
+    }
+
+    if (
+      pedido.status !== status &&
+      !transicoesPermitidasParaPedido(pedido, { admin: true }).includes(status)
+    ) {
+      return res.status(409).json({
+        message: `Transição de ${pedido.status} para ${status} não permitida`,
       });
     }
 
@@ -373,6 +439,66 @@ export const atualizarStatusPedido = async (req, res) => {
   }
 };
 
+export const aprovarPedidoAdmin = async (req, res) => {
+  try {
+    const now = new Date();
+    const aprovacao = {
+      aprovadoEm: now,
+      usuarioId: req.usuario._id,
+      usuarioNome:
+        req.usuario.nomeResponsavel || req.usuario.nomeFantasia || "Administrador",
+      usuarioTipo: "admin",
+    };
+    const pedido = await Pedido.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: "aguardando_aprovacao",
+      },
+      {
+        $set: {
+          status: "aprovado",
+          aprovacao,
+        },
+        $push: {
+          historicoStatus: buildStatusHistoryEntry({
+            statusAnterior: "aguardando_aprovacao",
+            novoStatus: "aprovado",
+            usuario: req.usuario,
+            observacao: "Pedido aprovado e liberado para a Logística",
+            now,
+          }),
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("+historicoStatus +observacaoLogistica +ocorrencias");
+
+    if (pedido) {
+      return res.status(200).json({
+        message: "Pedido aprovado e liberado para a Logística",
+        pedido: enrichInternalOrderDetail(pedido),
+      });
+    }
+
+    const pedidoExistente = await Pedido.findById(req.params.id)
+      .select("status aprovacao")
+      .lean();
+    if (!pedidoExistente) {
+      return res.status(404).json({ message: "Pedido não encontrado" });
+    }
+
+    return res.status(409).json({
+      message: pedidoExistente.status === "aprovado"
+        ? "Este pedido já foi aprovado"
+        : "Somente pedidos aguardando aprovação podem ser aprovados",
+    });
+  } catch (error) {
+    return sendServerError(res);
+  }
+};
+
 export const atualizarPedidoAdmin = async (req, res) => {
   try {
     const { itens, observacao } = req.body;
@@ -383,11 +509,23 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    const pedido = await Pedido.findById(req.params.id);
+    const pedido = await Pedido.findById(req.params.id).select("+historicoStatus");
 
     if (!pedido) {
       return res.status(404).json({
         message: "Pedido não encontrado",
+      });
+    }
+
+    if (pedidoPossuiEntregaConfirmada(pedido)) {
+      return res.status(409).json({
+        message: "Pedidos entregues são mantidos somente para consulta",
+      });
+    }
+
+    if (!["aguardando_aprovacao", "aprovado", "novo", "em_analise"].includes(pedido.status)) {
+      return res.status(409).json({
+        message: "Os itens não podem ser alterados depois do início da separação",
       });
     }
 
@@ -419,11 +557,17 @@ export const atualizarPedidoAdmin = async (req, res) => {
 
 export const excluirPedidoAdmin = async (req, res) => {
   try {
-    const pedido = await Pedido.findById(req.params.id);
+    const pedido = await Pedido.findById(req.params.id).select("+historicoStatus");
 
     if (!pedido) {
       return res.status(404).json({
         message: "Pedido não encontrado",
+      });
+    }
+
+    if (pedidoPossuiEntregaConfirmada(pedido)) {
+      return res.status(409).json({
+        message: "Pedidos entregues são mantidos para consulta e não podem ser excluídos",
       });
     }
 
