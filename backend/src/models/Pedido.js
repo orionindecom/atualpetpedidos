@@ -511,5 +511,15 @@ const pedidoSchema = new mongoose.Schema(
 pedidoSchema.index({ clienteId: 1, createdAt: -1 });
 pedidoSchema.index({ status: 1, createdAt: -1 });
 pedidoSchema.index({ createdAt: -1 });
+pedidoSchema.index({ "historicoStatus.alteradoEm": -1, "historicoStatus.operadorId": 1 });
+pedidoSchema.index({ "ocorrencias.criadaEm": -1, "ocorrencias.operadorId": 1 });
+pedidoSchema.index({
+  "conferencia.iniciadaEm": -1,
+  "conferencia.iniciadoPor.operadorId": 1,
+});
+pedidoSchema.index({
+  "conferencia.concluidaEm": -1,
+  "conferencia.concluidoPor.operadorId": 1,
+});
 
 export default mongoose.model("Pedido", pedidoSchema);

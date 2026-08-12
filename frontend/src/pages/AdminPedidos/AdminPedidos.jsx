@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
@@ -17,6 +18,8 @@ import {
 } from "../../utils/orderOperations";
 
 function AdminPedidos() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openedFromMetrics = useRef("");
   const [pedidos, setPedidos] = useState([]);
   const [produtos, setProdutos] = useState([]);
 
@@ -97,7 +100,7 @@ function AdminPedidos() {
     )));
   };
 
-  const abrirDetalhes = async (pedidoId) => {
+  const abrirDetalhes = useCallback(async (pedidoId) => {
     setDetailLoading(true);
     setDetailFeedback(null);
     try {
@@ -110,13 +113,25 @@ function AdminPedidos() {
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const pedidoId = searchParams.get("pedido") || "";
+    if (!pedidoId || openedFromMetrics.current === pedidoId) return;
+    openedFromMetrics.current = pedidoId;
+    abrirDetalhes(pedidoId);
+  }, [abrirDetalhes, searchParams]);
 
   const fecharDetalhes = () => {
     setDetail(null);
     setTransitions([]);
     setOperationsForm(null);
     setDetailFeedback(null);
+    if (searchParams.has("pedido")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("pedido");
+      setSearchParams(nextParams, { replace: true });
+    }
   };
 
   const alterarCampoOperacional = (field, value) => {

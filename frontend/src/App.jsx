@@ -21,6 +21,7 @@ import MarketingDashboard from "./pages/MarketingDashboard/MarketingDashboard";
 import LogisticaDashboard from "./pages/LogisticaDashboard/LogisticaDashboard";
 import LogisticaPedidos from "./pages/LogisticaPedidos/LogisticaPedidos";
 import AdminOperadoresLogistica from "./pages/AdminOperadoresLogistica/AdminOperadoresLogistica";
+import AdminMetricasPedidos from "./pages/AdminMetricasPedidos/AdminMetricasPedidos";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -131,6 +132,14 @@ function App() {
           element={(
             <RoleRoute role="admin">
               <AdminOperadoresLogistica />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/admin/metricas-operacionais"
+          element={(
+            <RoleRoute role="admin">
+              <AdminMetricasPedidos />
             </RoleRoute>
           )}
         />

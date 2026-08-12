@@ -11,6 +11,11 @@ const adminLinks = [
   { to: "/clientes", label: "Clientes", group: "Relacionamento" },
   { to: "/pedidos", label: "Pedidos", group: "Operação" },
   {
+    to: "/admin/metricas-operacionais",
+    label: "Métricas Operacionais",
+    group: "Operação",
+  },
+  {
     to: "/admin/operadores-logistica",
     label: "Operadores da Logística",
     group: "Operação",
