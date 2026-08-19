@@ -7,20 +7,20 @@ import {
 } from "../controllers/tabelaPrecoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteGestorComercial } from "../middlewares/adminMiddleware.js";
 import { adminLimiter } from "../middlewares/rateLimitMiddleware.js";
 import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.post("/", proteger, somenteAdmin, adminLimiter, criarTabela);
+router.post("/", proteger, somenteGestorComercial, adminLimiter, criarTabela);
 
-router.get("/", proteger, somenteAdmin, listarTabelas);
+router.get("/", proteger, somenteGestorComercial, listarTabelas);
 
 router.put(
   "/:id",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   validateObjectIdParam(),
   atualizarTabela
@@ -29,7 +29,7 @@ router.put(
 router.post(
   "/:id/duplicar",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   validateObjectIdParam(),
   duplicarTabela

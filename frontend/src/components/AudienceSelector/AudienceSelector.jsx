@@ -12,15 +12,19 @@ function AudienceSelector({
   audienceType,
   error,
   onChange,
+  onPublicosChange,
+  publicos,
   selectedIds,
 }) {
   const [distributors, setDistributors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
+  const supportsProfiles = Array.isArray(publicos) && typeof onPublicosChange === "function";
+  const includesDistributors = !supportsProfiles || publicos.includes("cliente");
 
   useEffect(() => {
-    if (audienceType !== "especificos" || distributors.length > 0) return;
+    if (!includesDistributors || audienceType !== "especificos" || distributors.length > 0) return;
 
     const controller = new AbortController();
     const load = async () => {
@@ -49,7 +53,7 @@ function AudienceSelector({
 
     load();
     return () => controller.abort();
-  }, [audienceType, distributors.length]);
+  }, [audienceType, distributors.length, includesDistributors]);
 
   const visibleDistributors = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
@@ -77,10 +81,41 @@ function AudienceSelector({
     onChange({ audienceType, selectedIds: next });
   };
 
+  const togglePublico = (publico) => {
+    const next = publicos.includes(publico)
+      ? publicos.filter((item) => item !== publico)
+      : [...publicos, publico];
+    onPublicosChange(next);
+  };
+
   return (
     <fieldset className={styles.selector}>
       <legend>Audiência</legend>
-      <div className={styles.segmented}>
+      {supportsProfiles && (
+        <div className={styles.profileSelector}>
+          <strong>Perfis com acesso</strong>
+          <div>
+            <label data-active={publicos.includes("cliente")}>
+              <input
+                type="checkbox"
+                checked={publicos.includes("cliente")}
+                onChange={() => togglePublico("cliente")}
+              />
+              Distribuidores
+            </label>
+            <label data-active={publicos.includes("groomer")}>
+              <input
+                type="checkbox"
+                checked={publicos.includes("groomer")}
+                onChange={() => togglePublico("groomer")}
+              />
+              Groomers
+            </label>
+          </div>
+        </div>
+      )}
+
+      {includesDistributors && <div className={styles.segmented}>
         <label data-active={audienceType === "todos"}>
           <input
             type="radio"
@@ -101,9 +136,9 @@ function AudienceSelector({
           />
           Distribuidores específicos
         </label>
-      </div>
+      </div>}
 
-      {audienceType === "especificos" && (
+      {includesDistributors && audienceType === "especificos" && (
         <div className={styles.distributorPanel}>
           <div className={styles.selectionHeader}>
             <label htmlFor="audience-search">Selecionar distribuidores</label>

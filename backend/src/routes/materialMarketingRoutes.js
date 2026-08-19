@@ -1,10 +1,16 @@
 import express from "express";
-import { listarMateriaisCliente } from "../controllers/materialMarketingController.js";
+import {
+  buscarMaterialCliente,
+  listarMateriaisCliente,
+} from "../controllers/materialMarketingController.js";
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteCliente } from "../middlewares/clienteMiddleware.js";
+import { somentePublicoConteudo } from "../middlewares/clienteMiddleware.js";
+import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.get("/", proteger, somenteCliente, listarMateriaisCliente);
+router.use(proteger, somentePublicoConteudo);
+router.get("/", listarMateriaisCliente);
+router.get("/:id", validateObjectIdParam(), buscarMaterialCliente);
 
 export default router;

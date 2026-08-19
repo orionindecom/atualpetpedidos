@@ -11,7 +11,7 @@ import {
   uploadImageBufferDetails,
 } from "../utils/cloudinaryUpload.js";
 import {
-  buildAudienceFilter,
+  buildContentAudienceFilter,
   validateAudienceDistributors,
 } from "../utils/contentAudience.js";
 import { sendServerError } from "../utils/validation.js";
@@ -79,11 +79,11 @@ const combineConditions = (filter, ...conditions) => {
   return combined;
 };
 
-export const buildClientMaterialVisibilityFilter = (usuarioId, now = new Date()) =>
+export const buildClientMaterialVisibilityFilter = (usuario, now = new Date()) =>
   combineConditions(
     { ativo: true },
     publicationFilter(now),
-    buildAudienceFilter(usuarioId)
+    buildContentAudienceFilter(usuario)
   );
 
 const logAndSendError = (res, error, operation) => {
@@ -113,13 +113,13 @@ const listMaterials = async (req, res, { admin }) => {
   const queryFilter = buildMaterialFilter(query, { onlyActive: !admin });
   const visibilityFilter = admin
     ? null
-    : buildClientMaterialVisibilityFilter(req.usuario._id);
+    : buildClientMaterialVisibilityFilter(req.usuario);
   const filter = admin
     ? queryFilter
     : combineConditions(
       queryFilter,
       publicationFilter(),
-      buildAudienceFilter(req.usuario._id)
+      buildContentAudienceFilter(req.usuario)
     );
   const filterScope = admin ? {} : visibilityFilter;
   const skip = (query.pagina - 1) * query.limite;
@@ -201,6 +201,28 @@ export const buscarMaterialAdmin = async (req, res) => {
   }
 };
 
+export const buscarMaterialCliente = async (req, res) => {
+  try {
+    const material = await MaterialMarketing.findOne(
+      combineConditions(
+        { _id: req.params.id, ativo: true },
+        publicationFilter(),
+        buildContentAudienceFilter(req.usuario)
+      )
+    )
+      .select(CLIENT_FIELDS)
+      .lean();
+
+    if (!material) {
+      return res.status(404).json({ message: "Material não encontrado ou indisponível" });
+    }
+
+    return res.status(200).json({ material });
+  } catch (error) {
+    return logAndSendError(res, error, "buscar material do público");
+  }
+};
+
 export const criarMaterial = async (req, res) => {
   let uploadedImage = null;
 
@@ -263,6 +285,7 @@ export const atualizarMaterial = async (req, res) => {
     }
 
     const nextAudience = {
+      publicos: validation.data.publicos ?? material.publicos,
       audienciaTipo: validation.data.audienciaTipo ?? material.audienciaTipo,
       distribuidoresIds:
         validation.data.distribuidoresIds ?? material.distribuidoresIds,

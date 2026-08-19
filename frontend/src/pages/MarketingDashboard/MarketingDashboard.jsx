@@ -44,7 +44,7 @@ function MarketingDashboard() {
         <header className={styles.pageHeader}>
           <span>Marketing</span>
           <h1>Dashboard</h1>
-          <p>Acompanhe a biblioteca comercial publicada para os distribuidores.</p>
+          <p>Acompanhe a biblioteca publicada para distribuidores e Groomers.</p>
         </header>
 
         {error ? (

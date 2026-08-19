@@ -5,15 +5,16 @@ import {
 } from "../controllers/precoProdutoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteGestorComercial } from "../middlewares/adminMiddleware.js";
 import { adminLimiter } from "../middlewares/rateLimitMiddleware.js";
+import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
 router.post(
   "/",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   definirPrecoProduto
 );
@@ -21,7 +22,8 @@ router.post(
 router.get(
   "/tabela/:tabelaPrecoId",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
+  validateObjectIdParam("tabelaPrecoId"),
   listarPrecosPorTabela
 );
 

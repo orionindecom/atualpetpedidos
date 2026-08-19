@@ -74,6 +74,19 @@ const treinamentoSchema = new mongoose.Schema(
       maxlength: 512,
       default: "",
     },
+    publicos: [{
+      type: String,
+      enum: ["cliente", "groomer"],
+    }],
+    audienciaTipo: {
+      type: String,
+      enum: ["todos", "especificos"],
+      default: "todos",
+    },
+    distribuidoresIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+    }],
     destaque: {
       type: Boolean,
       default: false,
@@ -120,6 +133,13 @@ treinamentoSchema.index({
   ordem: 1,
   publicadoEm: -1,
   _id: 1,
+});
+treinamentoSchema.index({
+  ativo: 1,
+  publicos: 1,
+  audienciaTipo: 1,
+  distribuidoresIds: 1,
+  publicadoEm: -1,
 });
 
 export default mongoose.model("Treinamento", treinamentoSchema);

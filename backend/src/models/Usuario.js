@@ -23,7 +23,7 @@ const usuarioSchema = new mongoose.Schema(
 
         tipo: {
             type: String,
-            enum: ["admin", "marketing", "logistica", "cliente"],
+            enum: ["admin", "comercial", "marketing", "logistica", "cliente", "groomer"],
             default: "cliente",
         },
 
@@ -37,6 +37,7 @@ const usuarioSchema = new mongoose.Schema(
             trim: true,
         },
 
+        // Campo legado mantido por compatibilidade; armazena CPF ou CNPJ normalizado.
         cnpj: {
             type: String,
             trim: true,
@@ -54,6 +55,37 @@ const usuarioSchema = new mongoose.Schema(
             trim: true,
         },
 
+        cidade: {
+            type: String,
+            trim: true,
+        },
+
+        estado: {
+            type: String,
+            trim: true,
+            uppercase: true,
+        },
+
+        nomeProfissional: {
+            type: String,
+            trim: true,
+        },
+
+        instagram: {
+            type: String,
+            trim: true,
+        },
+
+        tiktok: {
+            type: String,
+            trim: true,
+        },
+
+        observacaoCadastro: {
+            type: String,
+            trim: true,
+        },
+
         tabelaPrecoId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "TabelaPreco"
@@ -63,6 +95,10 @@ const usuarioSchema = new mongoose.Schema(
             type: String,
             enum: ["pendente", "aprovado", "reprovado", "inativo"],
             default: "pendente",
+        },
+
+        aprovadoEm: {
+            type: Date,
         },
 
         ativo: {

@@ -14,6 +14,7 @@ import {
   getTrainingProgressState,
   normalizeTrainingResponse,
 } from "../../utils/training";
+import { getAuthSession } from "../../utils/authSession";
 import styles from "./Treinamentos.module.css";
 
 const filtrosIniciais = {
@@ -28,6 +29,7 @@ const filtrosIniciais = {
 
 function Treinamentos() {
   const navigate = useNavigate();
+  const isGroomer = getAuthSession()?.usuario?.tipo === "groomer";
   const [treinamentos, setTreinamentos] = useState([]);
   const [paginacao, setPaginacao] = useState({ totalItens: 0, temProximaPagina: false });
   const [opcoes, setOpcoes] = useState({ categorias: [], marcas: [], linhas: [] });
@@ -106,7 +108,7 @@ function Treinamentos() {
       <Navbar />
       <main className={styles.container}>
         <PageHeader
-          eyebrow="Portal do distribuidor"
+          eyebrow={isGroomer ? "Portal Groomer" : "Portal do distribuidor"}
           title="Treinamentos"
           description="Conteúdos exclusivos para capacitação comercial e técnica."
         />

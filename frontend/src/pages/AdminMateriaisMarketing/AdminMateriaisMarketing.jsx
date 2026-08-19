@@ -7,6 +7,7 @@ import {
   PaginationControls,
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import {
   normalizeMaterialResponse,
   openMaterialLink,
@@ -57,6 +58,7 @@ const formularioVazio = {
   marca: "",
   linha: "",
   linkExterno: "",
+  publicos: ["cliente"],
   audienciaTipo: "todos",
   distribuidoresIds: [],
   dataPublicacao: "",
@@ -83,6 +85,7 @@ const criarFormulario = (material) => {
   if (!material) {
     return {
       ...formularioVazio,
+      publicos: ["cliente"],
       distribuidoresIds: [],
       dataPublicacao: formatarDataHoraLocal(),
     };
@@ -101,6 +104,9 @@ const criarFormulario = (material) => {
     marca: material.marca || "",
     linha: material.linha || "",
     linkExterno: material.linkExterno || "",
+    publicos: Array.isArray(material.publicos) && material.publicos.length > 0
+      ? material.publicos
+      : ["cliente"],
     audienciaTipo: material.audienciaTipo || "todos",
     distribuidoresIds: Array.isArray(material.distribuidoresIds)
       ? material.distribuidoresIds.map((item) => item?._id || item)
@@ -125,6 +131,7 @@ const prepararPayload = (form) => ({
   marca: form.marca,
   linha: form.linha,
   linkExterno: form.linkExterno,
+  publicos: JSON.stringify(form.publicos),
   audienciaTipo: form.audienciaTipo,
   distribuidoresIds: JSON.stringify(form.distribuidoresIds),
   dataPublicacao: form.dataPublicacao,
@@ -140,7 +147,11 @@ const validarFormulario = (payload) => {
   if (!payload.tipo.trim()) errors.tipo = "Informe o tipo";
   if (!payload.linkExterno.trim()) errors.linkExterno = "Informe o link externo";
   if (!payload.dataPublicacao) errors.dataPublicacao = "Informe a data de publicação";
+  if (JSON.parse(payload.publicos).length === 0) {
+    errors.publicos = "Selecione ao menos um público";
+  }
   if (
+    JSON.parse(payload.publicos).includes("cliente") &&
     payload.audienciaTipo === "especificos" &&
     JSON.parse(payload.distribuidoresIds).length === 0
   ) {
@@ -156,14 +167,7 @@ function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
   const [submitting, setSubmitting] = useState(false);
   const [coverFile, setCoverFile] = useState(null);
   const [removeCover, setRemoveCover] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && !submitting) onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, submitting]);
+  const dialogRef = useModalDialog({ onClose, closeDisabled: submitting });
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -213,10 +217,12 @@ function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
   return (
     <div className={styles.modalOverlay} onMouseDown={submitting ? undefined : onClose}>
       <section
+        ref={dialogRef}
         className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="material-form-title"
+        tabIndex="-1"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className={styles.modalHeader}>
@@ -226,7 +232,7 @@ function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
               {material ? "Editar material" : "Novo material"}
             </h2>
           </div>
-          <button type="button" onClick={onClose} disabled={submitting}>
+          <button type="button" aria-label="Fechar formulário de material" onClick={onClose} disabled={submitting}>
             Fechar
           </button>
         </header>
@@ -345,7 +351,7 @@ function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
             />
             {errors.linkExterno && <small>{errors.linkExterno}</small>}
             <p className={styles.helpText}>
-              Use somente um link do Google Drive e configure o arquivo ou pasta para que os distribuidores autorizados consigam visualizar.
+              Use somente um link do Google Drive e configure o arquivo ou pasta para que os públicos autorizados consigam visualizar.
             </p>
           </div>
 
@@ -353,7 +359,17 @@ function MaterialFormModal({ apiBase, material, onClose, onSaved }) {
             <AudienceSelector
               audienceType={form.audienciaTipo}
               selectedIds={form.distribuidoresIds}
-              error={errors.distribuidoresIds || errors.audienciaTipo}
+              publicos={form.publicos}
+              error={errors.publicos || errors.distribuidoresIds || errors.audienciaTipo}
+              onPublicosChange={(publicos) => {
+                setForm((current) => ({
+                  ...current,
+                  publicos,
+                  audienciaTipo: publicos.includes("cliente") ? current.audienciaTipo : "todos",
+                  distribuidoresIds: publicos.includes("cliente") ? current.distribuidoresIds : [],
+                }));
+                setErrors((current) => ({ ...current, publicos: undefined }));
+              }}
               onChange={({ audienceType, selectedIds }) => {
                 setForm((current) => ({
                   ...current,
@@ -544,7 +560,7 @@ function AdminMateriaisMarketing({
           <div>
             <span>Conteúdo comercial</span>
             <h1>{pageTitle}</h1>
-            <p>Organize links de campanhas, imagens e documentos para os distribuidores.</p>
+            <p>Organize links de campanhas, imagens e documentos por público autorizado.</p>
           </div>
           <button type="button" className={styles.primaryButton} onClick={() => setModalMaterial(null)}>
             Novo material
@@ -636,9 +652,11 @@ function AdminMateriaisMarketing({
                     <span>{material.categoria}</span>
                     <span>{material.tipo}</span>
                     <span>
-                      {material.audienciaTipo === "especificos"
-                        ? "Público específico"
-                        : "Todos os distribuidores"}
+                      {(Array.isArray(material.publicos) && material.publicos.length > 0
+                        ? material.publicos
+                        : ["cliente"])
+                        .map((item) => item === "groomer" ? "Groomers" : "Distribuidores")
+                        .join(" + ")}
                     </span>
                     {material.destaque && <strong>Destaque</strong>}
                     <strong className={material.ativo ? styles.activeBadge : styles.inactiveBadge}>

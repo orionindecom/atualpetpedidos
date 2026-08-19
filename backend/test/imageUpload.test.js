@@ -213,9 +213,7 @@ test("remoção recusa publicId fora da pasta controlada", async (t) => {
 
 test("rotas administrativas autenticam antes do upload e aplicam rate limit", () => {
   for (const router of [trainingRouter, materialRouter, bannerRouter]) {
-    const expectedAuthorization = router === trainingRouter
-      ? "somenteAdmin"
-      : "somenteGestorConteudo";
+    const expectedAuthorization = "somenteGestorConteudo";
     assert.deepEqual(router.stack.slice(0, 2).map((layer) => layer.name), [
       "proteger",
       expectedAuthorization,

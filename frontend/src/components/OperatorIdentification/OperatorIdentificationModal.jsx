@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import styles from "./OperatorIdentificationModal.module.css";
 
 function OperatorIdentificationModal({
@@ -16,10 +17,11 @@ function OperatorIdentificationModal({
   const selectedOperatorId = operators.some((operator) => operator._id === operatorId)
     ? operatorId
     : operators[0]?._id || "";
-
-  useEffect(() => {
-    pinRef.current?.focus();
-  }, []);
+  const dialogRef = useModalDialog({
+    onClose,
+    closeDisabled: loading,
+    initialFocusRef: pinRef,
+  });
 
   const submit = async (event) => {
     event.preventDefault();
@@ -31,12 +33,16 @@ function OperatorIdentificationModal({
   };
 
   return (
-    <div className={styles.overlay} onMouseDown={onClose}>
+    <div className={styles.overlay} onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !loading) onClose();
+    }}>
       <section
+        ref={dialogRef}
         className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="operator-identification-title"
+        tabIndex="-1"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <span className={styles.eyebrow}>Pedido {orderNumber}</span>

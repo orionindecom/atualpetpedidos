@@ -11,6 +11,7 @@ import {
   normalizeMaterialResponse,
   openMaterialLink,
 } from "../../utils/materialMarketing";
+import { getAuthSession } from "../../utils/authSession";
 import styles from "./MateriaisMarketing.module.css";
 
 const filtrosIniciais = {
@@ -29,6 +30,7 @@ const formatarData = (value) => {
 };
 
 function MateriaisMarketing() {
+  const isGroomer = getAuthSession()?.usuario?.tipo === "groomer";
   const [materiais, setMateriais] = useState([]);
   const [paginacao, setPaginacao] = useState({
     paginaAtual: 1,
@@ -126,9 +128,9 @@ function MateriaisMarketing() {
       <Navbar />
       <main className={styles.container}>
         <header className={styles.pageHeader}>
-          <span>Biblioteca do distribuidor</span>
+          <span>{isGroomer ? "Biblioteca do Groomer" : "Biblioteca do distribuidor"}</span>
           <h1>Materiais</h1>
-          <p>Encontre imagens, campanhas e documentos para apoiar suas vendas.</p>
+          <p>Encontre imagens, campanhas e documentos liberados para o seu perfil.</p>
         </header>
 
         <FilterToolbar

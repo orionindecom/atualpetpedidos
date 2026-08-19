@@ -10,11 +10,12 @@ import {
   PEDIDO_STATUS,
   pedidoAguardandoAprovacao,
   pedidoExigeConferencia,
+  pedidoExigeFechamentoLogistico,
   pedidoPossuiEntregaConfirmada,
-  STATUS_APOS_CONFERENCIA,
   STATUS_CONCLUIDOS,
-  transicaoLogisticaPermitida,
   transicoesPermitidasParaPedido,
+  validarCamposPedidoPorEtapa,
+  validarTransicaoPedido,
   validateLogisticsOrderPayload,
 } from "../utils/pedidoLogistica.js";
 import { sendServerError } from "../utils/validation.js";
@@ -114,6 +115,7 @@ export const applyLogisticsOrderUpdate = ({
   observacaoHistorico,
   separacaoItens,
   conferencia,
+  fechamentoLogistico,
   novaOcorrencia,
   usuario,
   operador,
@@ -145,12 +147,19 @@ export const applyLogisticsOrderUpdate = ({
   }
 
   if (
-    conferencia &&
-    (Object.keys(data).length > 0 || separacaoItens || novaOcorrencia)
+    (conferencia || fechamentoLogistico) &&
+    (
+      Object.keys(data).length > 0 ||
+      separacaoItens ||
+      novaOcorrencia ||
+      (conferencia && fechamentoLogistico)
+    )
   ) {
     return {
       valid: false,
-      message: "A conferência deve ser registrada em uma operação própria",
+      message: conferencia
+        ? "A conferência deve ser registrada em uma operação própria"
+        : "O fechamento logístico deve ser registrado em uma operação própria",
     };
   }
 
@@ -161,55 +170,21 @@ export const applyLogisticsOrderUpdate = ({
     };
   }
 
-  if (
-    novoStatus !== statusAnterior &&
-    ["aguardando_aprovacao", "aprovado"].includes(novoStatus)
-  ) {
-    return {
-      valid: false,
-      message: "Estados de aprovação só podem ser alterados pela ação de aprovação do Admin",
-    };
-  }
+  const validacaoCampos = validarCamposPedidoPorEtapa({
+    pedido,
+    data,
+    separacaoItens,
+    usuarioTipo: usuario.tipo,
+  });
+  if (!validacaoCampos.valid) return validacaoCampos;
 
-  if (novoStatus === "entregue" && novoStatus !== statusAnterior) {
-    return {
-      valid: false,
-      message: "O status Entregue deve ser confirmado pelo cliente",
-    };
-  }
-
-  if (
-    usuario.tipo === "logistica" &&
-    !transicaoLogisticaPermitida(statusAnterior, novoStatus)
-  ) {
-    return {
-      valid: false,
-      message: `Transição de ${statusAnterior} para ${novoStatus} não permitida`,
-    };
-  }
-
-  if (
-    STATUS_APOS_CONFERENCIA.includes(novoStatus) &&
-    novoStatus !== statusAnterior &&
-    pedidoExigeConferencia(pedido) &&
-    !conferenciaConcluida(pedido)
-  ) {
-    return {
-      valid: false,
-      message: "Conclua a conferência de todos os itens antes de liberar o pedido para faturamento",
-    };
-  }
-
-  if (
-    usuario.tipo === "admin" &&
-    novoStatus !== statusAnterior &&
-    !transicoesPermitidasParaPedido(pedido, { admin: true }).includes(novoStatus)
-  ) {
-    return {
-      valid: false,
-      message: `Transição administrativa de ${statusAnterior} para ${novoStatus} não permitida`,
-    };
-  }
+  const validacaoTransicao = validarTransicaoPedido({
+    pedido,
+    novoStatus,
+    usuarioTipo: usuario.tipo,
+    data,
+  });
+  if (!validacaoTransicao.valid) return validacaoTransicao;
 
   if (
     separacaoItens &&
@@ -433,6 +408,54 @@ export const applyLogisticsOrderUpdate = ({
     }
   }
 
+  if (fechamentoLogistico) {
+    if (!pedidoExigeFechamentoLogistico(pedido)) {
+      return {
+        valid: false,
+        message: "Este pedido histórico não exige fechamento logístico",
+      };
+    }
+    if (statusAnterior !== "separado") {
+      return {
+        valid: false,
+        message: "O fechamento logístico só pode ser preenchido após a separação e antes do faturamento",
+      };
+    }
+    if (pedidoExigeConferencia(pedido) && !conferenciaConcluida(pedido)) {
+      return {
+        valid: false,
+        message: "Conclua a conferência antes de preencher o fechamento logístico",
+      };
+    }
+    if (usuario.tipo !== "logistica" || !operador) {
+      return {
+        valid: false,
+        message: "O fechamento logístico exige identificação de um operador da Logística por PIN",
+      };
+    }
+
+    const fechamentoJaExistia = Boolean(pedido.fechamentoLogistico?.preenchidoEm);
+    pedido.fechamentoLogistico = {
+      ...fechamentoLogistico,
+      preenchidoEm: now,
+      preenchidoPor: {
+        usuarioId: usuario._id,
+        usuarioNome:
+          usuario.nomeResponsavel || usuario.nomeFantasia || "Usuário interno",
+        usuarioTipo: usuario.tipo,
+        operadorId: operador._id,
+        operadorNome: operador.nome,
+      },
+    };
+    novasOcorrencias.push(buildOccurrenceEntry({
+      conteudo: `${fechamentoJaExistia ? "Fechamento logístico atualizado" : "Fechamento logístico concluído"}: ${fechamentoLogistico.quantidadeVolumes} volume(s), ${fechamentoLogistico.pesoTotalKg} kg.`,
+      tipo: "informacao_operacional",
+      usuario,
+      operador,
+      now,
+    }));
+  }
+
   for (const [field, value] of Object.entries(data)) {
     if (field !== "status") pedido[field] = value;
   }
@@ -512,6 +535,7 @@ export const applyLogisticsOrderUpdate = ({
     statusAlterado: novoStatus !== statusAnterior,
     separacaoAlterada: alteracoesSeparacao.length > 0,
     conferenciaAlterada: Boolean(conferencia),
+    fechamentoLogisticoAlterado: Boolean(fechamentoLogistico),
   };
 };
 
@@ -590,6 +614,8 @@ export const listarPedidosLogistica = async (req, res) => {
             numeroNotaFiscal: 1,
             conferenciaObrigatoria: 1,
             "conferencia.status": 1,
+            fechamentoLogisticoObrigatorio: 1,
+            "fechamentoLogistico.preenchidoEm": 1,
             quantidadeItens: { $size: { $ifNull: ["$itens", []] } },
           },
         },
@@ -706,6 +732,7 @@ export const atualizarPedidoLogistica = async (req, res) => {
       observacaoHistorico: parsed.observacaoHistorico,
       separacaoItens: parsed.separacaoItens,
       conferencia: parsed.conferencia,
+      fechamentoLogistico: parsed.fechamentoLogistico,
       novaOcorrencia: parsed.novaOcorrencia,
       usuario: req.usuario,
       operador: req.operadorLogistica,

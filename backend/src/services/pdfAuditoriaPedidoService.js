@@ -127,6 +127,19 @@ export const buildOrderAuditPdfData = (pedido) => {
         observacao: source.conferencia.observacao || "",
       }
       : null,
+    fechamentoLogisticoObrigatorio: source.fechamentoLogisticoObrigatorio === true,
+    fechamentoLogistico: source.fechamentoLogistico
+      ? {
+        quantidadeVolumes: source.fechamentoLogistico.quantidadeVolumes,
+        pesoTotalKg: Number(source.fechamentoLogistico.pesoTotalKg).toLocaleString("pt-BR", {
+          maximumFractionDigits: 3,
+        }),
+        observacaoVolumes: source.fechamentoLogistico.observacaoVolumes || "-",
+        preenchidoEm: formatDateTime(source.fechamentoLogistico.preenchidoEm),
+        preenchidoPor: source.fechamentoLogistico.preenchidoPor?.operadorNome ||
+          source.fechamentoLogistico.preenchidoPor?.usuarioNome || "-",
+      }
+      : null,
     timeline: timeline.map((event) => ({
       ...event,
       dataFormatada: formatDateTime(event.data),
@@ -135,7 +148,9 @@ export const buildOrderAuditPdfData = (pedido) => {
       statusAnteriorLabel: statusLabel(event.statusAnterior),
       statusNovoLabel: statusLabel(event.statusNovo),
     })),
-    possuiDadosOperacionaisLegados: source.conferenciaObrigatoria !== true,
+    possuiDadosOperacionaisLegados:
+      source.conferenciaObrigatoria !== true ||
+      source.fechamentoLogisticoObrigatorio !== true,
   };
 };
 
@@ -240,6 +255,21 @@ export const gerarPdfRelatorioPedido = (pedido, res) => {
     );
   }
 
+  sectionTitle("FECHAMENTO LOGÍSTICO");
+  if (data.fechamentoLogistico) {
+    field("Quantidade de volumes", data.fechamentoLogistico.quantidadeVolumes);
+    field("Peso total", `${data.fechamentoLogistico.pesoTotalKg} kg`);
+    field("Descrição dos volumes/caixas", data.fechamentoLogistico.observacaoVolumes);
+    field("Preenchido em", data.fechamentoLogistico.preenchidoEm);
+    field("Operador responsável", data.fechamentoLogistico.preenchidoPor);
+  } else {
+    doc.font("Helvetica").fontSize(9).text(
+      data.fechamentoLogisticoObrigatorio
+        ? "O fechamento logístico obrigatório ainda não foi registrado."
+        : "Fechamento logístico não exigido para este pedido histórico."
+    );
+  }
+
   sectionTitle("HISTÓRICO IMUTÁVEL REGISTRADO");
   if (data.timeline.length === 0) {
     doc.font("Helvetica").fontSize(9).text("Nenhum evento persistido disponível.");
@@ -263,7 +293,7 @@ export const gerarPdfRelatorioPedido = (pedido, res) => {
       .font("Helvetica-Oblique")
       .fontSize(7.5)
       .fillColor("#64748b")
-      .text("Pedido anterior à obrigatoriedade da conferência estruturada; campos operacionais ausentes permanecem indicados como não registrados.", { width });
+      .text("Pedido anterior a uma ou mais etapas estruturadas de conferência e fechamento logístico; campos operacionais ausentes permanecem indicados como não registrados.", { width });
   }
 
   ensureSpace(50);
@@ -286,7 +316,7 @@ export const gerarPdfRelatorioPedido = (pedido, res) => {
       `Página ${index + 1} de ${pages.count}`,
       left,
       780,
-      { width, align: "right", lineBreak: false }
+      { width: width - 4, height: 10, align: "right", lineBreak: false }
     );
   }
   doc.end();

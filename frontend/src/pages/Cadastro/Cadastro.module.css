@@ -113,10 +113,20 @@
 }
 
 .section label {
-  display: contents;
+  min-width: 0;
+  color: #344054;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-.grid input {
+.grid input,
+.grid select,
+.grid textarea {
+  width: 100%;
+  min-width: 0;
   padding: 14px;
   border-radius: 12px;
   border: 1px solid #d1d5db;
@@ -125,10 +135,51 @@
   font-size: 15px;
 }
 
-.grid input:focus {
+.grid input:focus,
+.grid select:focus,
+.grid textarea:focus {
   outline: none;
   border-color: #f97316;
   box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+}
+
+.grid input[aria-invalid="true"],
+.grid select[aria-invalid="true"],
+.grid textarea[aria-invalid="true"] {
+  border-color: #dc2626;
+  background: #fffafa;
+}
+
+.grid input[aria-invalid="true"]:focus {
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.13);
+}
+
+.fieldError {
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.feedback {
+  margin: 0 0 22px;
+  padding: 13px 15px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff5f5;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.feedback strong {
+  display: block;
+}
+
+.feedback ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
 }
 
 .card button {
@@ -146,6 +197,11 @@
 
 .card button:hover {
   background: #ea580c;
+}
+
+.card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .footer {
@@ -277,6 +333,10 @@
     margin-bottom: 16px;
   }
 
+  .feedback {
+    margin-bottom: 16px;
+  }
+
   .mobileCardHeader h1 {
     margin: 0 0 6px;
     color: #111827;
@@ -320,7 +380,8 @@
     font-weight: 800;
   }
 
-  .grid input {
+  .grid input,
+  .grid select {
     width: 100%;
     height: 50px;
     padding: 0 15px;
@@ -331,7 +392,9 @@
     transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   }
 
-  .grid input:focus {
+  .grid input:focus,
+  .grid select:focus,
+  .grid textarea:focus {
     background: #ffffff;
     border-color: #68c1bd;
     box-shadow: 0 0 0 4px rgba(104, 193, 189, 0.16);

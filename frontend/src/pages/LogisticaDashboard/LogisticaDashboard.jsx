@@ -11,7 +11,7 @@ import styles from "./LogisticaDashboard.module.css";
 const metricCards = [
   ["recebidos", "Recebidos", "Aguardando separação"],
   ["emSeparacao", "Em separação", "Em processamento"],
-  ["separados", "Separados", "Aguardando faturamento"],
+  ["separados", "Separados", "Aguardando conferência, fechamento ou faturamento"],
   ["faturados", "Faturados", "Aguardando envio"],
   ["enviados", "Enviados", "Em transporte"],
   ["totalAguardandoAcao", "Aguardando ação", "Fluxo operacional aberto"],

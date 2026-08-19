@@ -7,8 +7,8 @@ import ProgressoTreinamento from "../src/models/ProgressoTreinamento.js";
 import adminRouter from "../src/routes/adminTreinamentoRoutes.js";
 import clientRouter from "../src/routes/treinamentoRoutes.js";
 import { proteger } from "../src/middlewares/authMiddleware.js";
-import { somenteAdmin } from "../src/middlewares/adminMiddleware.js";
-import { somenteCliente } from "../src/middlewares/clienteMiddleware.js";
+import { somenteGestorConteudo } from "../src/middlewares/adminMiddleware.js";
+import { somentePublicoConteudo } from "../src/middlewares/clienteMiddleware.js";
 import {
   alterarStatusTreinamento,
   atualizarProgresso,
@@ -67,7 +67,7 @@ const leanQuery = (value) => ({
   lean: async () => value,
 });
 
-test("rotas do cliente exigem autenticacao e perfil cliente", async () => {
+test("rotas de conteúdo exigem autenticação e perfil externo permitido", async () => {
   const res = createResponse();
   let nextCalled = false;
   await proteger({ headers: {} }, res, () => { nextCalled = true; });
@@ -75,11 +75,11 @@ test("rotas do cliente exigem autenticacao e perfil cliente", async () => {
   assert.equal(nextCalled, false);
 
   const adminResponse = createResponse();
-  somenteCliente({ usuario: { tipo: "admin" } }, adminResponse, () => {});
+  somentePublicoConteudo({ usuario: { tipo: "admin" } }, adminResponse, () => {});
   assert.equal(adminResponse.statusCode, 403);
   assert.deepEqual(clientRouter.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somenteCliente",
+    "somentePublicoConteudo",
   ]);
 });
 
@@ -119,15 +119,15 @@ test("cliente nao aprovado e interrompido pelo middleware", async (t) => {
   assert.equal(nextCalled, false);
 });
 
-test("cliente nao acessa rotas administrativas", () => {
+test("cliente não gerencia treinamentos e Marketing compartilha a gestão", () => {
   const res = createResponse();
   let nextCalled = false;
-  somenteAdmin({ usuario: { tipo: "cliente" } }, res, () => { nextCalled = true; });
+  somenteGestorConteudo({ usuario: { tipo: "cliente" } }, res, () => { nextCalled = true; });
   assert.equal(res.statusCode, 403);
   assert.equal(nextCalled, false);
   assert.deepEqual(adminRouter.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somenteAdmin",
+    "somenteGestorConteudo",
   ]);
 });
 

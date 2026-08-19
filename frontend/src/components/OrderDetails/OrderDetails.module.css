@@ -1,6 +1,6 @@
 .modalOverlay {
   padding: 24px;
-  overflow-y: auto;
+  overflow: hidden;
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -10,24 +10,32 @@
 }
 
 .modal {
-  width: min(1080px, 100%);
+  width: min(1080px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  min-height: 0;
   overflow: hidden;
   border-radius: 10px;
   background: var(--surface-primary);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
 }
 
 .modalHeader {
+  flex: 0 0 auto;
   min-height: 92px;
   padding: 18px 24px;
   border-bottom: 1px solid var(--border-default);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
 }
+
+.modalTitle { min-width: 0; }
 
 .modalHeader > div:first-child > span {
   color: var(--brand-primary-strong);
@@ -36,8 +44,8 @@
   text-transform: uppercase;
 }
 
-.modalHeader h2 { margin: 3px 0; font-size: 23px; }
-.modalHeader p { margin: 0; color: var(--text-muted); }
+.modalHeader h2 { margin: 3px 0; overflow-wrap: anywhere; font-size: 23px; }
+.modalHeader p { margin: 0; overflow-wrap: anywhere; color: var(--text-muted); }
 .activeOperator {
   width: fit-content;
   margin-top: 7px;
@@ -53,6 +61,7 @@
 
 .modalHeaderActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .modalHeaderActions button,
+.closeButton,
 .approvalPanel button,
 .formActions button,
 .conferenceCallout button,
@@ -70,13 +79,22 @@
 }
 
 .modalHeaderActions button:disabled,
+.closeButton:disabled,
 .approvalPanel button:disabled,
 .formActions button:disabled,
 .conferenceCallout button:disabled,
 .conferenceActions button:disabled { cursor: not-allowed; opacity: 0.58; }
 .modalHeaderActions .dangerButton { border-color: #dc2626; color: #b91c1c; }
 
-.modalContent { max-height: calc(100vh - 140px); padding: 0 24px 28px; overflow-y: auto; }
+.modalContent {
+  min-height: 0;
+  padding: 0 24px 28px;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 24px 104px;
+}
 
 .feedback {
   margin: 18px 0 0;
@@ -120,6 +138,22 @@
 .operationsForm h3,
 .historySection h3 { margin: 0 0 16px; font-size: 16px; }
 .approvalMeta { margin: 14px 0 0; color: var(--text-muted); font-size: 12px; }
+.nextActionPanel {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 8px;
+  background: var(--brand-primary-soft);
+  display: grid;
+  grid-template-columns: minmax(140px, 0.45fr) minmax(0, 1.55fr);
+  gap: 18px;
+}
+.nextActionPanel > div { min-width: 0; }
+.nextActionPanel span,
+.nextActionPanel strong { display: block; overflow-wrap: anywhere; }
+.nextActionPanel span { margin-bottom: 4px; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.nextActionPanel strong { color: var(--brand-primary-strong); font-size: 13px; }
+.nextActionPanel p { margin: 5px 0 0; color: var(--text-secondary); font-size: 12px; }
 
 .summaryGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .summaryGrid > div,
@@ -142,7 +176,7 @@
 
 .sectionTitle { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .divergenceNotice { margin-bottom: 12px; padding: 10px 12px; border: 1px solid #fde68a; border-radius: 8px; background: #fffbeb; color: #92400e; font-size: 12px; }
-.itemsTable { border-top: 1px solid var(--border-default); overflow-x: auto; }
+.itemsTable { max-width: 100%; border-top: 1px solid var(--border-default); overflow-x: auto; overscroll-behavior-inline: contain; }
 .itemRow {
   min-height: 62px;
   padding: 9px 0;
@@ -204,12 +238,31 @@
   width: 100%; min-height: 90px; padding: 10px 12px; resize: vertical;
   border: 1px solid var(--border-default); border-radius: var(--radius-small);
   background: var(--surface-primary); color: var(--text-primary); font: inherit;
+  scroll-margin-block: 72px 110px;
 }
 .conferenceObservation textarea:focus { border-color: var(--brand-primary-strong); outline: 3px solid rgba(113, 196, 192, 0.2); }
 .conferenceActions { display: flex; justify-content: flex-end; }
 .conferenceNote p { color: var(--text-secondary); }
+.shippingBadge {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #0e7490;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.trackingLink {
+  width: fit-content;
+  margin-top: 12px;
+  color: var(--brand-primary-strong);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+}
 
 .operationsForm > section + section { margin-top: 24px; }
+.stageHint { margin: -7px 0 14px; color: var(--text-muted); font-size: 12px; }
 .formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .formGrid label { min-width: 0; color: var(--text-secondary); display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
 .internalOnlyNote {
@@ -227,6 +280,7 @@
   width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px;
   border: 1px solid var(--border-default); border-radius: var(--radius-small);
   background: var(--surface-primary); color: var(--text-primary); font: inherit;
+  scroll-margin-block: 72px 110px;
 }
 .formGrid textarea { min-height: 92px; resize: vertical; }
 .formGrid input:focus,
@@ -250,15 +304,27 @@
 .legacyNote p { margin: 5px 0 0; color: var(--text-secondary); }
 
 @media (max-width: 760px) {
-  .modalOverlay { padding: 0; }
-  .modal { width: 100%; min-height: 100vh; max-height: 100vh; border-radius: 0; }
-  .modalHeader { min-height: 0; padding: 14px 18px; align-items: flex-start; flex-wrap: wrap; }
-  .modalHeaderActions { width: 100%; }
-  .modalHeaderActions button { min-width: 145px; flex: 1; }
-  .modalContent { max-height: calc(100vh - 142px); padding: 0 18px 36px; }
+  .modalOverlay { padding: 8px; }
+  .modal {
+    width: 100%;
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 8px;
+  }
+  .modalHeader {
+    min-height: 0;
+    padding: 14px 18px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: flex-start;
+  }
+  .modalHeaderActions { width: 100%; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .modalHeaderActions button { min-width: 0; width: 100%; padding-inline: 8px; font-size: 11px; }
+  .closeButton { flex: 0 0 auto; }
+  .modalContent { padding: 0 18px calc(24px + env(safe-area-inset-bottom)); }
   .approvalPanel { align-items: stretch; flex-direction: column; }
   .summaryGrid,
-  .formGrid { grid-template-columns: 1fr; }
+  .formGrid,
+  .nextActionPanel { grid-template-columns: 1fr; }
   .fullField { grid-column: 1; }
   .itemRow { grid-template-columns: minmax(0, 1fr) repeat(3, 62px); gap: 8px; }
   .customerItemRow { grid-template-columns: minmax(0, 1fr) 62px; }
@@ -273,4 +339,13 @@
   .conferenceCallout { align-items: stretch; flex-direction: column; }
   .conferenceCallout button,
   .conferenceActions button { width: 100%; }
+  .formActions,
+  .conferenceActions {
+    bottom: 0;
+    z-index: 2;
+    padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
+    position: sticky;
+    background: var(--surface-primary);
+    box-shadow: 0 -10px 18px rgba(15, 23, 42, 0.06);
+  }
 }

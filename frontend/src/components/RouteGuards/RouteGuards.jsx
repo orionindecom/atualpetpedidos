@@ -5,16 +5,20 @@ import { clearAuthSession, getAuthSession } from "../../utils/authSession";
 
 const roleHome = {
   admin: "/admin",
+  comercial: "/precos",
   marketing: "/marketing",
   logistica: "/logistica",
   cliente: "/catalogo",
+  groomer: "/groomer",
 };
 
 const validationEndpoint = {
   admin: "/produtos",
+  comercial: "/tabelas",
   marketing: "/marketing/dashboard",
   logistica: "/logistica/dashboard",
   cliente: "/pedidos/meus",
+  groomer: "/treinamentos?limite=1",
 };
 
 function AccessChecking() {
@@ -32,14 +36,16 @@ export function HomeRedirect() {
   return <Navigate to={roleHome[session.usuario.tipo] || "/login"} replace />;
 }
 
-export function RoleRoute({ role, children }) {
+export function RoleRoute({ role, roles, children }) {
   const location = useLocation();
   const [validation, setValidation] = useState({
     key: null,
     isAllowed: null,
   });
   const session = getAuthSession();
-  const validationKey = `${role}:${location.pathname}:${session?.token || ""}`;
+  const allowedRoles = Array.isArray(roles) ? roles : [role].filter(Boolean);
+  const allowedRolesKey = allowedRoles.join(",");
+  const validationKey = `${allowedRolesKey}:${location.pathname}:${session?.token || ""}`;
 
   useEffect(() => {
     let isActive = true;
@@ -47,14 +53,17 @@ export function RoleRoute({ role, children }) {
     const validateAccess = async () => {
       const currentSession = getAuthSession();
 
-      if (!currentSession || currentSession.usuario.tipo !== role) {
+      if (
+        !currentSession ||
+        !allowedRolesKey.split(",").includes(currentSession.usuario.tipo)
+      ) {
         return;
       }
 
       setValidation({ key: validationKey, isAllowed: null });
 
       try {
-        await api.get(validationEndpoint[role]);
+        await api.get(validationEndpoint[currentSession.usuario.tipo]);
 
         if (isActive) {
           setValidation({ key: validationKey, isAllowed: true });
@@ -73,14 +82,14 @@ export function RoleRoute({ role, children }) {
     return () => {
       isActive = false;
     };
-  }, [role, location.pathname, validationKey]);
+  }, [allowedRolesKey, location.pathname, validationKey]);
 
   if (!session) {
     clearAuthSession();
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (session.usuario.tipo !== role) {
+  if (!allowedRoles.includes(session.usuario.tipo)) {
     return (
       <Navigate
         to={roleHome[session.usuario.tipo] || "/login"}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import AudienceSelector from "../../components/AudienceSelector/AudienceSelector";
 import ImageUploadField from "../../components/ImageUploadField/ImageUploadField";
 import {
   FilterToolbar,
@@ -8,10 +9,15 @@ import {
 import Navbar from "../../components/Navbar/Navbar";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import {
+  buildTrainingAudiencePayload,
+  changeTrainingDistributorAudience,
+  changeTrainingPublics,
   extractYouTubeVideoId,
   formatTrainingDuration,
   getTrainingThumbnail,
+  normalizeTrainingAudience,
   normalizeTrainingResponse,
   TRAINING_CATEGORIES,
 } from "../../utils/training";
@@ -47,6 +53,9 @@ const createEmptyForm = () => ({
   duracaoMinutos: "0",
   provider: "youtube",
   videoInput: "",
+  publicos: ["cliente"],
+  audienciaTipo: "todos",
+  distribuidoresIds: [],
   destaque: false,
   obrigatorio: false,
   ordem: "0",
@@ -69,6 +78,7 @@ const createFormFromTraining = (training) => {
     duracaoMinutos: String(Math.round((training.duracaoSegundos || 0) / 60)),
     provider: training.provider || "youtube",
     videoInput: training.videoId || "",
+    ...normalizeTrainingAudience(training),
     destaque: Boolean(training.destaque),
     obrigatorio: Boolean(training.obrigatorio),
     ordem: String(training.ordem ?? 0),
@@ -83,12 +93,13 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? "Não publicado" : date.toLocaleDateString("pt-BR");
 };
 
-function TrainingFormModal({ training, onClose, onSaved }) {
+function TrainingFormModal({ apiBase, training, onClose, onSaved }) {
   const [form, setForm] = useState(() => createFormFromTraining(training));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [removeThumbnail, setRemoveThumbnail] = useState(false);
+  const dialogRef = useModalDialog({ onClose, closeDisabled: submitting });
   const videoId = extractYouTubeVideoId(form.videoInput);
   const fallbackThumbnail = getTrainingThumbnail({
     provider: form.provider,
@@ -115,6 +126,14 @@ function TrainingFormModal({ training, onClose, onSaved }) {
       localErrors.duracaoSegundos = "Informe uma duração válida";
     }
     if (!Number.isInteger(Number(form.ordem))) localErrors.ordem = "Informe um número inteiro";
+    if (form.publicos.length === 0) localErrors.publicos = "Selecione ao menos um público";
+    if (
+      form.publicos.includes("cliente") &&
+      form.audienciaTipo === "especificos" &&
+      form.distribuidoresIds.length === 0
+    ) {
+      localErrors.distribuidoresIds = "Selecione ao menos um distribuidor";
+    }
     if (Object.keys(localErrors).length) {
       setErrors(localErrors);
       return;
@@ -131,6 +150,7 @@ function TrainingFormModal({ training, onClose, onSaved }) {
       duracaoSegundos: Number(form.duracaoMinutos) * 60,
       provider: form.provider,
       videoId,
+      ...buildTrainingAudiencePayload(form),
       destaque: form.destaque,
       obrigatorio: form.obrigatorio,
       ordem: Number(form.ordem),
@@ -148,8 +168,8 @@ function TrainingFormModal({ training, onClose, onSaved }) {
         removeField: "removerThumbnail",
       });
 
-      if (training) await api.put(`/admin/treinamentos/${training._id}`, requestBody);
-      else await api.post("/admin/treinamentos", requestBody);
+      if (training) await api.put(`${apiBase}/${training._id}`, requestBody);
+      else await api.post(apiBase, requestBody);
       onSaved(training ? "Treinamento atualizado com sucesso" : "Treinamento criado com sucesso");
     } catch (error) {
       setErrors(error.response?.data?.errors || {
@@ -162,81 +182,106 @@ function TrainingFormModal({ training, onClose, onSaved }) {
 
   return (
     <div className={styles.modalOverlay} onMouseDown={submitting ? undefined : onClose}>
-      <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="training-form-title" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="training-form-title" tabIndex="-1" onMouseDown={(event) => event.stopPropagation()}>
         <header className={styles.modalHeader}>
           <div><span>Conteúdo educacional</span><h2 id="training-form-title">{training ? "Editar treinamento" : "Novo treinamento"}</h2></div>
-          <button type="button" onClick={onClose} disabled={submitting}>Fechar</button>
+          <button type="button" aria-label="Fechar formulário de treinamento" onClick={onClose} disabled={submitting}>Fechar</button>
         </header>
 
         <form className={styles.form} onSubmit={submit} noValidate>
-          {errors.formulario && <div className={styles.formError} role="alert">{errors.formulario}</div>}
-          <div className={styles.fullField}>
-            <label htmlFor="titulo">Título *</label>
-            <input id="titulo" name="titulo" value={form.titulo} onChange={updateField} maxLength="180" autoFocus />
-            {errors.titulo && <small>{errors.titulo}</small>}
-          </div>
-          <div className={styles.fullField}>
-            <label htmlFor="resumo">Resumo *</label>
-            <textarea id="resumo" name="resumo" value={form.resumo} onChange={updateField} maxLength="300" rows="2" />
-            <div className={styles.fieldMeta}>{errors.resumo ? <small>{errors.resumo}</small> : <span />}<span>{form.resumo.length} / 300</span></div>
-          </div>
-          <div className={styles.fullField}>
-            <label htmlFor="descricao">Descrição</label>
-            <textarea id="descricao" name="descricao" value={form.descricao} onChange={updateField} maxLength="3000" rows="5" />
-            <div className={styles.fieldMeta}>{errors.descricao ? <small>{errors.descricao}</small> : <span />}<span>{form.descricao.length} / 3000</span></div>
-          </div>
-          <div>
-            <label htmlFor="categoriaOpcao">Categoria *</label>
-            <select id="categoriaOpcao" name="categoriaOpcao" value={form.categoriaOpcao} onChange={updateField}>
-              {TRAINING_CATEGORIES.map((item) => <option key={item} value={item}>{item}</option>)}
-              <option value="__outro">Outra categoria</option>
-            </select>
-            {form.categoriaOpcao === "__outro" && <input className={styles.conditionalInput} name="categoriaOutro" value={form.categoriaOutro} onChange={updateField} maxLength="120" placeholder="Informe a categoria" />}
-            {errors.categoria && <small>{errors.categoria}</small>}
-          </div>
-          <div>
-            <label htmlFor="provider">Provedor</label>
-            <select id="provider" name="provider" value={form.provider} onChange={updateField}><option value="youtube">YouTube</option></select>
-            {errors.provider && <small>{errors.provider}</small>}
-          </div>
-          <div><label htmlFor="marca">Marca</label><input id="marca" name="marca" value={form.marca} onChange={updateField} maxLength="120" /></div>
-          <div><label htmlFor="linha">Linha</label><input id="linha" name="linha" value={form.linha} onChange={updateField} maxLength="120" /></div>
-          <div><label htmlFor="instrutor">Instrutor</label><input id="instrutor" name="instrutor" value={form.instrutor} onChange={updateField} maxLength="150" /></div>
-          <div>
-            <label htmlFor="duracaoMinutos">Duração em minutos</label>
-            <input id="duracaoMinutos" name="duracaoMinutos" type="number" min="0" max="1440" step="1" value={form.duracaoMinutos} onChange={updateField} />
-            {errors.duracaoSegundos && <small>{errors.duracaoSegundos}</small>}
-          </div>
-          <div className={styles.fullField}>
-            <label htmlFor="videoInput">Link ou ID do YouTube *</label>
-            <input id="videoInput" name="videoInput" value={form.videoInput} onChange={updateField} placeholder="https://youtu.be/... ou ID do vídeo" inputMode="url" />
-            {form.videoInput && !videoId && <small>O link ou ID informado não é válido.</small>}
-            {errors.videoId && <small>{errors.videoId}</small>}
-            <p className={styles.helpText}>Publique o vídeo no YouTube como não listado. O portal restringe o acesso à página do treinamento, mas o YouTube não oferece DRM nesta configuração.</p>
-          </div>
-          <ImageUploadField
-            name="thumbnail"
-            label="Thumbnail do treinamento"
-            file={thumbnailFile}
-            currentUrl={training?.thumbnailUrl || ""}
-            fallbackUrl={fallbackThumbnail}
-            removed={removeThumbnail}
-            onFileChange={setThumbnailFile}
-            onRemoveChange={setRemoveThumbnail}
-            error={errors.thumbnail}
-          />
-          {videoId && (
-            <div className={styles.previewArea}>
-              <div><strong>Vídeo validado</strong><span>Somente o ID será salvo.</span></div>
-              <VideoPlayer provider="youtube" videoId={videoId} titulo={`Prévia de ${form.titulo || "treinamento"}`} />
+          <div className={styles.formBody}>
+            {errors.formulario && <div className={styles.formError} role="alert">{errors.formulario}</div>}
+            <div className={styles.fullField}>
+              <label htmlFor="titulo">Título *</label>
+              <input id="titulo" name="titulo" value={form.titulo} onChange={updateField} maxLength="180" autoFocus />
+              {errors.titulo && <small>{errors.titulo}</small>}
             </div>
-          )}
-          <div><label htmlFor="ordem">Ordem</label><input id="ordem" name="ordem" type="number" min="-100000" max="100000" step="1" value={form.ordem} onChange={updateField} />{errors.ordem && <small>{errors.ordem}</small>}</div>
-          <div><label htmlFor="publicadoEm">Data de publicação</label><input id="publicadoEm" name="publicadoEm" type="datetime-local" value={form.publicadoEm} onChange={updateField} />{errors.publicadoEm && <small>{errors.publicadoEm}</small>}</div>
-          <div className={styles.checks}>
-            <label><input type="checkbox" name="destaque" checked={form.destaque} onChange={updateField} /> Destaque</label>
-            <label><input type="checkbox" name="obrigatorio" checked={form.obrigatorio} onChange={updateField} /> Obrigatório</label>
-            <label><input type="checkbox" name="ativo" checked={form.ativo} onChange={updateField} /> Ativo</label>
+            <div className={styles.fullField}>
+              <label htmlFor="resumo">Resumo *</label>
+              <textarea id="resumo" name="resumo" value={form.resumo} onChange={updateField} maxLength="300" rows="2" />
+              <div className={styles.fieldMeta}>{errors.resumo ? <small>{errors.resumo}</small> : <span />}<span>{form.resumo.length} / 300</span></div>
+            </div>
+            <div className={styles.fullField}>
+              <label htmlFor="descricao">Descrição</label>
+              <textarea id="descricao" name="descricao" value={form.descricao} onChange={updateField} maxLength="3000" rows="5" />
+              <div className={styles.fieldMeta}>{errors.descricao ? <small>{errors.descricao}</small> : <span />}<span>{form.descricao.length} / 3000</span></div>
+            </div>
+            <div>
+              <label htmlFor="categoriaOpcao">Categoria *</label>
+              <select id="categoriaOpcao" name="categoriaOpcao" value={form.categoriaOpcao} onChange={updateField}>
+                {TRAINING_CATEGORIES.map((item) => <option key={item} value={item}>{item}</option>)}
+                <option value="__outro">Outra categoria</option>
+              </select>
+              {form.categoriaOpcao === "__outro" && <input className={styles.conditionalInput} name="categoriaOutro" value={form.categoriaOutro} onChange={updateField} maxLength="120" placeholder="Informe a categoria" />}
+              {errors.categoria && <small>{errors.categoria}</small>}
+            </div>
+            <div>
+              <label htmlFor="provider">Provedor</label>
+              <select id="provider" name="provider" value={form.provider} onChange={updateField}><option value="youtube">YouTube</option></select>
+              {errors.provider && <small>{errors.provider}</small>}
+            </div>
+            <div><label htmlFor="marca">Marca</label><input id="marca" name="marca" value={form.marca} onChange={updateField} maxLength="120" /></div>
+            <div><label htmlFor="linha">Linha</label><input id="linha" name="linha" value={form.linha} onChange={updateField} maxLength="120" /></div>
+            <div><label htmlFor="instrutor">Instrutor</label><input id="instrutor" name="instrutor" value={form.instrutor} onChange={updateField} maxLength="150" /></div>
+            <div>
+              <label htmlFor="duracaoMinutos">Duração em minutos</label>
+              <input id="duracaoMinutos" name="duracaoMinutos" type="number" min="0" max="1440" step="1" value={form.duracaoMinutos} onChange={updateField} />
+              {errors.duracaoSegundos && <small>{errors.duracaoSegundos}</small>}
+            </div>
+            <div className={styles.fullField}>
+              <label htmlFor="videoInput">Link ou ID do YouTube *</label>
+              <input id="videoInput" name="videoInput" value={form.videoInput} onChange={updateField} placeholder="https://youtu.be/... ou ID do vídeo" inputMode="url" />
+              {form.videoInput && !videoId && <small>O link ou ID informado não é válido.</small>}
+              {errors.videoId && <small>{errors.videoId}</small>}
+              <p className={styles.helpText}>Publique o vídeo no YouTube como não listado. O portal restringe o acesso à página do treinamento, mas o YouTube não oferece DRM nesta configuração.</p>
+            </div>
+            <ImageUploadField
+              name="thumbnail"
+              label="Thumbnail do treinamento"
+              file={thumbnailFile}
+              currentUrl={training?.thumbnailUrl || ""}
+              fallbackUrl={fallbackThumbnail}
+              removed={removeThumbnail}
+              onFileChange={setThumbnailFile}
+              onRemoveChange={setRemoveThumbnail}
+              error={errors.thumbnail}
+            />
+            {videoId && (
+              <div className={styles.previewArea}>
+                <div><strong>Vídeo validado</strong><span>Somente o ID será salvo.</span></div>
+                <VideoPlayer provider="youtube" videoId={videoId} titulo={`Prévia de ${form.titulo || "treinamento"}`} />
+              </div>
+            )}
+            <div className={styles.fullField}>
+              <AudienceSelector
+                audienceType={form.audienciaTipo}
+                selectedIds={form.distribuidoresIds}
+                publicos={form.publicos}
+                error={errors.publicos || errors.distribuidoresIds || errors.audienciaTipo}
+                onPublicosChange={(publicos) => {
+                  setForm((current) => changeTrainingPublics(current, publicos));
+                  setErrors((current) => ({ ...current, publicos: undefined }));
+                }}
+                onChange={({ audienceType, selectedIds }) => {
+                  setForm((current) => changeTrainingDistributorAudience(
+                    current,
+                    { audienceType, selectedIds }
+                  ));
+                  setErrors((current) => ({
+                    ...current,
+                    audienciaTipo: undefined,
+                    distribuidoresIds: undefined,
+                  }));
+                }}
+              />
+            </div>
+            <div><label htmlFor="ordem">Ordem</label><input id="ordem" name="ordem" type="number" min="-100000" max="100000" step="1" value={form.ordem} onChange={updateField} />{errors.ordem && <small>{errors.ordem}</small>}</div>
+            <div><label htmlFor="publicadoEm">Data de publicação</label><input id="publicadoEm" name="publicadoEm" type="datetime-local" value={form.publicadoEm} onChange={updateField} />{errors.publicadoEm && <small>{errors.publicadoEm}</small>}</div>
+            <div className={styles.checks}>
+              <label><input type="checkbox" name="destaque" checked={form.destaque} onChange={updateField} /> Destaque</label>
+              <label><input type="checkbox" name="obrigatorio" checked={form.obrigatorio} onChange={updateField} /> Obrigatório</label>
+              <label><input type="checkbox" name="ativo" checked={form.ativo} onChange={updateField} /> Ativo</label>
+            </div>
           </div>
           <footer className={styles.formActions}>
             <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={submitting}>Cancelar</button>
@@ -248,24 +293,25 @@ function TrainingFormModal({ training, onClose, onSaved }) {
   );
 }
 
-function ProgressModal({ training, onClose }) {
+function ProgressModal({ apiBase, training, onClose }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const dialogRef = useModalDialog({ onClose });
 
   useEffect(() => {
     const controller = new AbortController();
-    api.get(`/admin/treinamentos/${training._id}/progresso`, { signal: controller.signal })
+    api.get(`${apiBase}/${training._id}/progresso`, { signal: controller.signal })
       .then((response) => setData(response.data))
       .catch((requestError) => {
         if (requestError.code !== "ERR_CANCELED") setError(requestError.response?.data?.message || "Não foi possível carregar o progresso");
       });
     return () => controller.abort();
-  }, [training._id]);
+  }, [apiBase, training._id]);
 
   return (
     <div className={styles.modalOverlay} onMouseDown={onClose}>
-      <section className={`${styles.modal} ${styles.progressModal}`} role="dialog" aria-modal="true" aria-labelledby="progress-title" onMouseDown={(event) => event.stopPropagation()}>
-        <header className={styles.modalHeader}><div><span>Acompanhamento</span><h2 id="progress-title">{training.titulo}</h2></div><button type="button" onClick={onClose}>Fechar</button></header>
+      <section ref={dialogRef} className={`${styles.modal} ${styles.progressModal}`} role="dialog" aria-modal="true" aria-labelledby="progress-title" tabIndex="-1" onMouseDown={(event) => event.stopPropagation()}>
+        <header className={styles.modalHeader}><div><span>Acompanhamento</span><h2 id="progress-title">{training.titulo}</h2></div><button type="button" aria-label="Fechar acompanhamento do treinamento" onClick={onClose}>Fechar</button></header>
         {error ? <div className={styles.stateBox} role="alert">{error}</div> : !data ? <div className={styles.stateBox}>Carregando progresso...</div> : (
           <div className={styles.progressContent}>
             <div className={styles.metrics}>
@@ -273,11 +319,11 @@ function ProgressModal({ training, onClose }) {
               <div><span>Concluíram</span><strong>{data.resumo.totalConcluiram}</strong></div>
               <div><span>Média</span><strong>{Math.round(data.resumo.mediaProgresso)}%</strong></div>
             </div>
-            {data.usuarios.length === 0 ? <div className={styles.stateBox}>Nenhum distribuidor iniciou este treinamento.</div> : (
+            {data.usuarios.length === 0 ? <div className={styles.stateBox}>Nenhum usuário iniciou este treinamento.</div> : (
               <div className={styles.progressList}>
                 {data.usuarios.map((item) => (
                   <div key={item.usuarioId?._id || item.usuarioId}>
-                    <span><strong>{item.usuarioId?.nomeFantasia || item.usuarioId?.nomeResponsavel || "Cliente"}</strong><small>{item.usuarioId?.email || ""}</small></span>
+                    <span><strong>{item.usuarioId?.nomeFantasia || item.usuarioId?.nomeProfissional || item.usuarioId?.nomeResponsavel || "Usuário"}</strong><small>{item.usuarioId?.email || ""}</small></span>
                     <span>{Math.round(item.percentualAssistido)}% • {item.concluido ? "Concluído" : "Em andamento"}</span>
                     <time>{item.ultimoAcessoEm ? new Date(item.ultimoAcessoEm).toLocaleDateString("pt-BR") : "Sem acesso recente"}</time>
                   </div>
@@ -291,7 +337,39 @@ function ProgressModal({ training, onClose }) {
   );
 }
 
-function AdminTreinamentos() {
+function TrainingPreviewModal({ training, onClose }) {
+  const dialogRef = useModalDialog({ onClose });
+
+  return (
+    <div className={styles.modalOverlay} onMouseDown={onClose}>
+      <section
+        ref={dialogRef}
+        className={`${styles.modal} ${styles.previewModal}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="training-preview-title"
+        tabIndex="-1"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className={styles.modalHeader}>
+          <div>
+            <span>Prévia administrativa</span>
+            <h2 id="training-preview-title">{training.titulo}</h2>
+          </div>
+          <button type="button" aria-label="Fechar prévia do treinamento" onClick={onClose}>Fechar</button>
+        </header>
+        <div className={styles.previewContent}>
+          <VideoPlayer provider={training.provider} videoId={training.videoId} titulo={training.titulo} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AdminTreinamentos({
+  apiBase = "/admin/treinamentos",
+  pageTitle = "Treinamentos",
+}) {
   const [treinamentos, setTreinamentos] = useState([]);
   const [paginacao, setPaginacao] = useState({ paginaAtual: 1, totalPaginas: 0, totalItens: 0 });
   const [opcoes, setOpcoes] = useState({ categorias: [], marcas: [], linhas: [] });
@@ -318,7 +396,7 @@ function AdminTreinamentos() {
       setCarregando(true);
       setErro("");
       try {
-        const response = await api.get("/admin/treinamentos", { params: { ...filtrosAplicados, pagina, limite: 12 }, signal: controller.signal });
+        const response = await api.get(apiBase, { params: { ...filtrosAplicados, pagina, limite: 12 }, signal: controller.signal });
         const normalized = normalizeTrainingResponse(response.data, { pagina, limite: 12 });
         setTreinamentos(normalized.treinamentos);
         setPaginacao(normalized.paginacao);
@@ -331,7 +409,7 @@ function AdminTreinamentos() {
     }
     load();
     return () => controller.abort();
-  }, [filtrosAplicados, pagina, refreshKey]);
+  }, [apiBase, filtrosAplicados, pagina, refreshKey]);
 
   const applyFilters = (event) => { event.preventDefault(); setPagina(1); setFiltrosAplicados({ ...filtros }); };
   const clearFilters = () => { setFiltros(filtrosIniciais); setFiltrosAplicados(filtrosIniciais); setPagina(1); };
@@ -341,7 +419,7 @@ function AdminTreinamentos() {
   const changeStatus = async (training) => {
     setActionId(training._id);
     try {
-      const response = await api.patch(`/admin/treinamentos/${training._id}/status`, { ativo: !training.ativo });
+      const response = await api.patch(`${apiBase}/${training._id}/status`, { ativo: !training.ativo });
       setFeedback({ type: "success", message: response.data.message });
       setRefreshKey((value) => value + 1);
     } catch (error) {
@@ -353,7 +431,7 @@ function AdminTreinamentos() {
     if (!window.confirm(`Excluir definitivamente o treinamento "${training.titulo}" e seus progressos?`)) return;
     setActionId(training._id);
     try {
-      const response = await api.delete(`/admin/treinamentos/${training._id}`);
+      const response = await api.delete(`${apiBase}/${training._id}`);
       setFeedback({ type: "success", message: response.data.message });
       setRefreshKey((value) => value + 1);
     } catch (error) {
@@ -367,8 +445,8 @@ function AdminTreinamentos() {
       <main className={styles.container}>
         <PageHeader
           eyebrow="Administração de conteúdo"
-          title="Treinamentos"
-          description="Publique e acompanhe conteúdos exclusivos para distribuidores."
+          title={pageTitle}
+          description="Publique e acompanhe conteúdos por público autorizado."
           action={<button type="button" className={styles.primaryButton} onClick={() => setFormTraining(null)}>Novo treinamento</button>}
         />
         {feedback && <div className={feedback.type === "success" ? styles.successFeedback : styles.errorFeedback} role="status">{feedback.message}</div>}
@@ -402,7 +480,15 @@ function AdminTreinamentos() {
                       <span className={styles.category}>{training.categoria}</span>
                       <span className={training.ativo ? styles.activeStatus : styles.inactiveStatus}>{training.ativo ? "Ativo" : "Inativo"}</span>
                     </div>
-                    <div className={styles.flags}><span>{training.provider === "youtube" ? "YouTube" : training.provider}</span>{training.destaque && <strong>Destaque</strong>}{training.obrigatorio && <strong>Obrigatório</strong>}</div>
+                    <div className={styles.flags}>
+                      <span>{training.provider === "youtube" ? "YouTube" : training.provider}</span>
+                      <span>{(Array.isArray(training.publicos) && training.publicos.length > 0
+                        ? training.publicos
+                        : ["cliente"])
+                        .map((item) => item === "groomer" ? "Groomers" : "Distribuidores")
+                        .join(" + ")}</span>
+                      {training.destaque && <strong>Destaque</strong>}{training.obrigatorio && <strong>Obrigatório</strong>}
+                    </div>
                     <h2>{training.titulo}</h2>
                     <p>{training.resumo || "Sem resumo cadastrado."}</p>
                     <div className={styles.metadata}><span>{[training.marca, training.linha].filter(Boolean).join(" • ") || "Sem marca ou linha"}</span><span>{training.instrutor || "Sem instrutor"} • {formatTrainingDuration(training.duracaoSegundos)}</span><span>Publicação: {formatDate(training.publicadoEm)}</span></div>
@@ -431,9 +517,9 @@ function AdminTreinamentos() {
           onNext={() => setPagina((value) => value + 1)}
         />
       </main>
-      {formTraining !== undefined && <TrainingFormModal training={formTraining} onClose={() => setFormTraining(undefined)} onSaved={saved} />}
-      {previewTraining && <div className={styles.modalOverlay} onMouseDown={() => setPreviewTraining(null)}><section className={`${styles.modal} ${styles.previewModal}`} role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}><header className={styles.modalHeader}><div><span>Prévia administrativa</span><h2>{previewTraining.titulo}</h2></div><button type="button" onClick={() => setPreviewTraining(null)}>Fechar</button></header><VideoPlayer provider={previewTraining.provider} videoId={previewTraining.videoId} titulo={previewTraining.titulo} /></section></div>}
-      {progressTraining && <ProgressModal training={progressTraining} onClose={() => setProgressTraining(null)} />}
+      {formTraining !== undefined && <TrainingFormModal apiBase={apiBase} training={formTraining} onClose={() => setFormTraining(undefined)} onSaved={saved} />}
+      {previewTraining && <TrainingPreviewModal training={previewTraining} onClose={() => setPreviewTraining(null)} />}
+      {progressTraining && <ProgressModal apiBase={apiBase} training={progressTraining} onClose={() => setProgressTraining(null)} />}
     </>
   );
 }

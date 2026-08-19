@@ -24,9 +24,11 @@ function Login() {
 
       const homeByRole = {
         admin: "/admin",
+        comercial: "/precos",
         marketing: "/marketing",
         logistica: "/logistica",
         cliente: "/catalogo",
+        groomer: "/groomer",
       };
       navigate(homeByRole[response.data.usuario.tipo] || "/login");
     } catch (error) {

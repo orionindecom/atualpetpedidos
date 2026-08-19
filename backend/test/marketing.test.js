@@ -33,7 +33,7 @@ const createResponse = () => ({
 
 test("schema de usuario aceita o papel marketing", () => {
   const enumValues = Usuario.schema.path("tipo").enumValues;
-  assert.deepEqual(enumValues, ["admin", "marketing", "logistica", "cliente"]);
+  assert.deepEqual(enumValues, ["admin", "comercial", "marketing", "logistica", "cliente", "groomer"]);
 });
 
 test("marketing acessa somente a gestao de conteudo, nao rotas admin", () => {
@@ -63,6 +63,14 @@ test("marketing acessa somente a gestao de conteudo, nao rotas admin", () => {
     () => assert.fail("cliente nao pode gerenciar conteudo")
   );
   assert.equal(clientResponse.statusCode, 403);
+
+  const commercialResponse = createResponse();
+  somenteGestorConteudo(
+    { usuario: { tipo: "comercial" } },
+    commercialResponse,
+    () => assert.fail("comercial nao pode gerenciar conteudo")
+  );
+  assert.equal(commercialResponse.statusCode, 403);
 });
 
 test("rotas de marketing e banners aplicam os papeis corretos", () => {

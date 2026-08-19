@@ -59,6 +59,13 @@ const occurrenceDuplicatesStatus = (entry, statusHistory) => {
   ));
 };
 
+const occurrenceDuplicatesLogisticsClosing = (entry, closing) => (
+  !entry.produtoId &&
+  entry.tipo === "informacao_operacional" &&
+  String(entry.conteudo || "").startsWith("Fechamento logístico") &&
+  asValidDate(entry.criadaEm)?.getTime() === asValidDate(closing?.preenchidoEm)?.getTime()
+);
+
 const separationSummary = (items = []) => {
   const separated = items.filter((item) => (
     item.quantidadeSeparada !== null && item.quantidadeSeparada !== undefined
@@ -207,10 +214,27 @@ export const buildOrderAuditTimeline = (pedido) => {
     }
   }
 
+  const logisticsClosing = source.fechamentoLogistico || {};
+  if (logisticsClosing.preenchidoEm) {
+    addEvent({
+      tipo: "fechamento_logistico",
+      data: logisticsClosing.preenchidoEm,
+      titulo: "Fechamento logístico registrado",
+      ...userData(logisticsClosing.preenchidoPor),
+      detalhes: `${logisticsClosing.quantidadeVolumes} volume(s); ${logisticsClosing.pesoTotalKg} kg. ${logisticsClosing.observacaoVolumes}`,
+      dados: {
+        quantidadeVolumes: logisticsClosing.quantidadeVolumes,
+        pesoTotalKg: logisticsClosing.pesoTotalKg,
+        observacaoVolumes: logisticsClosing.observacaoVolumes,
+      },
+    });
+  }
+
   for (const entry of source.ocorrencias || []) {
     if (
       occurrenceDuplicatesConference(entry, conference) ||
-      occurrenceDuplicatesStatus(entry, statusHistory)
+      occurrenceDuplicatesStatus(entry, statusHistory) ||
+      occurrenceDuplicatesLogisticsClosing(entry, logisticsClosing)
     ) continue;
     addEvent({
       tipo: "ocorrencia",

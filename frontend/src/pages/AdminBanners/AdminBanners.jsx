@@ -7,6 +7,7 @@ import {
   PaginationControls,
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import { buildImageFormData } from "../../utils/imageUpload";
 import styles from "./AdminBanners.module.css";
 
@@ -58,14 +59,7 @@ function BannerForm({ banner, onClose, onSaved }) {
   const [removeImage, setRemoveImage] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    const closeOnEscape = (event) => {
-      if (event.key === "Escape" && !submitting) onClose();
-    };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, submitting]);
+  const dialogRef = useModalDialog({ onClose, closeDisabled: submitting });
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -130,10 +124,10 @@ function BannerForm({ banner, onClose, onSaved }) {
 
   return (
     <div className={styles.modalOverlay} onMouseDown={submitting ? undefined : onClose}>
-      <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="banner-title" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="banner-title" tabIndex="-1" onMouseDown={(event) => event.stopPropagation()}>
         <header className={styles.modalHeader}>
           <div><span>Comunicação visual</span><h2 id="banner-title">{banner ? "Editar banner" : "Novo banner"}</h2></div>
-          <button type="button" onClick={onClose} disabled={submitting}>Fechar</button>
+          <button type="button" aria-label="Fechar formulário de banner" onClick={onClose} disabled={submitting}>Fechar</button>
         </header>
 
         <form className={styles.form} onSubmit={submit} noValidate>

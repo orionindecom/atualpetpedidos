@@ -29,8 +29,10 @@ function TreinamentoDetalhe() {
   const [erroPlayer, setErroPlayer] = useState("");
   const [erroProgresso, setErroProgresso] = useState("");
   const [watermarkPosition, setWatermarkPosition] = useState(0);
+  const sessionUser = getAuthSession()?.usuario;
+  const isGroomer = sessionUser?.tipo === "groomer";
   const watermark = buildTrainingWatermark(
-    treinamento?.identificacaoAcesso || getAuthSession()?.usuario
+    treinamento?.identificacaoAcesso || sessionUser
   );
 
   useEffect(() => {
@@ -178,11 +180,11 @@ function TreinamentoDetalhe() {
         <section className={styles.content}>
           <div>
             <h2>Sobre este treinamento</h2>
-            <p>{treinamento.descricao || treinamento.resumo || "Conteúdo exclusivo para distribuidores AtualPet."}</p>
+            <p>{treinamento.descricao || treinamento.resumo || "Conteúdo exclusivo para profissionais AtualPet."}</p>
           </div>
           <aside>
             <strong>Acesso exclusivo</strong>
-            <p>Este conteúdo é destinado a distribuidores autenticados. A marca-d’água identifica visualmente a sessão, mas não impede gravações de tela.</p>
+            <p>Este conteúdo é destinado a {isGroomer ? "Groomers" : "distribuidores"} autenticados. A marca-d’água identifica visualmente a sessão, mas não impede gravações de tela.</p>
           </aside>
         </section>
       </main>

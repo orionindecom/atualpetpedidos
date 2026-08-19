@@ -1,0 +1,54 @@
+.container {
+  min-height: 100vh;
+  padding: 48px 64px;
+  background: #f2f6f5;
+  color: #17211f;
+}
+
+.hero {
+  max-width: 760px;
+  padding: 40px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #174e4b, #24726d);
+  color: #fff;
+  box-shadow: 0 20px 44px rgba(23, 78, 75, 0.18);
+}
+
+.hero span,
+.grid article > span {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero h1 { margin: 10px 0 12px; font-size: clamp(32px, 5vw, 52px); line-height: 1.06; }
+.hero p { max-width: 600px; margin: 0; color: #d8efed; font-size: 17px; line-height: 1.6; }
+
+.grid {
+  max-width: 980px;
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.grid article {
+  padding: 28px;
+  border: 1px solid #d8e4e2;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.grid article > span { color: #24726d; }
+.grid h2 { margin: 9px 0 8px; }
+.grid p { min-height: 48px; margin: 0 0 20px; color: #64716f; line-height: 1.5; }
+.grid a { color: #174e4b; font-weight: 900; text-decoration: none; }
+
+@media (max-width: 760px) {
+  .container { padding: 24px 18px; }
+  .hero { padding: 28px 22px; border-radius: 18px; }
+  .grid { grid-template-columns: 1fr; }
+  .grid p { min-height: 0; }
+}

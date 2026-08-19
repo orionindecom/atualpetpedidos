@@ -98,6 +98,7 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
+  overflow: hidden;
   background: rgba(15, 23, 42, 0.65);
   z-index: 999;
   display: flex;
@@ -107,8 +108,11 @@
 }
 
 .modal {
-  width: min(1100px, 100%);
-  max-height: 90vh;
+  width: min(1100px, calc(100vw - 64px));
+  max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
+  min-height: 0;
+  overflow: hidden;
   background: #ffffff;
   border-radius: 22px;
   padding: 24px;
@@ -118,6 +122,8 @@
 }
 
 .modalHeader {
+  min-width: 0;
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -126,9 +132,15 @@
 
 .modalHeader h2 {
   margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.modalHeader > div {
+  min-width: 0;
 }
 
 .modalHeader p {
+  overflow-wrap: anywhere;
   color: #6b7280;
 }
 
@@ -144,6 +156,8 @@
 }
 
 .modalInfo {
+  min-width: 0;
+  flex: 0 0 auto;
   padding: 14px 16px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
@@ -157,8 +171,17 @@
   color: #6b7280;
 }
 
+.modalInfo strong,
+.modalInfo span {
+  overflow-wrap: anywhere;
+}
+
 .listaProdutosModal {
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 16px;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -184,6 +207,8 @@
 }
 
 .produtoModal input {
+  width: 100%;
+  min-width: 0;
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #d1d5db;
@@ -191,6 +216,7 @@
 }
 
 .modalFooter {
+  flex: 0 0 auto;
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid #e5e7eb;
@@ -213,7 +239,15 @@
   }
 
   .modalOverlay {
-    padding: 12px;
+    padding: 8px;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 18px;
+    border-radius: 12px;
   }
 
   .produtoModal {
@@ -223,5 +257,26 @@
   .modalInfo {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .modalFooter {
+    margin-inline: -18px;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 480px) {
+  .modalHeader {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .modalFooter {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .modalFooter button {
+    width: 100%;
   }
 }

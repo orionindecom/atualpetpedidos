@@ -320,6 +320,41 @@ const conferenciaSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const fechamentoLogisticoSchema = new mongoose.Schema(
+  {
+    quantidadeVolumes: {
+      type: Number,
+      required: true,
+      min: 1,
+      validate: {
+        validator: Number.isInteger,
+        message: "A quantidade de volumes deve ser um número inteiro",
+      },
+    },
+    pesoTotalKg: {
+      type: Number,
+      required: true,
+      min: 0.001,
+    },
+    observacaoVolumes: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 3000,
+    },
+    preenchidoEm: {
+      type: Date,
+      required: true,
+    },
+    preenchidoPor: {
+      type: conferenciaUsuarioSchema,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const pedidoSchema = new mongoose.Schema(
   {
     numeroPedido: {
@@ -446,6 +481,16 @@ const pedidoSchema = new mongoose.Schema(
 
     conferencia: {
       type: conferenciaSchema,
+      default: undefined,
+    },
+
+    fechamentoLogisticoObrigatorio: {
+      type: Boolean,
+      default: false,
+    },
+
+    fechamentoLogistico: {
+      type: fechamentoLogisticoSchema,
       default: undefined,
     },
 

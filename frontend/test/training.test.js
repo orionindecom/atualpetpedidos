@@ -3,15 +3,21 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   appendUniqueTrainings,
+  buildTrainingAudiencePayload,
   buildTrainingWatermark,
+  changeTrainingDistributorAudience,
+  changeTrainingPublics,
   clampProgress,
   createProgressThrottle,
   extractYouTubeVideoId,
   getPlayerKind,
   getTrainingProgressState,
   getTrainingThumbnail,
+  getYouTubePlayerOrigin,
+  normalizeTrainingAudience,
   normalizeTrainingResponse,
 } from "../src/utils/training.js";
+import { createYouTubePlayerSession } from "../src/utils/youtubePlayerSession.js";
 
 const readSource = (relativePath) =>
   readFileSync(new URL(relativePath, import.meta.url), "utf8");
@@ -30,6 +36,111 @@ test("recusa URLs e entradas inseguras", () => {
   assert.equal(extractYouTubeVideoId("https://example.com/dQw4w9WgXcQ"), null);
   assert.equal(extractYouTubeVideoId("<script>alert(1)</script>"), null);
   assert.equal(extractYouTubeVideoId("http://youtube.com/watch?v=dQw4w9WgXcQ"), null);
+});
+
+test("origem do player acompanha localhost e produção sem valor fixo", () => {
+  assert.equal(
+    getYouTubePlayerOrigin({ origin: "http://localhost:5173" }),
+    "http://localhost:5173"
+  );
+  assert.equal(
+    getYouTubePlayerOrigin({ origin: "https://b2b.atualpet.com.br" }),
+    "https://b2b.atualpet.com.br"
+  );
+  assert.equal(getYouTubePlayerOrigin({ origin: "file://treinamento" }), "");
+  assert.equal(getYouTubePlayerOrigin({}), "");
+});
+
+test("sessão do YouTube mantém uma única instância ativa por host e destrói de forma idempotente", () => {
+  let activePlayers = 0;
+  let destroyedPlayers = 0;
+  let mountSequence = 0;
+  const host = {
+    children: [],
+    ownerDocument: {
+      createElement: () => ({ id: ++mountSequence }),
+    },
+    replaceChildren(...children) {
+      this.children = children;
+    },
+  };
+  const YT = {
+    Player: class FakePlayer {
+      constructor(mountNode) {
+        this.mountNode = mountNode;
+        activePlayers += 1;
+      }
+
+      destroy() {
+        activePlayers -= 1;
+        destroyedPlayers += 1;
+      }
+    },
+  };
+
+  const first = createYouTubePlayerSession({ YT, host, options: {} });
+  const second = createYouTubePlayerSession({ YT, host, options: {} });
+
+  assert.equal(activePlayers, 1);
+  assert.equal(destroyedPlayers, 1);
+  assert.notEqual(first.player.mountNode, second.player.mountNode);
+  assert.deepEqual(host.children, [second.player.mountNode]);
+
+  second.destroy();
+  second.destroy();
+  assert.equal(activePlayers, 0);
+  assert.equal(destroyedPlayers, 2);
+  assert.deepEqual(host.children, []);
+});
+
+test("audiência de treinamento restaura edição e serializa Groomers com distribuidores específicos", () => {
+  const restored = normalizeTrainingAudience({
+    publicos: ["cliente", "groomer"],
+    audienciaTipo: "especificos",
+    distribuidoresIds: [{ _id: "dist-1" }, "dist-2"],
+  });
+
+  assert.deepEqual(restored, {
+    publicos: ["cliente", "groomer"],
+    audienciaTipo: "especificos",
+    distribuidoresIds: ["dist-1", "dist-2"],
+  });
+  assert.deepEqual(buildTrainingAudiencePayload(restored), {
+    publicos: '["cliente","groomer"]',
+    audienciaTipo: "especificos",
+    distribuidoresIds: '["dist-1","dist-2"]',
+  });
+  assert.deepEqual(normalizeTrainingAudience({}), {
+    publicos: ["cliente"],
+    audienciaTipo: "todos",
+    distribuidoresIds: [],
+  });
+});
+
+test("combinações de público mantêm a regra atual ao remover distribuidores", () => {
+  const base = normalizeTrainingAudience({});
+  const both = changeTrainingPublics(base, ["cliente", "groomer"]);
+  const specific = changeTrainingDistributorAudience(both, {
+    audienceType: "especificos",
+    selectedIds: ["dist-1"],
+  });
+  assert.deepEqual(specific, {
+    publicos: ["cliente", "groomer"],
+    audienciaTipo: "especificos",
+    distribuidoresIds: ["dist-1"],
+  });
+
+  const groomerOnly = changeTrainingPublics(specific, ["groomer"]);
+  assert.deepEqual(groomerOnly, {
+    publicos: ["groomer"],
+    audienciaTipo: "todos",
+    distribuidoresIds: [],
+  });
+  assert.deepEqual(changeTrainingPublics(groomerOnly, ["cliente", "groomer"]), {
+    publicos: ["cliente", "groomer"],
+    audienciaTipo: "todos",
+    distribuidoresIds: [],
+  });
 });
 
 test("gera thumbnail padrão somente para provider conhecido", () => {
@@ -140,16 +251,36 @@ test("player não oferece link público ou botão próprio de download", () => {
   assert.match(source, /youtube\.com\/iframe_api/);
 });
 
+test("IFrame API usa a origem hospedeira sem ampliar Permissions Policy", () => {
+  const source = readSource("../src/components/VideoPlayer/YouTubePlayer.jsx");
+  const adminSource = readSource("../src/pages/AdminTreinamentos/AdminTreinamentos.jsx");
+  const detailSource = readSource("../src/pages/TreinamentoDetalhe/TreinamentoDetalhe.jsx");
+
+  assert.match(source, /enablejsapi:\s*1/);
+  assert.match(source, /origin:\s*getYouTubePlayerOrigin\(\)/);
+  assert.doesNotMatch(source, /origin:\s*["']https:\/\/www\.youtube\.com/);
+  assert.doesNotMatch(source, /origin:\s*["']http:\/\/localhost/);
+  assert.doesNotMatch(source, /compute-pressure/i);
+  assert.match(source, /getCurrentTime/);
+  assert.match(source, /seekTo/);
+  assert.match(source, /createYouTubePlayerSession/);
+  assert.match(source, /session\?\.destroy\(\)/);
+  assert.match(source, /\}, \[videoId\]\);/);
+  assert.doesNotMatch(source, /new YT\.Player\(hostRef\.current/);
+  assert.match(adminSource, /<VideoPlayer provider="youtube"/);
+  assert.match(detailSource, /<VideoPlayer[\s\S]*?provider=\{treinamento\.provider\}/);
+});
+
 test("rotas de treinamentos exigem o perfil correto", () => {
   const source = readSource("../src/App.jsx");
 
   assert.match(
     source,
-    /path="\/treinamentos"[\s\S]*?<RoleRoute role="cliente">[\s\S]*?<Treinamentos \/>/
+    /path="\/treinamentos"[\s\S]*?<RoleRoute roles=\{\["cliente", "groomer"\]\}>[\s\S]*?<Treinamentos \/>/
   );
   assert.match(
     source,
-    /path="\/treinamentos\/:id"[\s\S]*?<RoleRoute role="cliente">[\s\S]*?<TreinamentoDetalhe \/>/
+    /path="\/treinamentos\/:id"[\s\S]*?<RoleRoute roles=\{\["cliente", "groomer"\]\}>[\s\S]*?<TreinamentoDetalhe \/>/
   );
   assert.match(
     source,

@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import styles from "./AdminPedidos.module.css";
 import {
   abrirOuBaixarPdfPedido,
@@ -301,6 +302,10 @@ function AdminPedidos() {
     setQuantidadesModal({});
     setBuscaProduto("");
   };
+  const editOrderDialogRef = useModalDialog({
+    open: Boolean(modalPedido),
+    onClose: fecharModal,
+  });
 
   const salvarModalPedido = async () => {
     const itens = Object.entries(quantidadesModal)
@@ -476,15 +481,24 @@ function AdminPedidos() {
         )}
 
         {modalPedido && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
+          <div className={styles.modalOverlay} onMouseDown={(event) => {
+            if (event.target === event.currentTarget) fecharModal();
+          }}>
+            <section
+              ref={editOrderDialogRef}
+              className={styles.modal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-order-title"
+              tabIndex="-1"
+            >
               <div className={styles.modalHeader}>
                 <div>
-                  <h2>Editar Pedido</h2>
+                  <h2 id="edit-order-title">Editar Pedido</h2>
                   <p>{modalPedido.numeroPedido}</p>
                 </div>
 
-                <button onClick={fecharModal}>Fechar</button>
+                <button type="button" aria-label="Fechar edição do pedido" onClick={fecharModal}>Fechar</button>
               </div>
 
               <div className={styles.modalInfo}>
@@ -514,6 +528,7 @@ function AdminPedidos() {
 
                     <input
                       type="number"
+                      aria-label={`Quantidade de ${produto.nome}`}
                       min="0"
                       value={quantidadesModal[produto._id] || ""}
                       placeholder="0"
@@ -527,18 +542,19 @@ function AdminPedidos() {
 
               <div className={styles.modalFooter}>
                 <button
+                  type="button"
                   className={styles.secundario}
                   onClick={fecharModal}
                 >
                   Cancelar
                 </button>
 
-                <button onClick={salvarModalPedido}>
+                <button type="button" onClick={salvarModalPedido}>
                   Salvar Alterações
                 </button>
               </div>
 
-            </div>
+            </section>
           </div>
         )}
       </div>

@@ -106,6 +106,7 @@ app.use("/api/logistica", logisticaRoutes);
 app.use("/api/admin/operadores-logistica", operadorLogisticaRoutes);
 app.use("/api/admin/metricas-pedidos", pedidoMetricasRoutes);
 app.use("/api/admin/treinamentos", adminTreinamentoRoutes);
+app.use("/api/marketing/treinamentos", adminTreinamentoRoutes);
 app.use("/api/treinamentos", treinamentoRoutes);
 
 app.get("/", (req, res) => {

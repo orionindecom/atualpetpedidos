@@ -5,6 +5,8 @@ import {
   formatOrderDateTime,
   formatOrderStatus,
 } from "../../utils/orderLogistics";
+import { getOrderFlowStage } from "../../utils/orderOperations";
+import { useModalDialog } from "../../hooks/useModalDialog";
 import OrderItems from "./OrderItems";
 import ConferenceItems from "./ConferenceItems";
 import styles from "./OrderDetails.module.css";
@@ -31,6 +33,7 @@ function OrderDetailModal({
   saving = false,
   approving = false,
   conferenceBusy = false,
+  logisticsClosingBusy = false,
   downloadingPdf = false,
   downloadingCommercialPdf = false,
   downloadingReportPdf = false,
@@ -45,6 +48,7 @@ function OrderDetailModal({
   onStartConference,
   onCompleteConference,
   onConferenceChange,
+  onSaveLogisticsClosing,
   onDownloadSeparationPdf,
   onDownloadCommercialPdf,
   onDownloadReportPdf,
@@ -52,8 +56,9 @@ function OrderDetailModal({
   onDeleteOrder,
 }) {
   const timeline = detail.historicoPedido || [];
+  const flowStage = getOrderFlowStage(detail);
   const pendingApproval = detail.status === "aguardando_aprovacao";
-  const terminal = detail.status === "entregue" || detail.entregaFinalizada === true;
+  const terminal = flowStage.terminal;
   const conference = detail.conferencia;
   const conferenceStatus = conference?.status;
   const conferenceRegistered = detail.conferenciaObrigatoria === true || Boolean(conference);
@@ -67,22 +72,37 @@ function OrderDetailModal({
     "concluida",
     "concluida_com_divergencia",
   ].includes(conferenceStatus);
+  const conferenceVisible = flowStage.showConference || Boolean(conference);
+  const operationFormVisible = !pendingApproval &&
+    !terminal &&
+    !flowStage.conferenceFocused &&
+    (
+      transitions.length > 0 ||
+      flowStage.showOccurrence ||
+      flowStage.showInvoicing ||
+      flowStage.showShipping
+    );
+  const sendingSelected = form.status === "enviado";
+  const billingSelected = form.status === "faturado";
   const statusOptions = [
     detail.status,
     ...transitions.filter((status) => status !== detail.status),
   ];
+  const dialogRef = useModalDialog({ onClose });
 
   return (
     <div className={styles.modalOverlay} onMouseDown={onClose}>
       <section
+        ref={dialogRef}
         className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="order-detail-title"
+        tabIndex="-1"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className={styles.modalHeader}>
-          <div>
+          <div className={styles.modalTitle}>
             <span>Pedido</span>
             <h2 id="order-detail-title">{detail.numeroPedido}</h2>
             <p>{detail.nomeFantasiaCliente || detail.razaoSocialCliente || "Cliente"}</p>
@@ -133,8 +153,15 @@ function OrderDetailModal({
                 {deleting ? "Excluindo..." : "Excluir"}
               </button>
             )}
-            <button type="button" onClick={onClose}>Fechar</button>
           </div>
+          <button
+            type="button"
+            className={styles.closeButton}
+            aria-label="Fechar detalhes do pedido"
+            onClick={onClose}
+          >
+            Fechar
+          </button>
         </header>
 
         <div className={styles.modalContent}>
@@ -146,8 +173,8 @@ function OrderDetailModal({
 
           {terminal && (
             <div className={styles.terminalNotice} role="status">
-              <strong>Pedido entregue — estado final</strong>
-              <p>As ações operacionais estão encerradas. O histórico e os documentos permanecem disponíveis para consulta.</p>
+              <strong>{flowStage.title}</strong>
+              <p>{flowStage.description}</p>
             </div>
           )}
 
@@ -173,6 +200,19 @@ function OrderDetailModal({
                 Aprovado em {formatOrderDateTime(detail.aprovacao.aprovadoEm)} por {detail.aprovacao.usuarioNome || "Administrador"}.
               </p>
             )}
+            {!terminal && (
+              <div className={styles.nextActionPanel} data-stage={flowStage.key}>
+                <div>
+                  <span>Status atual</span>
+                  <strong>{formatOrderStatus(detail.status)}</strong>
+                </div>
+                <div>
+                  <span>Próxima ação necessária</span>
+                  <strong>{flowStage.title}</strong>
+                  <p>{flowStage.description}</p>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className={styles.section}>
@@ -188,7 +228,7 @@ function OrderDetailModal({
 
           <section className={styles.section}>
             <div className={styles.sectionTitle}>
-              <h3>Itens e separação</h3>
+              <h3>{flowStage.showSeparationEditor ? "Itens e separação" : "Itens do pedido"}</h3>
               <strong>{formatCurrency(detail.valorTotal)}</strong>
             </div>
             {detail.temDivergencia && (
@@ -198,20 +238,14 @@ function OrderDetailModal({
             )}
             <OrderItems
               items={detail.itens}
-              editable={!pendingApproval && !terminal && !separationLocked}
+              editable={flowStage.showSeparationEditor && !separationLocked && form.status !== "cancelado"}
               separation={form.separacao}
               onSeparationChange={onSeparationChange}
-              deriveEditableStatus={[
-                "separando",
-                "separado",
-                "faturado",
-                "enviado",
-                "entregue",
-              ].includes(form.status)}
+              deriveEditableStatus={flowStage.showSeparationEditor}
             />
           </section>
 
-          <section className={`${styles.section} ${styles.conferenceSection}`}>
+          {conferenceVisible && <section className={`${styles.section} ${styles.conferenceSection}`}>
             <div className={styles.sectionTitle}>
               <h3>Conferência</h3>
               {conferenceRegistered && (
@@ -313,18 +347,125 @@ function OrderDetailModal({
                 )}
               </>
             )}
-          </section>
+          </section>}
 
-          {!pendingApproval && !terminal && (
+          {(flowStage.showLogisticsClosing || detail.fechamentoLogistico) && (
+            <section className={`${styles.section} ${styles.conferenceSection}`}>
+              <div className={styles.sectionTitle}>
+                <h3>Fechamento logístico</h3>
+                <span className={styles.conferenceBadge} data-status={detail.fechamentoLogistico ? "concluida" : "pendente"}>
+                  {detail.fechamentoLogistico ? "Concluído" : "Pendente"}
+                </span>
+              </div>
+
+              {detail.fechamentoLogistico && (
+                <div className={styles.conferenceResult}>
+                  <div className={styles.summaryGrid}>
+                    <div><span>Volumes</span><strong>{detail.fechamentoLogistico.quantidadeVolumes}</strong></div>
+                    <div><span>Peso total</span><strong>{Number(detail.fechamentoLogistico.pesoTotalKg).toLocaleString("pt-BR")} kg</strong></div>
+                    <div><span>Operador</span><strong>{detail.fechamentoLogistico.preenchidoPor?.operadorNome || "Não informado"}</strong></div>
+                    <div><span>Registrado em</span><strong>{formatOrderDateTime(detail.fechamentoLogistico.preenchidoEm)}</strong></div>
+                  </div>
+                  <div className={styles.conferenceNote}>
+                    <strong>Descrição dos volumes/caixas</strong>
+                    <p>{detail.fechamentoLogistico.observacaoVolumes}</p>
+                  </div>
+                </div>
+              )}
+
+              {flowStage.showLogisticsClosing && isAdmin && (
+                <div className={styles.legacyConference}>
+                  <strong>Aguardando a Logística</strong>
+                  <p>Um operador identificado por PIN deve informar volumes, peso e descrição antes do faturamento.</p>
+                </div>
+              )}
+
+              {flowStage.showLogisticsClosing && !isAdmin && (
+                <div className={styles.conferenceWorkspace}>
+                  <p className={styles.stageHint}>Etapa obrigatória e sem novo status. Os dados ficarão disponíveis ao Admin para o faturamento.</p>
+                  <div className={styles.formGrid}>
+                    <label>
+                      Quantidade de volumes
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        required
+                        value={form.quantidadeVolumes}
+                        onChange={(event) => onFieldChange("quantidadeVolumes", event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Peso total (kg)
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        required
+                        placeholder="Ex.: 38,5"
+                        value={form.pesoTotalKg}
+                        onChange={(event) => onFieldChange("pesoTotalKg", event.target.value)}
+                      />
+                    </label>
+                    <label className={styles.fullField}>
+                      Descrição dos volumes/caixas
+                      <textarea
+                        maxLength="3000"
+                        rows="4"
+                        required
+                        placeholder="Descreva caixas, embalagens e observações relevantes."
+                        value={form.observacaoVolumes}
+                        onChange={(event) => onFieldChange("observacaoVolumes", event.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <div className={styles.conferenceActions}>
+                    <button type="button" disabled={logisticsClosingBusy} onClick={onSaveLogisticsClosing}>
+                      {logisticsClosingBusy ? "Salvando..." : detail.fechamentoLogistico ? "Atualizar fechamento" : "Concluir fechamento logístico"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {flowStage.showShippingSummary && (
+            <section className={styles.section}>
+              <div className={styles.sectionTitle}>
+                <h3>Faturamento e envio</h3>
+                <span className={styles.shippingBadge}>{formatOrderStatus(detail.status)}</span>
+              </div>
+              <div className={styles.summaryGrid}>
+                <div><span>Nota fiscal</span><strong>{detail.numeroNotaFiscal || "Não informada"}</strong></div>
+                <div><span>Data de faturamento</span><strong>{formatOrderDate(detail.dataFaturamento, "Não informada")}</strong></div>
+                <div><span>Transportadora</span><strong>{detail.transportadora || "Não informada"}</strong></div>
+                <div><span>Código de rastreio</span><strong>{detail.codigoRastreio || "Não informado"}</strong></div>
+                <div><span>Data de envio</span><strong>{formatOrderDate(detail.dataEnvio, "Não informada")}</strong></div>
+                <div><span>Data de entrega</span><strong>{formatOrderDateTime(detail.dataEntrega, "Ainda não confirmada")}</strong></div>
+              </div>
+              {detail.linkRastreio && (
+                <a className={styles.trackingLink} href={detail.linkRastreio} target="_blank" rel="noreferrer">
+                  Abrir rastreamento
+                </a>
+              )}
+            </section>
+          )}
+
+          {operationFormVisible && (
             <form className={styles.operationsForm} onSubmit={onSubmit}>
               <section>
-                <h3>Status e registro</h3>
+                <h3>Próxima ação</h3>
                 <div className={styles.formGrid}>
                   <label>
-                    Status
+                    Atualização do fluxo
                     <select value={form.status} onChange={(event) => onFieldChange("status", event.target.value)}>
                       {statusOptions.map((status) => (
-                        <option key={status} value={status}>{formatOrderStatus(status)}</option>
+                        <option key={status} value={status}>
+                          {status === detail.status
+                            ? `Manter ${formatOrderStatus(status)}`
+                            : status === flowStage.nextStatus
+                              ? flowStage.nextAction
+                              : formatOrderStatus(status)}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -340,7 +481,7 @@ function OrderDetailModal({
                 </div>
               </section>
 
-              <section>
+              {flowStage.showOccurrence && <section>
                 <h3>Nova ocorrência</h3>
                 <div className={styles.formGrid}>
                   <label>
@@ -365,19 +506,27 @@ function OrderDetailModal({
                     />
                   </label>
                 </div>
-              </section>
+              </section>}
 
-              <section>
-                <h3>Faturamento e expedição</h3>
+              {flowStage.showInvoicing && isAdmin && <section>
+                <h3>Faturamento</h3>
+                <p className={styles.stageHint}>Informe a Nota Fiscal e a data de faturamento para avançar o pedido a Faturado.</p>
                 <div className={styles.formGrid}>
                   <label>
                     Número da nota fiscal
-                    <input type="text" maxLength="100" value={form.numeroNotaFiscal} onChange={(event) => onFieldChange("numeroNotaFiscal", event.target.value)} />
+                    <input type="text" maxLength="100" required={billingSelected} value={form.numeroNotaFiscal} onChange={(event) => onFieldChange("numeroNotaFiscal", event.target.value)} />
                   </label>
                   <label>
                     Data de faturamento
-                    <input type="date" value={form.dataFaturamento} onChange={(event) => onFieldChange("dataFaturamento", event.target.value)} />
+                    <input type="date" required={billingSelected} value={form.dataFaturamento} onChange={(event) => onFieldChange("dataFaturamento", event.target.value)} />
                   </label>
+                </div>
+              </section>}
+
+              {flowStage.showShipping && <section>
+                <h3>Envio</h3>
+                <p className={styles.stageHint}>Faturamento concluído com NF {detail.numeroNotaFiscal || "não informada"} em {formatOrderDate(detail.dataFaturamento, "data não informada")}. A data de envio é obrigatória; transporte e rastreio são opcionais.</p>
+                <div className={styles.formGrid}>
                   <label>
                     Transportadora
                     <input type="text" maxLength="120" value={form.transportadora} onChange={(event) => onFieldChange("transportadora", event.target.value)} />
@@ -392,19 +541,23 @@ function OrderDetailModal({
                   </label>
                   <label>
                     Data de envio
-                    <input type="date" value={form.dataEnvio} onChange={(event) => onFieldChange("dataEnvio", event.target.value)} />
+                    <input type="date" required={sendingSelected} value={form.dataEnvio} onChange={(event) => onFieldChange("dataEnvio", event.target.value)} />
                   </label>
                   <div className={styles.readOnlyField}>
                     <span>Data de entrega</span>
                     <strong>{formatOrderDateTime(detail.dataEntrega, "Ainda não confirmada")}</strong>
                   </div>
                 </div>
-              </section>
+              </section>}
 
               <div className={styles.formActions}>
                 <button type="button" onClick={onClose}>Cancelar</button>
                 <button type="submit" disabled={saving}>
-                  {saving ? "Salvando..." : "Salvar atualização"}
+                  {saving
+                    ? "Salvando..."
+                    : form.status === flowStage.nextStatus
+                      ? flowStage.nextAction
+                      : "Salvar atualização"}
                 </button>
               </div>
             </form>

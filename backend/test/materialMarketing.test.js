@@ -56,11 +56,12 @@ test("rota do cliente exige autenticacao", async () => {
 
   assert.equal(res.statusCode, 401);
   assert.equal(nextCalled, false);
-  const clientRoute = clientRouter.stack.find((layer) => layer.route?.path === "/");
   assert.deepEqual(
-    clientRoute.route.stack.map((layer) => layer.name),
-    ["proteger", "somenteCliente", "listarMateriaisCliente"]
+    clientRouter.stack.slice(0, 2).map((layer) => layer.name),
+    ["proteger", "somentePublicoConteudo"]
   );
+  const clientRoute = clientRouter.stack.find((layer) => layer.route?.path === "/");
+  assert.equal(clientRoute.route.stack.at(-1).name, "listarMateriaisCliente");
 });
 
 test("cliente nao passa pelo middleware de gestao de conteudo", () => {

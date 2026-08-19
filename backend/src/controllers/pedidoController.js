@@ -9,15 +9,12 @@ import { gerarPdfRelatorioPedido } from "../services/pdfAuditoriaPedidoService.j
 import {
   buildClientReceiptConfirmationUpdate,
   buildStatusHistoryEntry,
-  conferenciaConcluida,
   enrichInternalOrderDetail,
   enrichOrderSeparation,
   PEDIDO_STATUS,
-  pedidoExigeConferencia,
   pedidoPossuiEntregaConfirmada,
   sanitizeClientOrder,
-  STATUS_APOS_CONFERENCIA,
-  transicoesPermitidasParaPedido,
+  validarTransicaoPedido,
 } from "../utils/pedidoLogistica.js";
 import {
   isOptionalString,
@@ -194,6 +191,7 @@ export const criarPedido = async (req, res) => {
       valorTotal,
       status: "aguardando_aprovacao",
       conferenciaObrigatoria: true,
+      fechamentoLogisticoObrigatorio: true,
       observacao: observacao?.trim(),
     });
 
@@ -386,34 +384,14 @@ export const atualizarStatusPedido = async (req, res) => {
       });
     }
 
-    if (pedidoPossuiEntregaConfirmada(pedido) && status !== "entregue") {
+    const validacaoTransicao = validarTransicaoPedido({
+      pedido,
+      novoStatus: status,
+      usuarioTipo: "admin",
+    });
+    if (!validacaoTransicao.valid) {
       return res.status(409).json({
-        message: "Pedido entregue é um estado terminal e não pode regredir",
-      });
-    }
-
-    if (pedido.status === "aguardando_aprovacao" && status !== "cancelado") {
-      return res.status(409).json({
-        message: "O pedido precisa ser aprovado antes de avançar no fluxo",
-      });
-    }
-
-    if (
-      STATUS_APOS_CONFERENCIA.includes(status) &&
-      pedidoExigeConferencia(pedido) &&
-      !conferenciaConcluida(pedido)
-    ) {
-      return res.status(409).json({
-        message: "Conclua a conferência de todos os itens antes de liberar o pedido para faturamento",
-      });
-    }
-
-    if (
-      pedido.status !== status &&
-      !transicoesPermitidasParaPedido(pedido, { admin: true }).includes(status)
-    ) {
-      return res.status(409).json({
-        message: `Transição de ${pedido.status} para ${status} não permitida`,
+        message: validacaoTransicao.message,
       });
     }
 

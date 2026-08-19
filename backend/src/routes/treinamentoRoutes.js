@@ -5,12 +5,12 @@ import {
   listarTreinamentosCliente,
 } from "../controllers/treinamentoController.js";
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteCliente } from "../middlewares/clienteMiddleware.js";
+import { somentePublicoConteudo } from "../middlewares/clienteMiddleware.js";
 import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.use(proteger, somenteCliente);
+router.use(proteger, somentePublicoConteudo);
 router.get("/", listarTreinamentosCliente);
 router.get("/:id", validateObjectIdParam(), buscarTreinamentoCliente);
 router.put("/:id/progresso", validateObjectIdParam(), atualizarProgresso);

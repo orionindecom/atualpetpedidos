@@ -1,5 +1,9 @@
 import { useEffect, useRef } from "react";
-import { createProgressThrottle } from "../../utils/training";
+import {
+  createProgressThrottle,
+  getYouTubePlayerOrigin,
+} from "../../utils/training";
+import { createYouTubePlayerSession } from "../../utils/youtubePlayerSession";
 import styles from "./VideoPlayer.module.css";
 
 let youtubeApiPromise;
@@ -38,9 +42,12 @@ function YouTubePlayer({
 }) {
   const hostRef = useRef(null);
   const playerRef = useRef(null);
+  const sessionRef = useRef(null);
   const intervalRef = useRef(null);
   const progressCallbackRef = useRef(onProgress);
   const errorCallbackRef = useRef(onPlayerError);
+  const titleRef = useRef(titulo);
+  const initialPositionRef = useRef(initialPosition);
 
   useEffect(() => {
     progressCallbackRef.current = onProgress;
@@ -48,8 +55,22 @@ function YouTubePlayer({
   }, [onProgress, onPlayerError]);
 
   useEffect(() => {
+    titleRef.current = titulo;
+    const iframe = playerRef.current?.getIframe?.();
+    if (iframe) iframe.title = titulo || "Player do treinamento";
+  }, [titulo]);
+
+  useEffect(() => {
+    initialPositionRef.current = initialPosition;
+  }, [initialPosition]);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return undefined;
+
     let active = true;
     let throttle;
+    let session;
 
     const clearProgressInterval = () => {
       if (intervalRef.current) {
@@ -76,49 +97,58 @@ function YouTubePlayer({
 
     loadYouTubeApi()
       .then((YT) => {
-        if (!active || !hostRef.current) return;
+        if (!active || hostRef.current !== host || !host.isConnected) return;
         throttle = createProgressThrottle(
           (progress) => progressCallbackRef.current?.(progress),
           { interval: 15000 }
         );
 
-        playerRef.current = new YT.Player(hostRef.current, {
-          videoId,
-          width: "100%",
-          height: "100%",
-          playerVars: {
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            enablejsapi: 1,
-            fs: 0,
-          },
-          events: {
-            onReady: (event) => {
-              const iframe = event.target.getIframe();
-              iframe.title = titulo || "Player do treinamento";
-              iframe.referrerPolicy = "strict-origin-when-cross-origin";
-              iframe.setAttribute(
-                "allow",
-                "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-              );
-              if (initialPosition > 0) event.target.seekTo(initialPosition, true);
+        session = createYouTubePlayerSession({
+          YT,
+          host,
+          options: {
+            videoId,
+            width: "100%",
+            height: "100%",
+            playerVars: {
+              rel: 0,
+              modestbranding: 1,
+              playsinline: 1,
+              enablejsapi: 1,
+              origin: getYouTubePlayerOrigin(),
+              fs: 0,
             },
-            onStateChange: (event) => {
-              if (event.data === YT.PlayerState.PLAYING) {
-                clearProgressInterval();
-                intervalRef.current = window.setInterval(() => emitProgress(), 15000);
-              } else if (event.data === YT.PlayerState.PAUSED) {
-                clearProgressInterval();
-                emitProgress(true);
-              } else if (event.data === YT.PlayerState.ENDED) {
-                clearProgressInterval();
-                emitProgress(true);
-              }
+            events: {
+              onReady: (event) => {
+                const iframe = event.target.getIframe();
+                iframe.title = titleRef.current || "Player do treinamento";
+                iframe.referrerPolicy = "strict-origin-when-cross-origin";
+                iframe.setAttribute(
+                  "allow",
+                  "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                );
+                if (initialPositionRef.current > 0) {
+                  event.target.seekTo(initialPositionRef.current, true);
+                }
+              },
+              onStateChange: (event) => {
+                if (event.data === YT.PlayerState.PLAYING) {
+                  clearProgressInterval();
+                  intervalRef.current = window.setInterval(() => emitProgress(), 15000);
+                } else if (event.data === YT.PlayerState.PAUSED) {
+                  clearProgressInterval();
+                  emitProgress(true);
+                } else if (event.data === YT.PlayerState.ENDED) {
+                  clearProgressInterval();
+                  emitProgress(true);
+                }
+              },
+              onError: () => errorCallbackRef.current?.("Não foi possível reproduzir este vídeo."),
             },
-            onError: () => errorCallbackRef.current?.("Não foi possível reproduzir este vídeo."),
           },
         });
+        playerRef.current = session.player;
+        sessionRef.current = session;
       })
       .catch(() => errorCallbackRef.current?.("Não foi possível carregar o player de vídeo."));
 
@@ -132,10 +162,11 @@ function YouTubePlayer({
       emitProgress(true);
       clearProgressInterval();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      playerRef.current?.destroy?.();
-      playerRef.current = null;
+      if (sessionRef.current === session) sessionRef.current = null;
+      if (playerRef.current === session?.player) playerRef.current = null;
+      session?.destroy();
     };
-  }, [videoId, titulo, initialPosition]);
+  }, [videoId]);
 
   return (
     <div

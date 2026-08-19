@@ -13,6 +13,10 @@ import {
   ImageUploadError,
   uploadImageBufferDetails,
 } from "../utils/cloudinaryUpload.js";
+import {
+  buildContentAudienceFilter,
+  validateAudienceDistributors,
+} from "../utils/contentAudience.js";
 import { sendServerError } from "../utils/validation.js";
 
 const MAX_QUERY_TIME_MS = 5000;
@@ -77,6 +81,18 @@ const handleControllerError = (res, error, operation) => {
     return res.status(error.statusCode).json({ message: error.message });
   }
   return logAndSendError(res, error, operation);
+};
+
+const combineConditions = (filter, ...conditions) => {
+  const combined = { ...filter };
+  const and = [];
+  if (combined.$or) {
+    and.push({ $or: combined.$or });
+    delete combined.$or;
+  }
+  and.push(...conditions.filter(Boolean));
+  if (and.length > 0) combined.$and = and;
+  return combined;
 };
 
 export const buildClientTrainingPipeline = ({
@@ -252,6 +268,13 @@ export const criarTreinamento = async (req, res) => {
     const validation = validateTrainingPayload(req.body);
     if (!validation.valid) return sendValidationError(res, validation.errors);
 
+    const audienceIsValid = await validateAudienceDistributors(validation.data);
+    if (!audienceIsValid) {
+      return sendValidationError(res, {
+        distribuidoresIds: "Selecione distribuidores ativos e aprovados",
+      });
+    }
+
     if (req.file) uploadedImage = await uploadThumbnail(req.file);
 
     let treinamento;
@@ -290,6 +313,19 @@ export const atualizarTreinamento = async (req, res) => {
     const treinamento = await Treinamento.findById(req.params.id);
     if (!treinamento) {
       return res.status(404).json({ message: "Treinamento não encontrado" });
+    }
+
+    const nextAudience = {
+      publicos: validation.data.publicos ?? treinamento.publicos,
+      audienciaTipo: validation.data.audienciaTipo ?? treinamento.audienciaTipo,
+      distribuidoresIds:
+        validation.data.distribuidoresIds ?? treinamento.distribuidoresIds,
+    };
+    const audienceIsValid = await validateAudienceDistributors(nextAudience);
+    if (!audienceIsValid) {
+      return sendValidationError(res, {
+        distribuidoresIds: "Selecione distribuidores ativos e aprovados",
+      });
     }
 
     const previousPublicId = treinamento.thumbnailPublicId;
@@ -399,7 +435,7 @@ export const listarProgressoAdmin = async (req, res) => {
       ]).option({ maxTimeMS: MAX_QUERY_TIME_MS }),
       ProgressoTreinamento.find(filter)
         .select("-_id usuarioId percentualAssistido concluido iniciadoEm ultimoAcessoEm concluidoEm")
-        .populate("usuarioId", "nomeResponsavel nomeFantasia email")
+        .populate("usuarioId", "nomeResponsavel nomeFantasia nomeProfissional email tipo")
         .sort({ ultimoAcessoEm: -1 })
         .skip(skip)
         .limit(query.limite)
@@ -438,9 +474,16 @@ export const listarTreinamentosCliente = async (req, res) => {
     }
 
     const now = new Date();
-    const filter = buildTrainingFilter(query, { onlyAvailable: true, now });
+    const audienceFilter = buildContentAudienceFilter(req.usuario);
+    const filter = combineConditions(
+      buildTrainingFilter(query, { onlyAvailable: true, now }),
+      audienceFilter
+    );
     const usuarioId = new mongoose.Types.ObjectId(String(req.usuario._id));
-    const scope = { ativo: true, publicadoEm: { $ne: null, $lte: now } };
+    const scope = combineConditions(
+      { ativo: true, publicadoEm: { $ne: null, $lte: now } },
+      audienceFilter
+    );
     const [facets, categorias, marcas, linhas] = await Promise.all([
       Treinamento.aggregate(
         buildClientTrainingPipeline({ filter, query, usuarioId })
@@ -476,11 +519,11 @@ export const listarTreinamentosCliente = async (req, res) => {
 export const buscarTreinamentoCliente = async (req, res) => {
   try {
     const now = new Date();
-    const treinamento = await Treinamento.findOne({
+    const treinamento = await Treinamento.findOne(combineConditions({
       _id: req.params.id,
       ativo: true,
       publicadoEm: { $ne: null, $lte: now },
-    })
+    }, buildContentAudienceFilter(req.usuario)))
       .select(CLIENT_DETAIL_FIELDS)
       .lean();
 
@@ -502,8 +545,11 @@ export const buscarTreinamentoCliente = async (req, res) => {
         ...publicFields,
         progresso: progresso || emptyProgress,
         identificacaoAcesso: {
-          nomeResponsavel: req.usuario.nomeResponsavel || "Distribuidor AtualPet",
-          nomeFantasia: req.usuario.nomeFantasia || "Acesso exclusivo AtualPet",
+          nomeResponsavel: req.usuario.nomeResponsavel || "Profissional AtualPet",
+          nomeFantasia:
+            req.usuario.nomeFantasia ||
+            req.usuario.nomeProfissional ||
+            (req.usuario.tipo === "groomer" ? "Groomer AtualPet" : "Distribuidor AtualPet"),
           id: String(req.usuario._id).slice(-6),
         },
       },
@@ -515,11 +561,11 @@ export const buscarTreinamentoCliente = async (req, res) => {
 
 export const atualizarProgresso = async (req, res) => {
   try {
-    const treinamento = await Treinamento.findOne({
+    const treinamento = await Treinamento.findOne(combineConditions({
       _id: req.params.id,
       ativo: true,
       publicadoEm: { $ne: null, $lte: new Date() },
-    })
+    }, buildContentAudienceFilter(req.usuario)))
       .select("_id duracaoSegundos")
       .lean();
 

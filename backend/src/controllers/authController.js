@@ -1,15 +1,16 @@
 import Usuario from "../models/Usuario.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import {
-  isNonEmptyString,
-  isOptionalString,
-  isStrongEnoughPassword,
-  isValidEmail,
-  sendServerError,
-} from "../utils/validation.js";
+import { isValidEmail, sendServerError } from "../utils/validation.js";
 import { measureStage, measureStageSync } from "../utils/performance.js";
-import { cadastroClienteBloqueiaAcesso } from "../utils/userAccess.js";
+import { cadastroExternoBloqueiaAcesso } from "../utils/userAccess.js";
+import {
+  buildDocumentDuplicateCandidates,
+  getCadastroDocumentType,
+  normalizeDigits,
+  validateCadastroGroomerPayload,
+  validateCadastroPayload,
+} from "../utils/cadastroValidation.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -35,72 +36,117 @@ const gerarToken = (usuario) => {
   );
 };
 
-export const cadastrar = async (req, res) => {
+const cadastrarContaExterna = async (
+  req,
+  res,
+  { tipo, validatePayload, fields, message }
+) => {
   try {
-    const {
-      nomeResponsavel,
-      email,
-      senha,
-      razaoSocial,
-      nomeFantasia,
-      cnpj,
-      telefone,
-      whatsapp,
-    } = req.body;
-
-    if (
-      !isNonEmptyString(nomeResponsavel, 120) ||
-      !isValidEmail(email) ||
-      !isStrongEnoughPassword(senha) ||
-      !isOptionalString(razaoSocial, 160) ||
-      !isOptionalString(nomeFantasia, 160) ||
-      !isOptionalString(cnpj, 32) ||
-      !isOptionalString(telefone, 32) ||
-      !isOptionalString(whatsapp, 32)
-    ) {
+    const parsed = validatePayload(req.body);
+    if (!parsed.valid) {
       return res.status(400).json({
         message: "Dados de cadastro inválidos",
+        errors: parsed.errors,
       });
     }
 
-    const emailNormalizado = email.trim().toLowerCase();
+    const documentCandidates = buildDocumentDuplicateCandidates(parsed.data.cnpj);
+    const duplicateConditions = [{ email: parsed.data.email }];
+    if (documentCandidates.length > 0) {
+      duplicateConditions.push({ cnpj: { $in: documentCandidates } });
+    }
 
-    const usuarioExiste = await Usuario.findOne({ email: emailNormalizado });
+    const usuariosExistentes = await Usuario.find({ $or: duplicateConditions })
+      .select("email cnpj")
+      .lean();
+    const duplicateErrors = {};
 
-    if (usuarioExiste) {
-      return res.status(202).json({
-        message: "Solicitação de cadastro recebida. Aguarde aprovação.",
+    for (const usuario of usuariosExistentes) {
+      if (usuario.email?.trim().toLowerCase() === parsed.data.email) {
+        duplicateErrors.email = "Este e-mail já está cadastrado.";
+      }
+      if (
+        parsed.data.cnpj &&
+        normalizeDigits(usuario.cnpj) === parsed.data.cnpj
+      ) {
+        const documentType = getCadastroDocumentType(parsed.data.cnpj);
+        duplicateErrors.cnpj = documentType === "cpf"
+          ? "Este CPF já está cadastrado."
+          : "Este CNPJ já está cadastrado.";
+      }
+    }
+
+    if (Object.keys(duplicateErrors).length > 0) {
+      return res.status(409).json({
+        message: "Não foi possível concluir o cadastro.",
+        errors: duplicateErrors,
       });
     }
 
-    const senhaHash = await bcrypt.hash(senha, 10);
+    const senhaHash = await bcrypt.hash(parsed.data.senha, 10);
 
-    const novoUsuario = await Usuario.create({
-      nomeResponsavel: nomeResponsavel?.trim(),
-      email: emailNormalizado,
+    const cadastro = {
+      nomeResponsavel: parsed.data.nomeResponsavel,
+      email: parsed.data.email,
       senha: senhaHash,
-      razaoSocial: razaoSocial?.trim(),
-      nomeFantasia: nomeFantasia?.trim(),
-      cnpj: cnpj?.trim(),
-      telefone: telefone?.trim(),
-      whatsapp: whatsapp?.trim(),
-      tipo: "cliente",
+      tipo,
       statusCadastro: "pendente",
-    });
+    };
+    for (const field of fields) {
+      if (parsed.data[field]) cadastro[field] = parsed.data[field];
+    }
+
+    const novoUsuario = await Usuario.create(cadastro);
 
     return res.status(201).json({
-      message: "Cadastro realizado com sucesso. Aguarde aprovação.",
+      message,
       usuario: {
         id: novoUsuario._id,
         nomeResponsavel: novoUsuario.nomeResponsavel,
         email: novoUsuario.email,
+        tipo: novoUsuario.tipo,
         statusCadastro: novoUsuario.statusCadastro,
       },
     });
   } catch (error) {
+    if (error?.code === 11000) {
+      const field = (error.keyPattern?.cnpj || error.keyValue?.cnpj) ? "cnpj" : "email";
+      const documentType = getCadastroDocumentType(req.body?.cnpj);
+      return res.status(409).json({
+        message: "Não foi possível concluir o cadastro.",
+        errors: {
+          [field]: field === "cnpj"
+            ? `Este ${documentType === "cpf" ? "CPF" : "CNPJ"} já está cadastrado.`
+            : "Este e-mail já está cadastrado.",
+        },
+      });
+    }
     return sendServerError(res);
   }
 };
+
+export const cadastrar = (req, res) => cadastrarContaExterna(req, res, {
+  tipo: "cliente",
+  validatePayload: validateCadastroPayload,
+  fields: ["razaoSocial", "nomeFantasia", "cnpj", "telefone", "whatsapp"],
+  message: "Cadastro realizado com sucesso. Aguarde aprovação.",
+});
+
+export const cadastrarGroomer = (req, res) => cadastrarContaExterna(req, res, {
+  tipo: "groomer",
+  validatePayload: validateCadastroGroomerPayload,
+  fields: [
+    "cnpj",
+    "whatsapp",
+    "cidade",
+    "estado",
+    "nomeProfissional",
+    "instagram",
+    "tiktok",
+    "observacaoCadastro",
+  ],
+  message: "Cadastro de Groomer enviado com sucesso. Aguarde aprovação.",
+});
 
 export const login = async (req, res) => {
   try {
@@ -140,7 +186,7 @@ export const login = async (req, res) => {
       });
     }
 
-    if (cadastroClienteBloqueiaAcesso(usuario)) {
+    if (cadastroExternoBloqueiaAcesso(usuario)) {
       return res.status(403).json({
         message: "Cadastro ainda não aprovado pelo administrador",
       });

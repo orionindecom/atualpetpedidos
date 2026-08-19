@@ -4,6 +4,7 @@ import Usuario from "../models/Usuario.js";
 export const AUDIENCIA_TODOS = "todos";
 export const AUDIENCIA_ESPECIFICOS = "especificos";
 export const AUDIENCIA_TIPOS = [AUDIENCIA_TODOS, AUDIENCIA_ESPECIFICOS];
+export const PUBLICOS_CONTEUDO = ["cliente", "groomer"];
 
 const normalizeIds = (value) => {
   if (value === undefined) return undefined;
@@ -24,6 +25,27 @@ const normalizeIds = (value) => {
 
   const ids = [...new Set(source.map((item) => String(item).trim()).filter(Boolean))];
   return ids.every((id) => mongoose.isValidObjectId(id)) ? ids : null;
+};
+
+const normalizePublicos = (value) => {
+  if (value === undefined) return undefined;
+
+  let source = value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      source = JSON.parse(trimmed);
+    } catch {
+      source = trimmed.split(",");
+    }
+  }
+
+  if (!Array.isArray(source)) return null;
+  const publicos = [...new Set(source.map((item) => String(item).trim()).filter(Boolean))];
+  return publicos.every((item) => PUBLICOS_CONTEUDO.includes(item))
+    ? publicos
+    : null;
 };
 
 export const validateAudiencePayload = (
@@ -74,10 +96,42 @@ export const validateAudiencePayload = (
   return { data, errors };
 };
 
+export const validateContentAudiencePayload = (
+  source = {},
+  { partial = false } = {}
+) => {
+  const hasPublicos = Object.hasOwn(source, "publicos");
+  const publicos = hasPublicos ? normalizePublicos(source.publicos) : undefined;
+  const publicErrors = {};
+
+  if (publicos === null || (hasPublicos && publicos.length === 0)) {
+    publicErrors.publicos = "Selecione ao menos um público válido";
+  }
+
+  const effectivePublicos = publicos === null
+    ? []
+    : publicos ?? (partial ? undefined : ["cliente"]);
+  const hasCliente = effectivePublicos?.includes("cliente") ?? true;
+  const audienceSource = hasCliente ? source : {
+    ...source,
+    audienciaTipo: AUDIENCIA_TODOS,
+    distribuidoresIds: [],
+  };
+  const audience = validateAudiencePayload(audienceSource, { partial });
+
+  if (effectivePublicos) audience.data.publicos = effectivePublicos;
+  return {
+    data: audience.data,
+    errors: { ...audience.errors, ...publicErrors },
+  };
+};
+
 export const validateAudienceDistributors = async ({
+  publicos,
   audienciaTipo,
   distribuidoresIds = [],
 }) => {
+  if (Array.isArray(publicos) && !publicos.includes("cliente")) return true;
   if (audienciaTipo !== AUDIENCIA_ESPECIFICOS) return true;
   if (!Array.isArray(distribuidoresIds) || distribuidoresIds.length === 0) {
     return false;
@@ -104,3 +158,25 @@ export const buildAudienceFilter = (usuarioId) => ({
     },
   ],
 });
+
+export const buildContentAudienceFilter = (usuario) => {
+  if (usuario?.tipo === "groomer") {
+    return { publicos: "groomer" };
+  }
+
+  const legacyOrClientProfile = {
+    $or: [
+      { publicos: "cliente" },
+      { publicos: { $exists: false } },
+      { publicos: null },
+      { publicos: { $size: 0 } },
+    ],
+  };
+
+  return {
+    $and: [
+      legacyOrClientProfile,
+      buildAudienceFilter(usuario?._id ?? usuario),
+    ],
+  };
+};

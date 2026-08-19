@@ -1,4 +1,4 @@
-import { validateAudiencePayload } from "./contentAudience.js";
+import { validateContentAudiencePayload } from "./contentAudience.js";
 
 const PAGINA_PADRAO = 1;
 const LIMITE_CLIENTE_PADRAO = 12;
@@ -46,6 +46,7 @@ export const CAMPOS_MATERIAL_PERMITIDOS = new Set([
   "ativo",
   "audienciaTipo",
   "distribuidoresIds",
+  "publicos",
   "dataPublicacao",
 ]);
 
@@ -308,7 +309,7 @@ export const validateMaterialPayload = (
     data.dataPublicacao = new Date();
   }
 
-  const audience = validateAudiencePayload(source, { partial });
+  const audience = validateContentAudiencePayload(source, { partial });
   Object.assign(data, audience.data);
   Object.assign(errors, audience.errors);
 

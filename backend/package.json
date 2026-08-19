@@ -10,6 +10,7 @@
     "test": "node --test",
     "audit:db": "node src/scripts/dbAudit.js",
     "db:create-indexes": "node src/scripts/createIndexes.js",
+    "user:create-comercial": "node src/scripts/criarComercial.js",
     "user:create-marketing": "node src/scripts/criarMarketing.js",
     "user:create-logistica": "node src/scripts/criarLogistica.js",
     "smoke:catalog": "node src/scripts/catalogPaginationSmokeTest.js"

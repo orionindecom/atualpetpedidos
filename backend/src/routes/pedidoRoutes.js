@@ -16,7 +16,10 @@ import {
 
 import { proteger } from "../middlewares/authMiddleware.js";
 import { somenteAdmin } from "../middlewares/adminMiddleware.js";
-import { somenteCliente } from "../middlewares/clienteMiddleware.js";
+import {
+  somenteCliente,
+  somenteClienteOuAdmin,
+} from "../middlewares/clienteMiddleware.js";
 import {
   adminLimiter,
   pedidoLimiter,
@@ -69,6 +72,7 @@ router.patch(
 router.get(
   "/:id/pdf",
   proteger,
+  somenteClienteOuAdmin,
   validateObjectIdParam(),
   gerarPdf
 );
@@ -103,6 +107,7 @@ router.delete(
 router.get(
   "/:id",
   proteger,
+  somenteClienteOuAdmin,
   validateObjectIdParam(),
   buscarPedidoPorId
 );

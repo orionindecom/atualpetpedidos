@@ -16,6 +16,7 @@ import {
 } from "../../utils/orderLogistics";
 import {
   buildConferencePayload,
+  buildLogisticsClosingPayload,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
 } from "../../utils/orderOperations";
@@ -50,6 +51,7 @@ function LogisticaPedidos() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [conferenceBusy, setConferenceBusy] = useState(false);
+  const [logisticsClosingBusy, setLogisticsClosingBusy] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [detailFeedback, setDetailFeedback] = useState(null);
   const [operators, setOperators] = useState([]);
@@ -113,15 +115,6 @@ function LogisticaPedidos() {
       controller.abort();
     };
   }, [requestOrders]);
-
-  useEffect(() => {
-    if (!detail && !identification) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [detail, identification]);
 
   const applyFilters = (event) => {
     event.preventDefault();
@@ -291,6 +284,52 @@ function LogisticaPedidos() {
     buildConferencePayload(detail, form)
   );
 
+  const saveLogisticsClosing = async () => {
+    const quantity = Number(form.quantidadeVolumes);
+    const weight = Number(String(form.pesoTotalKg).trim().replace(",", "."));
+    if (
+      !Number.isInteger(quantity) ||
+      quantity <= 0 ||
+      !Number.isFinite(weight) ||
+      weight <= 0 ||
+      !form.observacaoVolumes.trim()
+    ) {
+      setDetailFeedback({
+        type: "error",
+        message: "Informe uma quantidade inteira de volumes, peso maior que zero e a descrição das caixas.",
+      });
+      return;
+    }
+
+    setLogisticsClosingBusy(true);
+    setDetailFeedback(null);
+    try {
+      const response = await api.patch(
+        `/logistica/pedidos/${detail._id}`,
+        buildLogisticsClosingPayload(form),
+        { headers: { "X-Operador-Contexto": operatorContext?.token } }
+      );
+      setDetail(response.data.pedido);
+      setTransitions(response.data.transicoesPermitidas || []);
+      setForm(buildOrderOperationsForm(response.data.pedido));
+      setDetailFeedback({ type: "success", message: response.data.message });
+      const listResponse = await requestOrders();
+      setPedidos(listResponse.data.pedidos || []);
+      setPaginacao(listResponse.data.paginacao || emptyPagination);
+    } catch (requestError) {
+      if (requireNewIdentification(
+        requestError,
+        "Identifique-se novamente para concluir o fechamento logístico"
+      )) return;
+      setDetailFeedback({
+        type: "error",
+        message: requestError.response?.data?.message || "Não foi possível salvar o fechamento logístico",
+      });
+    } finally {
+      setLogisticsClosingBusy(false);
+    }
+  };
+
   const saveOrder = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -441,11 +480,18 @@ function LogisticaPedidos() {
                 {formatOrderStatus(pedido.status)}
               </span>
               <div className={styles.operationalMeta}>
-                <span>NF: {pedido.numeroNotaFiscal || "-"}</span>
                 {pedido.conferencia?.status && (
                   <span>Conferência: {pedido.conferencia.status.replaceAll("_", " ")}</span>
                 )}
-                <span>{pedido.transportadora || "Transportadora não informada"}</span>
+                {pedido.fechamentoLogisticoObrigatorio && (
+                  <span>Fechamento: {pedido.fechamentoLogistico?.preenchidoEm ? "concluído" : "pendente"}</span>
+                )}
+                {["faturado", "enviado", "entregue"].includes(pedido.status) && (
+                  <>
+                    <span>NF: {pedido.numeroNotaFiscal || "-"}</span>
+                    <span>{pedido.transportadora || "Transportadora não informada"}</span>
+                  </>
+                )}
               </div>
               <button type="button" onClick={() => openOrder(pedido)} disabled={detailLoading}>
                 Abrir pedido
@@ -476,6 +522,7 @@ function LogisticaPedidos() {
           transitions={transitions}
           saving={saving}
           conferenceBusy={conferenceBusy}
+          logisticsClosingBusy={logisticsClosingBusy}
           downloadingPdf={downloadingPdf}
           feedback={detailFeedback}
           activeOperator={operatorContext?.operator}
@@ -486,6 +533,7 @@ function LogisticaPedidos() {
           onConferenceChange={updateConference}
           onStartConference={startConference}
           onCompleteConference={completeConference}
+          onSaveLogisticsClosing={saveLogisticsClosing}
           onDownloadSeparationPdf={downloadSeparationPdf}
         />
       )}

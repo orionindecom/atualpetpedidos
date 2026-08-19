@@ -9,7 +9,7 @@ import {
   listarTreinamentosAdmin,
 } from "../controllers/treinamentoController.js";
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteGestorConteudo } from "../middlewares/adminMiddleware.js";
 import {
   adminLimiter,
   uploadLimiter,
@@ -21,7 +21,7 @@ import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.use(proteger, somenteAdmin, adminLimiter);
+router.use(proteger, somenteGestorConteudo, adminLimiter);
 
 router.get("/", listarTreinamentosAdmin);
 router.post(

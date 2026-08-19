@@ -1,3 +1,5 @@
+import { validateContentAudiencePayload } from "./contentAudience.js";
+
 const PAGINA_PADRAO = 1;
 const LIMITE_CLIENTE_PADRAO = 12;
 const LIMITE_ADMIN_PADRAO = 20;
@@ -264,6 +266,10 @@ export const validateTrainingPayload = (
       else data.publicadoEm = date;
     }
   }
+
+  const audience = validateContentAudiencePayload(source, { partial });
+  Object.assign(data, audience.data);
+  Object.assign(errors, audience.errors);
 
   if (
     partial &&

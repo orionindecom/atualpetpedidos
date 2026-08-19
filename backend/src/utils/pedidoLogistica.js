@@ -27,7 +27,7 @@ const TRANSICOES_LOGISTICA = Object.freeze({
   novo: ["separando"],
   em_analise: ["separando"],
   separando: ["separado"],
-  separado: ["faturado"],
+  separado: [],
   faturado: ["enviado"],
   enviado: [],
   entregue: [],
@@ -59,7 +59,31 @@ const CAMPOS_LOGISTICOS = Object.freeze([
   "observacaoHistorico",
   "separacaoItens",
   "conferencia",
+  "fechamentoLogistico",
   "novaOcorrencia",
+]);
+
+export const CAMPOS_FATURAMENTO = Object.freeze([
+  "numeroNotaFiscal",
+  "dataFaturamento",
+]);
+
+export const CAMPOS_EXPEDICAO = Object.freeze([
+  "transportadora",
+  "codigoRastreio",
+  "linkRastreio",
+  "dataEnvio",
+]);
+
+export const CAMPOS_OBRIGATORIOS_ENVIO = Object.freeze([
+  ["numeroNotaFiscal", "número da Nota Fiscal"],
+  ["dataFaturamento", "data de faturamento"],
+  ["dataEnvio", "data de envio"],
+]);
+
+export const CAMPOS_OBRIGATORIOS_FATURAMENTO = Object.freeze([
+  ["numeroNotaFiscal", "número da Nota Fiscal"],
+  ["dataFaturamento", "data de faturamento"],
 ]);
 
 export const OCORRENCIA_TIPOS = Object.freeze([
@@ -126,6 +150,25 @@ export const pedidoExigeConferencia = (pedido) => (
   pedido?.conferenciaObrigatoria === true
 );
 
+export const pedidoExigeFechamentoLogistico = (pedido) => (
+  pedido?.fechamentoLogisticoObrigatorio === true
+);
+
+export const fechamentoLogisticoConcluido = (pedido) => {
+  const fechamento = pedido?.fechamentoLogistico;
+  return Boolean(
+    Number.isInteger(Number(fechamento?.quantidadeVolumes)) &&
+    Number(fechamento?.quantidadeVolumes) > 0 &&
+    Number.isFinite(Number(fechamento?.pesoTotalKg)) &&
+    Number(fechamento?.pesoTotalKg) > 0 &&
+    typeof fechamento?.observacaoVolumes === "string" &&
+    fechamento.observacaoVolumes.trim().length > 0 &&
+    fechamento?.preenchidoEm &&
+    fechamento?.preenchidoPor?.usuarioId &&
+    fechamento?.preenchidoPor?.operadorId
+  );
+};
+
 export const pedidoPossuiEntregaConfirmada = (pedido) => (
   pedido?.status === "entregue" ||
   Boolean(pedido?.dataEntrega) ||
@@ -150,7 +193,170 @@ export const transicoesPermitidasParaPedido = (
     return transicoes.filter((status) => !STATUS_APOS_CONFERENCIA.includes(status));
   }
 
+  if (
+    pedido?.status === "separado" &&
+    pedidoExigeFechamentoLogistico(pedido) &&
+    !fechamentoLogisticoConcluido(pedido)
+  ) {
+    return transicoes.filter((status) => status !== "faturado");
+  }
+
   return transicoes;
+};
+
+const valorPreenchido = (value) => (
+  value instanceof Date
+    ? !Number.isNaN(value.getTime())
+    : typeof value === "string"
+      ? value.trim().length > 0
+      : value !== null && value !== undefined
+);
+
+const valorEfetivo = (pedido, data, field) => (
+  Object.hasOwn(data || {}, field) ? data[field] : pedido?.[field]
+);
+
+export const validarTransicaoPedido = ({
+  pedido,
+  novoStatus,
+  usuarioTipo = "logistica",
+  data = {},
+}) => {
+  const statusAtual = pedido?.status;
+
+  if (pedidoPossuiEntregaConfirmada(pedido)) {
+    return {
+      valid: false,
+      message: "Pedido entregue é um estado terminal e não pode ser alterado",
+    };
+  }
+
+  if (!novoStatus || novoStatus === statusAtual) return { valid: true };
+
+  if (["aguardando_aprovacao", "aprovado"].includes(novoStatus)) {
+    return {
+      valid: false,
+      message: "Estados de aprovação só podem ser alterados pela ação de aprovação do Admin",
+    };
+  }
+
+  if (novoStatus === "entregue") {
+    return {
+      valid: false,
+      message: "O status Entregue deve ser confirmado pelo cliente",
+    };
+  }
+
+  const transicoes = usuarioTipo === "admin"
+    ? transicoesPermitidasParaPedido(pedido, { admin: true })
+    : transicoesPermitidasParaPedido(pedido);
+  if (!transicoes.includes(novoStatus)) {
+    if (
+      statusAtual === "separado" &&
+      STATUS_APOS_CONFERENCIA.includes(novoStatus) &&
+      pedidoExigeConferencia(pedido) &&
+      !conferenciaConcluida(pedido)
+    ) {
+      return {
+        valid: false,
+        message: "Conclua a conferência de todos os itens antes de liberar o pedido para faturamento",
+      };
+    }
+    if (
+      statusAtual === "separado" &&
+      novoStatus === "faturado" &&
+      pedidoExigeFechamentoLogistico(pedido) &&
+      !fechamentoLogisticoConcluido(pedido)
+    ) {
+      return {
+        valid: false,
+        message: "Conclua o fechamento logístico com volumes, peso e descrição antes de faturar o pedido",
+      };
+    }
+    return {
+      valid: false,
+      message: `Transição de ${statusAtual} para ${novoStatus} não permitida`,
+    };
+  }
+
+  if (novoStatus === "faturado") {
+    const ausentes = CAMPOS_OBRIGATORIOS_FATURAMENTO
+      .filter(([field]) => !valorPreenchido(valorEfetivo(pedido, data, field)))
+      .map(([, label]) => label);
+    if (ausentes.length > 0) {
+      return {
+        valid: false,
+        message: `Preencha ${ausentes.join(", ")} antes de faturar o pedido`,
+      };
+    }
+  }
+
+  if (novoStatus === "enviado") {
+    const ausentes = CAMPOS_OBRIGATORIOS_ENVIO
+      .filter(([field]) => !valorPreenchido(valorEfetivo(pedido, data, field)))
+      .map(([, label]) => label);
+    if (ausentes.length > 0) {
+      return {
+        valid: false,
+        message: `Preencha ${ausentes.join(", ")} antes de marcar o pedido como enviado`,
+      };
+    }
+  }
+
+  return { valid: true };
+};
+
+export const validarCamposPedidoPorEtapa = ({
+  pedido,
+  data = {},
+  separacaoItens,
+  usuarioTipo = "logistica",
+}) => {
+  const iniciandoFaturamento = pedido?.status === "separado" && data.status === "faturado";
+  const podeInformarFaturamento = usuarioTipo === "admin" && (
+    iniciandoFaturamento || pedido?.status === "faturado"
+  );
+  const faturamentoForaDaEtapa = CAMPOS_FATURAMENTO.some((field) => (
+    Object.hasOwn(data, field) && !podeInformarFaturamento
+  ));
+  if (faturamentoForaDaEtapa) {
+    return {
+      valid: false,
+      message: "Número e data da Nota Fiscal só podem ser informados pelo Admin ao faturar o pedido",
+    };
+  }
+
+  if (
+    pedido?.status === "faturado" &&
+    CAMPOS_FATURAMENTO.some((field) => Object.hasOwn(data, field)) &&
+    CAMPOS_OBRIGATORIOS_FATURAMENTO.some(([field]) => (
+      !valorPreenchido(valorEfetivo(pedido, data, field))
+    ))
+  ) {
+    return {
+      valid: false,
+      message: "Número e data da Nota Fiscal não podem ser removidos de um pedido faturado",
+    };
+  }
+
+  const expedicaoForaDaEtapa = CAMPOS_EXPEDICAO.some((field) => (
+    Object.hasOwn(data, field) && pedido?.status !== "faturado"
+  ));
+  if (expedicaoForaDaEtapa) {
+    return {
+      valid: false,
+      message: "Dados de envio só podem ser informados depois que o pedido estiver faturado",
+    };
+  }
+
+  if (separacaoItens && pedido?.status !== "separando") {
+    return {
+      valid: false,
+      message: "As quantidades separadas só podem ser registradas durante a separação",
+    };
+  }
+
+  return { valid: true };
 };
 
 export const transicaoLogisticaPermitida = (statusAtual, novoStatus) => (
@@ -365,6 +571,64 @@ const validateConference = (value) => {
   };
 };
 
+export const validateLogisticsClosing = (source) => {
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return { error: "Informe os dados do fechamento logístico" };
+  }
+
+  const allowedFields = [
+    "quantidadeVolumes",
+    "pesoTotalKg",
+    "observacaoVolumes",
+  ];
+  const extraFields = Object.keys(source).filter((field) => !allowedFields.includes(field));
+  if (extraFields.length > 0) {
+    return { error: `Campos de fechamento não permitidos: ${extraFields.join(", ")}` };
+  }
+
+  const quantidadeTexto = typeof source.quantidadeVolumes === "string"
+    ? source.quantidadeVolumes.trim()
+    : source.quantidadeVolumes;
+  const quantidadeVolumes = Number(quantidadeTexto);
+  if (
+    quantidadeTexto === "" ||
+    !Number.isInteger(quantidadeVolumes) ||
+    quantidadeVolumes <= 0 ||
+    quantidadeVolumes > 999999
+  ) {
+    return { error: "Informe uma quantidade de volumes inteira e maior que zero" };
+  }
+
+  const pesoTexto = typeof source.pesoTotalKg === "string"
+    ? source.pesoTotalKg.trim()
+    : source.pesoTotalKg;
+  if (typeof pesoTexto === "string" && !/^\d+(?:[.,]\d+)?$/.test(pesoTexto)) {
+    return { error: "Informe um peso total válido e maior que zero" };
+  }
+  const pesoTotalKg = Number(
+    typeof pesoTexto === "string" ? pesoTexto.replace(",", ".") : pesoTexto
+  );
+  if (!Number.isFinite(pesoTotalKg) || pesoTotalKg <= 0 || pesoTotalKg > 999999999) {
+    return { error: "Informe um peso total válido e maior que zero" };
+  }
+
+  if (
+    typeof source.observacaoVolumes !== "string" ||
+    source.observacaoVolumes.trim().length === 0 ||
+    source.observacaoVolumes.trim().length > 3000
+  ) {
+    return { error: "Descreva os volumes/caixas em até 3000 caracteres" };
+  }
+
+  return {
+    value: {
+      quantidadeVolumes,
+      pesoTotalKg,
+      observacaoVolumes: source.observacaoVolumes.trim(),
+    },
+  };
+};
+
 export const validateLogisticsOrderPayload = (source) => {
   const body = source && typeof source === "object" && !Array.isArray(source)
     ? source
@@ -374,6 +638,7 @@ export const validateLogisticsOrderPayload = (source) => {
   let observacaoHistorico = "";
   let separacaoItens;
   let conferencia;
+  let fechamentoLogistico;
   let novaOcorrencia;
 
   const fields = Object.keys(body);
@@ -420,6 +685,12 @@ export const validateLogisticsOrderPayload = (source) => {
     else conferencia = normalized.value;
   }
 
+  if (possuiCampo(body, "fechamentoLogistico")) {
+    const normalized = validateLogisticsClosing(body.fechamentoLogistico);
+    if (normalized.error) errors.fechamentoLogistico = normalized.error;
+    else fechamentoLogistico = normalized.value;
+  }
+
   if (Object.hasOwn(data, "linkRastreio") && !isSafeTrackingUrl(data.linkRastreio)) {
     errors.linkRastreio = "Informe um link HTTPS válido";
   }
@@ -428,6 +699,7 @@ export const validateLogisticsOrderPayload = (source) => {
     Object.keys(data).length === 0 &&
     !separacaoItens &&
     !conferencia &&
+    !fechamentoLogistico &&
     !novaOcorrencia &&
     Object.keys(errors).length === 0
   ) {
@@ -441,6 +713,7 @@ export const validateLogisticsOrderPayload = (source) => {
     observacaoHistorico,
     separacaoItens,
     conferencia,
+    fechamentoLogistico,
     novaOcorrencia,
   };
 };
@@ -516,6 +789,8 @@ export const sanitizeClientOrder = (pedido) => {
   delete source.aprovacao;
   delete source.conferencia;
   delete source.conferenciaObrigatoria;
+  delete source.fechamentoLogistico;
+  delete source.fechamentoLogisticoObrigatorio;
   delete source.ocorrencias;
   delete source.temDivergencia;
   source.itens = Array.isArray(source.itens)

@@ -30,6 +30,7 @@ import {
   sanitizeClientOrder,
   transicaoLogisticaPermitida,
   transicoesPermitidasParaPedido,
+  validateLogisticsClosing,
   validateLogisticsOrderPayload,
 } from "../src/utils/pedidoLogistica.js";
 import { buildSeparationPdfData } from "../src/services/pdfSeparacaoService.js";
@@ -78,6 +79,42 @@ const criarPedidoParaConferencia = ({
     ],
   };
 };
+
+const operadorLogistica = () => ({
+  _id: new mongoose.Types.ObjectId(),
+  nome: "Pedro Operador",
+});
+
+const criarPedidoParaFechamento = (overrides = {}) => ({
+  ...criarPedidoParaConferencia({ conferencia: { status: "concluida" } }),
+  fechamentoLogisticoObrigatorio: true,
+  ocorrencias: [],
+  ...overrides,
+});
+
+const registrarFechamento = ({
+  pedido = criarPedidoParaFechamento(),
+  usuario = conferenciaUsuario(),
+  operador = operadorLogistica(),
+  now = new Date("2026-08-12T15:00:00.000Z"),
+  fechamentoLogistico = {
+    quantidadeVolumes: 3,
+    pesoTotalKg: 38.5,
+    observacaoVolumes: "Duas caixas grandes e uma caixa pequena lacrada.",
+  },
+} = {}) => ({
+  pedido,
+  usuario,
+  operador,
+  result: applyLogisticsOrderUpdate({
+    pedido,
+    data: {},
+    fechamentoLogistico,
+    usuario,
+    operador,
+    now,
+  }),
+});
 
 const iniciarConferencia = (pedido, usuario = conferenciaUsuario(), now = new Date()) => (
   applyLogisticsOrderUpdate({
@@ -145,9 +182,11 @@ const runProtected = async (user) => {
 test("schema aceita logistica e Pedido preserva status antigos", () => {
   assert.deepEqual(Usuario.schema.path("tipo").enumValues, [
     "admin",
+    "comercial",
     "marketing",
     "logistica",
     "cliente",
+    "groomer",
   ]);
   assert.ok(Pedido.schema.path("status").enumValues.includes("separado"));
   assert.ok(Pedido.schema.path("status").enumValues.includes("em_analise"));
@@ -183,6 +222,7 @@ test("somente cliente depende de aprovacao de cadastro", () => {
   assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "cliente", statusCadastro: "pendente" }), true);
   assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "cliente", statusCadastro: "aprovado" }), false);
   assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "admin", statusCadastro: "pendente" }), false);
+  assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "comercial", statusCadastro: "pendente" }), false);
   assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "marketing", statusCadastro: "pendente" }), false);
   assert.equal(cadastroClienteBloqueiaAcesso({ tipo: "logistica", statusCadastro: "pendente" }), false);
 });
@@ -218,7 +258,7 @@ test("middleware permite apenas admin e logistica na operacao", () => {
     somenteOperacaoLogistica({ usuario: { tipo } }, response, () => { allowed = true; });
     assert.equal(allowed, true);
   }
-  for (const tipo of ["cliente", "marketing"]) {
+  for (const tipo of ["cliente", "comercial", "marketing"]) {
     const response = createResponse();
     somenteOperacaoLogistica(
       { usuario: { tipo } },
@@ -284,7 +324,7 @@ test("transicoes logisticas seguem fluxo linear e aceitam legado", () => {
   assert.equal(transicaoLogisticaPermitida("novo", "separando"), true);
   assert.equal(transicaoLogisticaPermitida("em_analise", "separando"), true);
   assert.equal(transicaoLogisticaPermitida("separando", "separado"), true);
-  assert.equal(transicaoLogisticaPermitida("separado", "faturado"), true);
+  assert.equal(transicaoLogisticaPermitida("separado", "faturado"), false);
   assert.equal(transicaoLogisticaPermitida("faturado", "enviado"), true);
   assert.equal(transicaoLogisticaPermitida("enviado", "entregue"), false);
   assert.equal(transicaoLogisticaPermitida("entregue", "separando"), false);
@@ -361,7 +401,7 @@ test("aprovacao atomica registra admin e rejeita a segunda requisicao", async ()
   assert.equal(capturedUpdate.$push.historicoStatus.usuarioTipo, "admin");
 });
 
-test("atualizacao valida registra historico imutavel e autoria", () => {
+test("inicio da separacao registra historico imutavel e autoria sem aceitar expedicao antecipada", () => {
   const pedido = { status: "novo" };
   const usuario = {
     _id: new mongoose.Types.ObjectId(),
@@ -371,14 +411,14 @@ test("atualizacao valida registra historico imutavel e autoria", () => {
   const now = new Date("2026-08-07T17:30:00.000Z");
   const result = applyLogisticsOrderUpdate({
     pedido,
-    data: { status: "separando", transportadora: "Transportes Atual" },
+    data: { status: "separando" },
     observacaoHistorico: "Separacao iniciada",
     usuario,
     now,
   });
   assert.equal(result.valid, true);
   assert.equal(pedido.status, "separando");
-  assert.equal(pedido.transportadora, "Transportes Atual");
+  assert.equal(pedido.transportadora, undefined);
   assert.equal(pedido.historicoStatus.length, 1);
   assert.deepEqual(pedido.historicoStatus[0], {
     statusAnterior: "novo",
@@ -389,6 +429,51 @@ test("atualizacao valida registra historico imutavel e autoria", () => {
     usuarioTipo: "logistica",
     observacao: "Separacao iniciada",
   });
+});
+
+test("dados de faturamento e envio sao rejeitados antes do status faturado", () => {
+  const pedido = { status: "aprovado", itens: [] };
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "separando",
+      numeroNotaFiscal: "NF-antecipada",
+      dataEnvio: new Date("2026-08-07T00:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "logistica", nomeResponsavel: "Teste" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Nota Fiscal.*Admin.*faturar/);
+  assert.equal(pedido.status, "aprovado");
+  assert.equal(pedido.numeroNotaFiscal, undefined);
+  assert.equal(pedido.dataEnvio, undefined);
+});
+
+test("pedido aprovado inicia separacao sem registrar quantidades antecipadamente", () => {
+  const produtoId = new mongoose.Types.ObjectId();
+  const pedido = {
+    status: "aprovado",
+    itens: [{ produtoId, nomeProduto: "Produto", quantidade: 3 }],
+  };
+  const usuario = { _id: objectId, tipo: "logistica", nomeResponsavel: "Teste" };
+  const antecipada = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "separando" },
+    separacaoItens: [{ produtoId: String(produtoId), quantidadeSeparada: 3 }],
+    usuario,
+  });
+  assert.equal(antecipada.valid, false);
+  assert.match(antecipada.message, /durante a separação/);
+  assert.equal(pedido.status, "aprovado");
+
+  const inicio = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "separando" },
+    usuario,
+  });
+  assert.equal(inicio.valid, true);
+  assert.equal(pedido.status, "separando");
+  assert.equal(pedido.itens[0].quantidadeSeparada, undefined);
 });
 
 test("transicao invalida nao altera o pedido", () => {
@@ -590,11 +675,56 @@ test("whitelist aceita somente dados logisticos e link HTTPS", () => {
   assert.equal(unsafeUrl.valid, false);
 });
 
+test("pedido faturado exige NF e datas antes de ser marcado como enviado", () => {
+  const pedido = { status: "faturado", itens: [] };
+  const usuario = { _id: objectId, tipo: "logistica", nomeResponsavel: "Teste" };
+  const incompleto = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "enviado", transportadora: "Transportes Atual" },
+    usuario,
+  });
+  assert.equal(incompleto.valid, false);
+  assert.match(incompleto.message, /número da Nota Fiscal/);
+  assert.match(incompleto.message, /data de faturamento/);
+  assert.match(incompleto.message, /data de envio/);
+  assert.equal(pedido.status, "faturado");
+
+  pedido.numeroNotaFiscal = "NF-123";
+  pedido.dataFaturamento = new Date("2026-08-07T12:00:00.000Z");
+  const completo = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "enviado",
+      dataEnvio: new Date("2026-08-08T12:00:00.000Z"),
+    },
+    usuario,
+  });
+  assert.equal(completo.valid, true);
+  assert.equal(pedido.status, "enviado");
+  assert.equal(pedido.transportadora, undefined);
+});
+
+test("pedido enviado bloqueia edicao posterior dos dados de expedicao", () => {
+  const pedido = {
+    status: "enviado",
+    numeroNotaFiscal: "NF-original",
+    transportadora: "Original",
+  };
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: { transportadora: "Alterada" },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /só podem ser informados.*faturado/);
+  assert.equal(pedido.transportadora, "Original");
+});
+
 test("separacao valida falta parcial, total e calcula situacao por produto", () => {
   const parcialId = new mongoose.Types.ObjectId();
   const totalId = new mongoose.Types.ObjectId();
   const pedido = {
-    status: "aprovado",
+    status: "separando",
     itens: [
       { produtoId: parcialId, nomeProduto: "Produto parcial", quantidade: 12 },
       { produtoId: totalId, nomeProduto: "Produto indisponível", quantidade: 5 },
@@ -770,7 +900,11 @@ test("7. faturamento nao e oferecido enquanto a conferencia esta pendente", () =
   iniciarConferencia(pedido);
   assert.deepEqual(transicoesPermitidasParaPedido(pedido), []);
   concluirConferencia({ pedido });
-  assert.deepEqual(transicoesPermitidasParaPedido(pedido), ["faturado"]);
+  assert.deepEqual(transicoesPermitidasParaPedido(pedido), []);
+  assert.equal(
+    transicoesPermitidasParaPedido(pedido, { admin: true }).includes("faturado"),
+    true
+  );
 });
 
 test("8. backend administrativo rejeita tentativa de pular conferencia", async () => {
@@ -793,6 +927,28 @@ test("8. backend administrativo rejeita tentativa de pular conferencia", async (
   assert.equal(response.statusCode, 409);
   assert.match(response.body.message, /Conclua a confer.ncia/);
   assert.equal(pedido.status, "separado");
+});
+
+test("rota administrativa de status tambem exige dados antes do envio", async () => {
+  const originalFindById = Pedido.findById;
+  const pedido = {
+    status: "faturado",
+    async save() { assert.fail("pedido incompleto não deve ser salvo"); },
+  };
+  Pedido.findById = () => ({ select: async () => pedido });
+  const response = createResponse();
+  try {
+    await atualizarStatusPedido({
+      params: { id: objectId },
+      body: { status: "enviado" },
+      usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+    }, response);
+  } finally {
+    Pedido.findById = originalFindById;
+  }
+  assert.equal(response.statusCode, 409);
+  assert.match(response.body.message, /número da Nota Fiscal/);
+  assert.equal(pedido.status, "faturado");
 });
 
 test("9. conferencia registra operador e horarios para o Admin", () => {
@@ -834,7 +990,7 @@ test("11. cliente nao recebe conferencia, operador ou separacao interna", () => 
   assert.equal(Object.hasOwn(clientView.itens[0], "situacaoSeparacao"), false);
 });
 
-test("12. pedido antigo sem conferencia continua podendo faturar", () => {
+test("12. pedido antigo sem conferencia continua podendo faturar pelo Admin", () => {
   const pedido = {
     status: "separado",
     itens: [{
@@ -846,8 +1002,12 @@ test("12. pedido antigo sem conferencia continua podendo faturar", () => {
   };
   const result = applyLogisticsOrderUpdate({
     pedido,
-    data: { status: "faturado" },
-    usuario: conferenciaUsuario(),
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-LEGADA",
+      dataFaturamento: new Date("2026-08-11T18:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
   });
   assert.equal(result.valid, true);
   assert.equal(pedido.status, "faturado");
@@ -896,12 +1056,19 @@ test("14. conferencia concluida persiste apos faturamento, envio e entrega", () 
 
   const faturamento = applyLogisticsOrderUpdate({
     pedido,
-    data: { status: "faturado" },
-    usuario: conferenciaUsuario(),
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-2026-001",
+      dataFaturamento: new Date("2026-08-11T18:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
   });
   const envio = applyLogisticsOrderUpdate({
     pedido,
-    data: { status: "enviado" },
+    data: {
+      status: "enviado",
+      dataEnvio: new Date("2026-08-11T19:00:00.000Z"),
+    },
     usuario: conferenciaUsuario(),
   });
   const receipt = buildClientReceiptConfirmationUpdate({ usuario: {
@@ -916,6 +1083,316 @@ test("14. conferencia concluida persiste apos faturamento, envio e entrega", () 
   assert.equal(pedido.status, "entregue");
   assert.equal(pedido.conferencia, conferenciaConcluida);
   assert.equal(pedido.conferencia.status, "concluida_com_divergencia");
+});
+
+test("fechamento 1. pedido historico recebe isencao por padrao no schema", () => {
+  const pedido = new Pedido();
+  assert.equal(pedido.fechamentoLogisticoObrigatorio, false);
+  assert.equal(pedido.fechamentoLogistico, undefined);
+});
+
+test("fechamento 2. payload aceita peso com virgula e normaliza para numero", () => {
+  const parsed = validateLogisticsOrderPayload({
+    fechamentoLogistico: {
+      quantidadeVolumes: "4",
+      pesoTotalKg: "38,5",
+      observacaoVolumes: "Quatro caixas lacradas",
+    },
+  });
+  assert.equal(parsed.valid, true);
+  assert.deepEqual(parsed.fechamentoLogistico, {
+    quantidadeVolumes: 4,
+    pesoTotalKg: 38.5,
+    observacaoVolumes: "Quatro caixas lacradas",
+  });
+});
+
+test("fechamento 3. quantidade de volumes zero e rejeitada", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 0,
+    pesoTotalKg: 10,
+    observacaoVolumes: "Caixa",
+  });
+  assert.match(parsed.error, /inteira e maior que zero/);
+});
+
+test("fechamento 4. quantidade fracionaria de volumes e rejeitada", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 1.5,
+    pesoTotalKg: 10,
+    observacaoVolumes: "Caixa",
+  });
+  assert.match(parsed.error, /inteira e maior que zero/);
+});
+
+test("fechamento 5. peso zero e rejeitado", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 1,
+    pesoTotalKg: 0,
+    observacaoVolumes: "Caixa",
+  });
+  assert.match(parsed.error, /peso total válido/);
+});
+
+test("fechamento 6. peso com separadores ambiguos e rejeitado", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 1,
+    pesoTotalKg: "1.234,50",
+    observacaoVolumes: "Caixa",
+  });
+  assert.match(parsed.error, /peso total válido/);
+});
+
+test("fechamento 7. descricao vazia e rejeitada", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 1,
+    pesoTotalKg: 10,
+    observacaoVolumes: "   ",
+  });
+  assert.match(parsed.error, /Descreva os volumes/);
+});
+
+test("fechamento 8. campo desconhecido e rejeitado", () => {
+  const parsed = validateLogisticsClosing({
+    quantidadeVolumes: 1,
+    pesoTotalKg: 10,
+    observacaoVolumes: "Caixa",
+    faturado: true,
+  });
+  assert.match(parsed.error, /não permitidos/);
+});
+
+test("fechamento 9. deve ser salvo em operacao isolada", () => {
+  const pedido = criarPedidoParaFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: { observacaoLogistica: "Misturada" },
+    fechamentoLogistico: {
+      quantidadeVolumes: 1,
+      pesoTotalKg: 10,
+      observacaoVolumes: "Caixa",
+    },
+    usuario: conferenciaUsuario(),
+    operador: operadorLogistica(),
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /operação própria/);
+});
+
+test("fechamento 10. pedido historico isento nao aceita registro estruturado", () => {
+  const { result } = registrarFechamento({
+    pedido: criarPedidoParaFechamento({ fechamentoLogisticoObrigatorio: false }),
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /histórico não exige/);
+});
+
+test("fechamento 11. nao pode ser preenchido antes do status separado", () => {
+  const { result } = registrarFechamento({
+    pedido: criarPedidoParaFechamento({ status: "separando" }),
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /após a separação e antes do faturamento/);
+});
+
+test("fechamento 12. conferencia obrigatoria precisa estar concluida", () => {
+  const { result } = registrarFechamento({
+    pedido: criarPedidoParaFechamento({ conferencia: { status: "em_andamento" } }),
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Conclua a conferência/);
+});
+
+test("fechamento 13. Admin nao assume responsabilidade da Logistica", () => {
+  const { result } = registrarFechamento({
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /operador da Logística por PIN/);
+});
+
+test("fechamento 14. conta Logistica sem operador identificado e rejeitada", () => {
+  const { result } = registrarFechamento({ operador: null });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /operador da Logística por PIN/);
+});
+
+test("fechamento 15. registro valido persiste dados autoria horario e ocorrencia", () => {
+  const now = new Date("2026-08-12T15:20:00.000Z");
+  const { pedido, usuario, operador, result } = registrarFechamento({ now });
+  assert.equal(result.valid, true);
+  assert.equal(result.fechamentoLogisticoAlterado, true);
+  assert.equal(pedido.fechamentoLogistico.quantidadeVolumes, 3);
+  assert.equal(pedido.fechamentoLogistico.pesoTotalKg, 38.5);
+  assert.equal(pedido.fechamentoLogistico.preenchidoEm, now);
+  assert.equal(pedido.fechamentoLogistico.preenchidoPor.usuarioId, usuario._id);
+  assert.equal(pedido.fechamentoLogistico.preenchidoPor.operadorId, operador._id);
+  assert.match(pedido.ocorrencias[0].conteudo, /Fechamento logístico concluído/);
+});
+
+test("fechamento 16. alteracao substitui resumo atual e preserva rastreio anterior", () => {
+  const first = registrarFechamento();
+  const second = registrarFechamento({
+    pedido: first.pedido,
+    now: new Date("2026-08-12T16:00:00.000Z"),
+    fechamentoLogistico: {
+      quantidadeVolumes: 5,
+      pesoTotalKg: 42,
+      observacaoVolumes: "Cinco caixas após reembalagem.",
+    },
+  });
+  assert.equal(second.result.valid, true);
+  assert.equal(second.pedido.fechamentoLogistico.quantidadeVolumes, 5);
+  assert.equal(second.pedido.ocorrencias.length, 2);
+  assert.match(second.pedido.ocorrencias[0].conteudo, /concluído/);
+  assert.match(second.pedido.ocorrencias[1].conteudo, /atualizado/);
+});
+
+test("fechamento 17. Admin nao fatura novo pedido sem fechamento", () => {
+  const pedido = criarPedidoParaFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-1",
+      dataFaturamento: new Date("2026-08-12T17:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Conclua o fechamento logístico/);
+  assert.equal(pedido.status, "separado");
+});
+
+test("fechamento 18. Logistica nao fatura mesmo depois do fechamento", () => {
+  const registered = registrarFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido: registered.pedido,
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-1",
+      dataFaturamento: new Date("2026-08-12T17:00:00.000Z"),
+    },
+    usuario: registered.usuario,
+    operador: registered.operador,
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Nota Fiscal.*Admin|Transição/);
+});
+
+test("fechamento 19. faturamento pelo Admin exige numero da Nota Fiscal", () => {
+  const { pedido } = registrarFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "faturado",
+      dataFaturamento: new Date("2026-08-12T17:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /número da Nota Fiscal/);
+});
+
+test("fechamento 20. faturamento pelo Admin exige data de faturamento", () => {
+  const { pedido } = registrarFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "faturado", numeroNotaFiscal: "NF-20" },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /data de faturamento/);
+});
+
+test("fechamento 21. Admin fatura com fechamento NF e data completos", () => {
+  const { pedido } = registrarFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-21",
+      dataFaturamento: new Date("2026-08-12T17:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, true);
+  assert.equal(pedido.status, "faturado");
+  assert.equal(pedido.numeroNotaFiscal, "NF-21");
+  assert.equal(pedido.fechamentoLogistico.quantidadeVolumes, 3);
+});
+
+test("fechamento 22. dados de envio continuam bloqueados antes de faturado", () => {
+  const { pedido } = registrarFechamento();
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: { transportadora: "Antecipada" },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Dados de envio.*faturado/);
+});
+
+test("fechamento 23. nao pode ser alterado depois de faturado", () => {
+  const registered = registrarFechamento();
+  registered.pedido.status = "faturado";
+  const second = registrarFechamento({ pedido: registered.pedido });
+  assert.equal(second.result.valid, false);
+  assert.match(second.result.message, /antes do faturamento/);
+});
+
+test("fechamento 24. DTO do cliente remove obrigatoriedade dados e operador", () => {
+  const { pedido } = registrarFechamento();
+  const client = sanitizeClientOrder(pedido);
+  assert.equal(Object.hasOwn(client, "fechamentoLogisticoObrigatorio"), false);
+  assert.equal(Object.hasOwn(client, "fechamentoLogistico"), false);
+  assert.equal(JSON.stringify(client).includes("Pedro Operador"), false);
+});
+
+test("fechamento 25. timeline estrutura o registro atual sem duplicar sua ocorrencia", () => {
+  const first = registrarFechamento();
+  const second = registrarFechamento({
+    pedido: first.pedido,
+    now: new Date("2026-08-12T16:00:00.000Z"),
+    fechamentoLogistico: {
+      quantidadeVolumes: 4,
+      pesoTotalKg: 40.25,
+      observacaoVolumes: "Quatro caixas revisadas.",
+    },
+  });
+  const timeline = buildOrderAuditTimeline(second.pedido);
+  assert.equal(timeline.filter((entry) => entry.tipo === "fechamento_logistico").length, 1);
+  assert.equal(timeline.filter((entry) => entry.tipo === "ocorrencia").length, 1);
+  const current = timeline.find((entry) => entry.tipo === "fechamento_logistico");
+  assert.equal(current.dados.quantidadeVolumes, 4);
+  assert.equal(current.operadorNome, second.operador.nome);
+});
+
+test("fechamento 26. relatorio administrativo inclui o resumo completo", () => {
+  const { pedido } = registrarFechamento();
+  pedido.numeroPedido = "PED-FECHAMENTO-PDF";
+  const report = buildOrderAuditPdfData(pedido);
+  assert.equal(report.fechamentoLogisticoObrigatorio, true);
+  assert.equal(report.fechamentoLogistico.quantidadeVolumes, 3);
+  assert.equal(report.fechamentoLogistico.pesoTotalKg, "38,5");
+  assert.match(report.fechamentoLogistico.observacaoVolumes, /caixas grandes/);
+  assert.equal(report.fechamentoLogistico.preenchidoPor, "Pedro Operador");
+});
+
+test("fechamento 27. dados fiscais obrigatorios nao podem ser apagados depois do faturamento", () => {
+  const pedido = {
+    status: "faturado",
+    numeroNotaFiscal: "NF-PERSISTIDA",
+    dataFaturamento: new Date("2026-08-12T17:00:00.000Z"),
+  };
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: { numeroNotaFiscal: "" },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /não podem ser removidos/);
+  assert.equal(pedido.numeroNotaFiscal, "NF-PERSISTIDA");
 });
 
 test("ocorrencias guardam autoria interna e nunca sao entregues ao cliente", () => {

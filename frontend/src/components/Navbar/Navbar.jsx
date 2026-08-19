@@ -29,10 +29,16 @@ const adminLinks = [
   { to: "/admin/treinamentos", label: "Treinamentos", group: "Conteúdo" },
 ];
 
+const comercialLinks = [
+  { to: "/precos", label: "Preços", group: "Comercial" },
+  { to: "/tabelas", label: "Tabelas de Preços", group: "Comercial" },
+];
+
 const marketingLinks = [
   { to: "/marketing", label: "Dashboard", group: "Visão geral" },
   { to: "/marketing/conteudos", label: "Conteúdos", group: "Conteúdo" },
   { to: "/marketing/banners", label: "Banners", group: "Conteúdo" },
+  { to: "/marketing/treinamentos", label: "Treinamentos", group: "Conteúdo" },
 ];
 
 const logisticaLinks = [
@@ -56,6 +62,12 @@ const clienteLinks = [
   { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
 ];
 
+const groomerLinks = [
+  { to: "/groomer", label: "Início", group: "Portal Groomer" },
+  { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+  { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
+];
+
 function Navbar() {
   const navigate = useNavigate();
   const menuButtonRef = useRef(null);
@@ -64,23 +76,44 @@ function Navbar() {
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const isAdmin = usuario?.tipo === "admin";
+  const isCommercial = usuario?.tipo === "comercial";
   const isMarketing = usuario?.tipo === "marketing";
   const isLogistica = usuario?.tipo === "logistica";
-  const isBackoffice = isAdmin || isMarketing || isLogistica;
+  const isGroomer = usuario?.tipo === "groomer";
+  const isBackoffice = isAdmin || isCommercial || isMarketing || isLogistica;
   const links = isAdmin
     ? adminLinks
-    : isMarketing
-      ? marketingLinks
-      : isLogistica
-        ? logisticaLinks
-        : clienteLinks;
+    : isCommercial
+      ? comercialLinks
+      : isMarketing
+        ? marketingLinks
+        : isLogistica
+          ? logisticaLinks
+          : isGroomer
+            ? groomerLinks
+            : clienteLinks;
   const home = isAdmin
     ? "/admin"
-    : isMarketing
-      ? "/marketing"
-      : isLogistica
-        ? "/logistica"
-        : "/catalogo";
+    : isCommercial
+      ? "/precos"
+      : isMarketing
+        ? "/marketing"
+        : isLogistica
+          ? "/logistica"
+          : isGroomer
+            ? "/groomer"
+            : "/catalogo";
+  const profileCopy = isAdmin
+    ? { brand: "Administração", account: "Administrador", mobile: "Administração" }
+    : isCommercial
+      ? { brand: "Comercial", account: "Equipe Comercial", mobile: "Painel Comercial" }
+      : isMarketing
+        ? { brand: "Marketing", account: "Equipe de Marketing", mobile: "Painel de Marketing" }
+        : isLogistica
+          ? { brand: "Logística", account: "Equipe de Logística", mobile: "Painel de Logística" }
+          : isGroomer
+            ? { brand: "Groomers", account: "Profissional aprovado", mobile: "Portal Groomer" }
+            : { brand: "Distribuidores", account: "Conta aprovada", mobile: "Portal do distribuidor" };
   const userName = usuario?.nomeResponsavel || usuario?.nomeFantasia || "Minha conta";
 
   useEffect(() => {
@@ -129,7 +162,7 @@ function Navbar() {
           <img src={logo} alt="Atual Pet" width="110" height="76" />
           <div className={styles.brandCopy}>
             <strong>Portal Comercial</strong>
-            <span>{isAdmin ? "Administração" : isMarketing ? "Marketing" : isLogistica ? "Logística" : "Distribuidores"}</span>
+            <span>{profileCopy.brand}</span>
           </div>
         </NavLink>
 
@@ -163,7 +196,7 @@ function Navbar() {
         <div className={styles.usuario}>
           <div>
             <span>{userName}</span>
-            <small>{isAdmin ? "Administrador" : isMarketing ? "Equipe de Marketing" : isLogistica ? "Equipe de Logística" : "Conta aprovada"}</small>
+            <small>{profileCopy.account}</small>
           </div>
           <button type="button" onClick={sair}>Sair</button>
         </div>
@@ -191,7 +224,7 @@ function Navbar() {
 
             <div className={styles.mobileAccount}>
               <strong>{userName}</strong>
-              <span>{isAdmin ? "Administração" : isMarketing ? "Painel de Marketing" : isLogistica ? "Painel de Logística" : "Portal do distribuidor"}</span>
+              <span>{profileCopy.mobile}</span>
             </div>
 
             <div className={styles.mobileLinks}>

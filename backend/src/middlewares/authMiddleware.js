@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import Usuario from "../models/Usuario.js";
 import { measureStage, measureStageSync } from "../utils/performance.js";
-import { cadastroClienteBloqueiaAcesso } from "../utils/userAccess.js";
+import { cadastroExternoBloqueiaAcesso } from "../utils/userAccess.js";
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -36,7 +36,7 @@ export const proteger = async (req, res, next) => {
     req.usuario = await measureStage(req, "auth.usuario", () =>
       Usuario.findById(decoded.id)
         .select(
-          "_id tipo tabelaPrecoId statusCadastro ativo tokenVersion nomeResponsavel nomeFantasia"
+          "_id tipo tabelaPrecoId statusCadastro ativo tokenVersion nomeResponsavel nomeFantasia nomeProfissional"
         )
     );
 
@@ -52,7 +52,7 @@ export const proteger = async (req, res, next) => {
       });
     }
 
-    if (cadastroClienteBloqueiaAcesso(req.usuario)) {
+    if (cadastroExternoBloqueiaAcesso(req.usuario)) {
       return res.status(403).json({
         message: "Cadastro não aprovado",
       });

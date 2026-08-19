@@ -29,6 +29,7 @@ const OPERATIONAL_EVENT_TYPES = new Set([
   "conferencia_iniciada",
   "conferencia_concluida",
   "divergencia_conferencia",
+  "fechamento_logistico",
   "ocorrencia",
 ]);
 
@@ -41,6 +42,8 @@ const ORDER_PROJECTION = Object.freeze({
   aprovacao: 1,
   conferenciaObrigatoria: 1,
   conferencia: 1,
+  fechamentoLogisticoObrigatorio: 1,
+  fechamentoLogistico: 1,
   historicoStatus: 1,
   ocorrencias: 1,
   "itens.produtoId": 1,
@@ -137,7 +140,8 @@ export const pedidoTemParticipacaoOperador = (pedido, operadorId) => {
   return (pedido.historicoStatus || []).some((entry) => stringId(entry.operadorId) === expected) ||
     (pedido.ocorrencias || []).some((entry) => stringId(entry.operadorId) === expected) ||
     stringId(pedido.conferencia?.iniciadoPor?.operadorId) === expected ||
-    stringId(pedido.conferencia?.concluidoPor?.operadorId) === expected;
+    stringId(pedido.conferencia?.concluidoPor?.operadorId) === expected ||
+    stringId(pedido.fechamentoLogistico?.preenchidoPor?.operadorId) === expected;
 };
 
 const pedidoIdentity = (pedido, marcos) => ({
@@ -600,6 +604,7 @@ const operatorParticipationMatch = (operatorObjectId) => ({
     { "ocorrencias.operadorId": operatorObjectId },
     { "conferencia.iniciadoPor.operadorId": operatorObjectId },
     { "conferencia.concluidoPor.operadorId": operatorObjectId },
+    { "fechamentoLogistico.preenchidoPor.operadorId": operatorObjectId },
   ],
 });
 
@@ -614,6 +619,10 @@ const eventPeriodMatch = ({ inicio, fim, operatorObjectId }) => {
   const conferenceEnd = {
     "conferencia.concluidaEm": { $gte: inicio, $lte: fim },
     "conferencia.concluidoPor.operadorId": operatorObjectId || { $exists: true },
+  };
+  const logisticsClosing = {
+    "fechamentoLogistico.preenchidoEm": { $gte: inicio, $lte: fim },
+    "fechamentoLogistico.preenchidoPor.operadorId": operatorObjectId || { $exists: true },
   };
   return {
     $or: [
@@ -635,6 +644,7 @@ const eventPeriodMatch = ({ inicio, fim, operatorObjectId }) => {
       },
       conferenceStart,
       conferenceEnd,
+      logisticsClosing,
     ],
   };
 };

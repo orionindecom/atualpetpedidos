@@ -57,6 +57,61 @@ export function getPlayerKind(provider) {
   return provider === "youtube" ? "youtube" : "unsupported";
 }
 
+export function getYouTubePlayerOrigin(locationLike) {
+  const candidate = locationLike?.origin
+    ?? (typeof window !== "undefined" ? window.location?.origin : "");
+
+  try {
+    const url = new URL(candidate);
+    return ["http:", "https:"].includes(url.protocol) ? url.origin : "";
+  } catch {
+    return "";
+  }
+}
+
+export function normalizeTrainingAudience(training = {}) {
+  return {
+    publicos: Array.isArray(training.publicos) && training.publicos.length > 0
+      ? training.publicos
+      : ["cliente"],
+    audienciaTipo: training.audienciaTipo || "todos",
+    distribuidoresIds: Array.isArray(training.distribuidoresIds)
+      ? training.distribuidoresIds.map((item) => item?._id || item)
+      : [],
+  };
+}
+
+export function changeTrainingPublics(current, publicos) {
+  const nextPublicos = Array.isArray(publicos) ? publicos : [];
+  const includesDistributors = nextPublicos.includes("cliente");
+
+  return {
+    ...current,
+    publicos: nextPublicos,
+    audienciaTipo: includesDistributors ? current.audienciaTipo : "todos",
+    distribuidoresIds: includesDistributors ? current.distribuidoresIds : [],
+  };
+}
+
+export function changeTrainingDistributorAudience(
+  current,
+  { audienceType, selectedIds }
+) {
+  return {
+    ...current,
+    audienciaTipo: audienceType,
+    distribuidoresIds: selectedIds,
+  };
+}
+
+export function buildTrainingAudiencePayload(form) {
+  return {
+    publicos: JSON.stringify(form.publicos),
+    audienciaTipo: form.audienciaTipo,
+    distribuidoresIds: JSON.stringify(form.distribuidoresIds),
+  };
+}
+
 export function clampProgress(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
@@ -124,8 +179,11 @@ const sanitizeWatermarkPart = (value, fallback) => {
 export function buildTrainingWatermark(usuario = {}) {
   const id = String(usuario._id || usuario.id || "").replace(/[^A-Za-z0-9]/g, "");
   return {
-    nome: sanitizeWatermarkPart(usuario.nomeResponsavel, "Distribuidor AtualPet"),
-    cliente: sanitizeWatermarkPart(usuario.nomeFantasia, "Acesso exclusivo AtualPet"),
+    nome: sanitizeWatermarkPart(usuario.nomeResponsavel, "Profissional AtualPet"),
+    cliente: sanitizeWatermarkPart(
+      usuario.nomeFantasia || usuario.nomeProfissional,
+      usuario.tipo === "groomer" ? "Groomer AtualPet" : "Acesso exclusivo AtualPet"
+    ),
     sessao: id ? id.slice(-6).toUpperCase() : "PORTAL",
   };
 }

@@ -35,7 +35,10 @@ test("pipeline de clientes preserva defaults e remove dados sensiveis", () => {
 
 test("pipeline de clientes pendentes mantem o filtro administrativo", () => {
   assert.deepEqual(criarPipelineClientes({ pendentes: true })[0], {
-    $match: { tipo: "cliente", statusCadastro: "pendente" },
+    $match: {
+      tipo: { $in: ["cliente", "groomer"] },
+      statusCadastro: "pendente",
+    },
   });
 });
 

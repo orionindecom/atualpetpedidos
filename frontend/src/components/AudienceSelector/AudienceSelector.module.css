@@ -12,6 +12,50 @@
   font-weight: 800;
 }
 
+.profileSelector {
+  margin-bottom: 12px;
+}
+
+.profileSelector > strong {
+  margin-bottom: 7px;
+  color: #344054;
+  display: block;
+  font-size: 13px;
+}
+
+.profileSelector > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.profileSelector label {
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #667085;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.profileSelector label[data-active="true"] {
+  border-color: #24726d;
+  background: #e8f5f3;
+  color: #174e4b;
+}
+
+.profileSelector input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+}
+
 .segmented {
   padding: 3px;
   border: 1px solid #cbd5e1;
@@ -23,6 +67,7 @@
 }
 
 .segmented label {
+  position: relative;
   min-height: 40px;
   margin: 0;
   padding: 8px 10px;
@@ -43,9 +88,22 @@
 }
 
 .segmented input {
+  width: 1px;
+  min-width: 1px;
+  height: 1px;
+  min-height: 1px;
+  padding: 0;
   position: absolute;
+  inset: 50% auto auto 50%;
+  border: 0;
+  clip-path: inset(50%);
   opacity: 0;
   pointer-events: none;
+}
+
+.segmented label:focus-within {
+  outline: 3px solid rgba(36, 114, 109, 0.28);
+  outline-offset: 2px;
 }
 
 .distributorPanel {
@@ -138,7 +196,8 @@
 }
 
 @media (max-width: 560px) {
-  .segmented {
+  .segmented,
+  .profileSelector > div {
     grid-template-columns: 1fr;
   }
 }

@@ -8,8 +8,11 @@ import {
 } from "../src/utils/orderLogistics.js";
 import {
   buildConferencePayload,
+  buildLogisticsClosingPayload,
+  getOrderFlowStage,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
+  isLogisticsClosingComplete,
 } from "../src/utils/orderOperations.js";
 
 const readSource = (relativePath) => (
@@ -37,10 +40,13 @@ test("menu de logistica contem apenas Dashboard e Pedidos", () => {
 
 test("pagina de logistica usa endpoints dedicados e paginacao", () => {
   const page = readSource("../src/pages/LogisticaPedidos/LogisticaPedidos.jsx");
+  const dashboard = readSource("../src/pages/LogisticaDashboard/LogisticaDashboard.jsx");
   assert.match(page, /api\.get\("\/logistica\/pedidos"/);
   assert.match(page, /api\.patch\(`\/logistica\/pedidos\/\$\{detail\._id\}`/);
   assert.match(page, /<PaginationControls/);
   assert.match(page, /aguardandoAcao/);
+  assert.match(page, /\["faturado", "enviado", "entregue"\]\.includes\(pedido\.status\)/);
+  assert.match(dashboard, /Aguardando conferência, fechamento ou faturamento/);
 });
 
 test("tela logistica mantem itens e valores somente leitura", () => {
@@ -127,14 +133,23 @@ test("timeline representa fluxo e cancelamento", () => {
   });
 });
 
-test("formulario operacional calcula falta sem alterar dados comerciais", () => {
-  const pedido = {
+test("payload progressivo nao antecipa separacao ou dados comerciais", () => {
+  const aprovado = {
     status: "aprovado",
     itens: [{ produtoId: "507f1f77bcf86cd799439011", quantidade: 12 }],
   };
+  const formAprovado = buildOrderOperationsForm(aprovado);
+  formAprovado.status = "separando";
+  formAprovado.separacao["507f1f77bcf86cd799439011"] = 8;
+  const payloadAprovado = buildOrderOperationsPayload(aprovado, formAprovado);
+  assert.equal(Object.hasOwn(payloadAprovado, "separacaoItens"), false);
+  assert.equal(Object.hasOwn(payloadAprovado, "numeroNotaFiscal"), false);
+  assert.equal(Object.hasOwn(payloadAprovado, "dataEnvio"), false);
+
+  const pedido = { ...aprovado, status: "separando" };
   const form = buildOrderOperationsForm(pedido);
   assert.equal(form.separacao["507f1f77bcf86cd799439011"], "");
-  form.status = "separando";
+  form.status = "separado";
   form.separacao["507f1f77bcf86cd799439011"] = 8;
   form.ocorrenciaConteudo = "Falta confirmada";
   form.ocorrenciaTipo = "falta_produto";
@@ -147,6 +162,142 @@ test("formulario operacional calcula falta sem alterar dados comerciais", () => 
   assert.equal(payload.novaOcorrencia.visibilidade, "interna");
   assert.equal(Object.hasOwn(payload, "valorTotal"), false);
   assert.equal(Object.hasOwn(payload, "itens"), false);
+});
+
+test("etapas do detalhe definem uma unica proxima acao operacional", () => {
+  assert.equal(getOrderFlowStage({ status: "aprovado" }).nextStatus, "separando");
+  assert.equal(getOrderFlowStage({ status: "separando" }).showSeparationEditor, true);
+  assert.equal(getOrderFlowStage({
+    status: "separado",
+    conferenciaObrigatoria: true,
+    conferencia: { status: "pendente" },
+  }).conferenceFocused, true);
+  assert.equal(getOrderFlowStage({
+    status: "separado",
+    conferenciaObrigatoria: true,
+    conferencia: { status: "concluida" },
+  }).nextStatus, "faturado");
+  assert.equal(getOrderFlowStage({ status: "faturado" }).showShipping, true);
+  assert.equal(getOrderFlowStage({ status: "enviado" }).showShippingSummary, true);
+  assert.equal(getOrderFlowStage({ status: "entregue" }).terminal, true);
+  assert.equal(getOrderFlowStage({ status: "cancelado" }).terminal, true);
+  assert.equal(getOrderFlowStage({ status: "novo", entregaFinalizada: true }).terminal, true);
+});
+
+test("fechamento pendente vira etapa derivada sem criar novo status", () => {
+  const pedido = {
+    status: "separado",
+    conferenciaObrigatoria: true,
+    conferencia: { status: "concluida" },
+    fechamentoLogisticoObrigatorio: true,
+  };
+  const stage = getOrderFlowStage(pedido);
+  assert.equal(stage.key, "logistics_closing");
+  assert.equal(stage.showLogisticsClosing, true);
+  assert.equal(stage.nextStatus, undefined);
+  assert.equal(pedido.status, "separado");
+});
+
+test("fechamento completo libera etapa administrativa de faturamento", () => {
+  const pedido = {
+    status: "separado",
+    conferenciaObrigatoria: true,
+    conferencia: { status: "concluida" },
+    fechamentoLogisticoObrigatorio: true,
+    fechamentoLogistico: {
+      quantidadeVolumes: 3,
+      pesoTotalKg: 38.5,
+      observacaoVolumes: "Três caixas",
+      preenchidoEm: "2026-08-12T15:00:00.000Z",
+      preenchidoPor: { operadorId: "507f1f77bcf86cd799439011" },
+    },
+  };
+  assert.equal(isLogisticsClosingComplete(pedido), true);
+  const stage = getOrderFlowStage(pedido);
+  assert.equal(stage.key, "ready_billing");
+  assert.equal(stage.nextStatus, "faturado");
+  assert.equal(stage.showInvoicing, true);
+});
+
+test("pedido historico sem obrigatoriedade ignora fechamento sem erro", () => {
+  const stage = getOrderFlowStage({ status: "separado" });
+  assert.equal(stage.key, "ready_billing");
+  assert.equal(stage.nextStatus, "faturado");
+});
+
+test("formulario recarrega os dados atuais do fechamento", () => {
+  const form = buildOrderOperationsForm({
+    status: "separado",
+    fechamentoLogistico: {
+      quantidadeVolumes: 2,
+      pesoTotalKg: 12.75,
+      observacaoVolumes: "Duas caixas lacradas",
+    },
+  });
+  assert.equal(form.quantidadeVolumes, 2);
+  assert.equal(form.pesoTotalKg, 12.75);
+  assert.equal(form.observacaoVolumes, "Duas caixas lacradas");
+});
+
+test("payload do fechamento normaliza virgula sem incluir status", () => {
+  const payload = buildLogisticsClosingPayload({
+    quantidadeVolumes: "4",
+    pesoTotalKg: "38,5",
+    observacaoVolumes: "  Quatro caixas  ",
+  });
+  assert.deepEqual(payload, {
+    fechamentoLogistico: {
+      quantidadeVolumes: "4",
+      pesoTotalKg: "38.5",
+      observacaoVolumes: "Quatro caixas",
+    },
+  });
+  assert.equal(Object.hasOwn(payload, "status"), false);
+});
+
+test("faturamento envia somente NF e data antes da mudanca de status", () => {
+  const pedido = { status: "separado", itens: [] };
+  const form = buildOrderOperationsForm(pedido);
+  form.status = "faturado";
+  form.numeroNotaFiscal = "NF-2026-1";
+  form.dataFaturamento = "2026-08-12";
+  form.transportadora = "Não deve antecipar";
+  form.dataEnvio = "2026-08-13";
+  const payload = buildOrderOperationsPayload(pedido, form);
+  assert.equal(payload.numeroNotaFiscal, "NF-2026-1");
+  assert.equal(payload.dataFaturamento, "2026-08-12");
+  assert.equal(Object.hasOwn(payload, "transportadora"), false);
+  assert.equal(Object.hasOwn(payload, "dataEnvio"), false);
+});
+
+test("envio nao reenvia nem permite editar campos de faturamento", () => {
+  const pedido = {
+    status: "faturado",
+    numeroNotaFiscal: "NF-PERSISTIDA",
+    dataFaturamento: "2026-08-12T00:00:00.000Z",
+    itens: [],
+  };
+  const form = buildOrderOperationsForm(pedido);
+  form.status = "enviado";
+  form.numeroNotaFiscal = "NF-ALTERADA";
+  form.dataFaturamento = "2026-08-10";
+  form.transportadora = "Atual Transportes";
+  form.dataEnvio = "2026-08-13";
+  const payload = buildOrderOperationsPayload(pedido, form);
+  assert.equal(payload.transportadora, "Atual Transportes");
+  assert.equal(payload.dataEnvio, "2026-08-13");
+  assert.equal(Object.hasOwn(payload, "numeroNotaFiscal"), false);
+  assert.equal(Object.hasOwn(payload, "dataFaturamento"), false);
+});
+
+test("modal reserva fechamento a Logistica e faturamento ao Admin", () => {
+  const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
+  const logistics = readSource("../src/pages/LogisticaPedidos/LogisticaPedidos.jsx");
+  assert.match(modal, /flowStage\.showLogisticsClosing && !isAdmin/);
+  assert.match(modal, /flowStage\.showLogisticsClosing && isAdmin/);
+  assert.match(modal, /flowStage\.showInvoicing && isAdmin/);
+  assert.match(logistics, /X-Operador-Contexto/);
+  assert.match(logistics, /buildLogisticsClosingPayload/);
 });
 
 test("conferencia preenche os valores separados e monta payload por item", () => {
@@ -217,12 +368,24 @@ test("detalhe administrativo centraliza edicao PDFs relatorio e exclusao", () =>
 
 test("pedido entregue vira detalhe terminal sem formulario operacional", () => {
   const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
-  assert.match(modal, /detail\.status === "entregue" \|\| detail\.entregaFinalizada === true/);
-  assert.match(modal, /Pedido entregue — estado final/);
-  assert.match(modal, /!pendingApproval && !terminal/);
+  const operations = readSource("../src/utils/orderOperations.js");
+  assert.match(operations, /pedido\.status === "entregue"/);
+  assert.match(operations, /Pedido entregue — estado final/);
+  assert.match(modal, /operationFormVisible/);
   assert.match(modal, /!terminal && conferenceStatus === "em_andamento"/);
   assert.match(modal, /isAdmin && !terminal && \["aguardando_aprovacao"/);
   assert.match(modal, /isAdmin && !terminal/);
+});
+
+test("detalhe exibe apenas os controles pertinentes a etapa atual", () => {
+  const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
+  assert.match(modal, /Próxima ação necessária/);
+  assert.match(modal, /flowStage\.showSeparationEditor/);
+  assert.match(modal, /flowStage\.conferenceFocused/);
+  assert.match(modal, /flowStage\.showInvoicing && isAdmin/);
+  assert.match(modal, /flowStage\.showShipping && <section>/);
+  assert.match(modal, /flowStage\.showShippingSummary/);
+  assert.match(modal, /required=\{sendingSelected\}/);
 });
 
 test("timeline do detalhe usa somente consolidacao real do backend", () => {

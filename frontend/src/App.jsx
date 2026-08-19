@@ -5,6 +5,8 @@ import Catalogo from "./pages/Catalogo/Catalogo";
 import MeusPedidos from "./pages/MeusPedidos/MeusPedidos";
 import AdminClientes from "./pages/AdminClientes/AdminClientes";
 import Cadastro from "./pages/Cadastro/Cadastro";
+import CadastroGroomer from "./pages/CadastroGroomer/CadastroGroomer";
+import GroomerHome from "./pages/GroomerHome/GroomerHome";
 import AdminProdutos from "./pages/AdminProdutos/AdminProdutos";
 import AdminPrecos from "./pages/AdminPrecos/AdminPrecos";
 import AdminTabelas from "./pages/AdminTabelas/AdminTabelas";
@@ -39,6 +41,15 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/cadastro-groomer" element={<CadastroGroomer />} />
+        <Route
+          path="/groomer"
+          element={(
+            <RoleRoute role="groomer">
+              <GroomerHome />
+            </RoleRoute>
+          )}
+        />
         <Route
           path="/catalogo"
           element={(
@@ -66,7 +77,7 @@ function App() {
         <Route
           path="/materiais-marketing"
           element={(
-            <RoleRoute role="cliente">
+            <RoleRoute roles={["cliente", "groomer"]}>
               <MateriaisMarketing />
             </RoleRoute>
           )}
@@ -74,7 +85,7 @@ function App() {
         <Route
           path="/treinamentos"
           element={(
-            <RoleRoute role="cliente">
+            <RoleRoute roles={["cliente", "groomer"]}>
               <Treinamentos />
             </RoleRoute>
           )}
@@ -82,7 +93,7 @@ function App() {
         <Route
           path="/treinamentos/:id"
           element={(
-            <RoleRoute role="cliente">
+            <RoleRoute roles={["cliente", "groomer"]}>
               <TreinamentoDetalhe />
             </RoleRoute>
           )}
@@ -106,7 +117,7 @@ function App() {
         <Route
           path="/precos"
           element={(
-            <RoleRoute role="admin">
+            <RoleRoute roles={["admin", "comercial"]}>
               <AdminPrecos />
             </RoleRoute>
           )}
@@ -114,7 +125,7 @@ function App() {
         <Route
           path="/tabelas"
           element={(
-            <RoleRoute role="admin">
+            <RoleRoute roles={["admin", "comercial"]}>
               <AdminTabelas />
             </RoleRoute>
           )}
@@ -199,6 +210,17 @@ function App() {
           element={(
             <RoleRoute role="marketing">
               <AdminBanners />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/marketing/treinamentos"
+          element={(
+            <RoleRoute role="marketing">
+              <AdminTreinamentos
+                apiBase="/marketing/treinamentos"
+                pageTitle="Treinamentos"
+              />
             </RoleRoute>
           )}
         />

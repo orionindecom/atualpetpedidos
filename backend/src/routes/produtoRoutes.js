@@ -10,7 +10,10 @@ import upload, {
 } from "../middlewares/uploadProduto.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import {
+  somenteAdmin,
+  somenteGestorComercial,
+} from "../middlewares/adminMiddleware.js";
 import {
   adminLimiter,
   uploadLimiter,
@@ -33,7 +36,7 @@ router.post(
 router.get(
   "/",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   listarProdutos
 );
 

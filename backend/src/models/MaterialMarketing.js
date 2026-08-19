@@ -56,6 +56,10 @@ const materialMarketingSchema = new mongoose.Schema(
       maxlength: 512,
       default: "",
     },
+    publicos: [{
+      type: String,
+      enum: ["cliente", "groomer"],
+    }],
     audienciaTipo: {
       type: String,
       enum: ["todos", "especificos"],
@@ -104,6 +108,7 @@ materialMarketingSchema.index({
 });
 materialMarketingSchema.index({
   ativo: 1,
+  publicos: 1,
   audienciaTipo: 1,
   distribuidoresIds: 1,
   dataPublicacao: -1,

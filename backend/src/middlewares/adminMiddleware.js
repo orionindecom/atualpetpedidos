@@ -31,6 +31,20 @@ export const somenteGestorConteudo = (req, res, next) => {
   return next();
 };
 
+export const somenteGestorComercial = (req, res, next) => {
+  const isCommercialManager = measureStageSync(
+    req,
+    "auth.gestor_comercial",
+    () => temPapel(req.usuario, ["admin", "comercial"])
+  );
+
+  if (!isCommercialManager) {
+    return res.status(403).json({ message: "Acesso negado" });
+  }
+
+  return next();
+};
+
 export const somenteOperacaoLogistica = (req, res, next) => {
   const isLogisticsOperator = measureStageSync(
     req,
