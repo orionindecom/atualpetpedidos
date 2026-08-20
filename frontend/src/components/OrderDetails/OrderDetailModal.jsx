@@ -5,7 +5,12 @@ import {
   formatOrderDateTime,
   formatOrderStatus,
 } from "../../utils/orderLogistics";
-import { getOrderFlowStage } from "../../utils/orderOperations";
+import {
+  getConferenceCompletionIssues,
+  getOrderFlowStage,
+  getSeparationCompletionIssues,
+  isConferenceFinishedForCurrentOrder,
+} from "../../utils/orderOperations";
 import { useModalDialog } from "../../hooks/useModalDialog";
 import OrderItems from "./OrderItems";
 import ConferenceItems from "./ConferenceItems";
@@ -62,20 +67,23 @@ function OrderDetailModal({
   const conference = detail.conferencia;
   const conferenceStatus = conference?.status;
   const conferenceRegistered = detail.conferenciaObrigatoria === true || Boolean(conference);
-  const conferenceFinished = [
-    "concluida",
+  const conferenceFinished = isConferenceFinishedForCurrentOrder(detail);
+  const separationLocked = conferenceFinished;
+  const conferenceNeedsRestart = [
     "concluida_com_divergencia",
-  ].includes(conferenceStatus);
-  const separationLocked = [
-    "pendente",
-    "em_andamento",
     "concluida",
-    "concluida_com_divergencia",
-  ].includes(conferenceStatus);
+  ].includes(conferenceStatus) && !conferenceFinished;
+  const conferenceIssues = conferenceStatus === "em_andamento"
+    ? getConferenceCompletionIssues(detail, form)
+    : [];
+  const finishingSeparation = detail.status === "separando" && form.status === "separado";
+  const separationIssues = finishingSeparation
+    ? getSeparationCompletionIssues(detail, form)
+    : [];
   const conferenceVisible = flowStage.showConference || Boolean(conference);
   const operationFormVisible = !pendingApproval &&
     !terminal &&
-    !flowStage.conferenceFocused &&
+    (!flowStage.conferenceFocused || flowStage.showSeparationEditor) &&
     (
       transitions.length > 0 ||
       flowStage.showOccurrence ||
@@ -113,7 +121,7 @@ function OrderDetailModal({
             )}
           </div>
           <div className={styles.modalHeaderActions}>
-            {isAdmin && !terminal && ["aguardando_aprovacao", "aprovado", "novo", "em_analise"].includes(detail.status) && (
+            {isAdmin && !terminal && ["aguardando_aprovacao", "aprovado", "novo", "em_analise", "separando", "separado"].includes(detail.status) && (
               <button type="button" onClick={onEditOrder}>Editar pedido</button>
             )}
             {isAdmin && (
@@ -233,7 +241,7 @@ function OrderDetailModal({
             </div>
             {detail.temDivergencia && (
               <div className={styles.divergenceNotice}>
-                Este pedido possui um ou mais itens atendidos parcialmente.
+                Existem quantidades separadas diferentes do pedido atual. Corrija os itens indicados antes de concluir a conferência.
               </div>
             )}
             <OrderItems
@@ -243,6 +251,19 @@ function OrderDetailModal({
               onSeparationChange={onSeparationChange}
               deriveEditableStatus={flowStage.showSeparationEditor}
             />
+            {finishingSeparation && separationIssues.length > 0 && (
+              <div className={styles.divergenceNotice} role="alert">
+                <strong>Não é possível concluir a separação.</strong>
+                <p>
+                  Existem {separationIssues.length} {separationIssues.length === 1 ? "item" : "itens"} com quantidade pendente ou incompatível com o pedido atual:
+                </p>
+                <ul>
+                  {separationIssues.slice(0, 5).map((issue) => (
+                    <li key={`${issue.produtoId}-${issue.tipo}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
 
           {conferenceVisible && <section className={`${styles.section} ${styles.conferenceSection}`}>
@@ -270,20 +291,20 @@ function OrderDetailModal({
                   </p>
                 )}
 
-                {!terminal && (conferenceStatus === "pendente" || (
+                {!terminal && (conferenceStatus === "pendente" || conferenceNeedsRestart || (
                   !conferenceStatus && detail.status === "separado"
                 )) && (
                   <div className={styles.conferenceCallout}>
                     <div>
-                      <strong>Pedido aguardando conferência</strong>
-                      <p>Os valores separados serão preenchidos automaticamente para uma validação rápida.</p>
+                      <strong>{conferenceNeedsRestart ? "Conferência precisa ser refeita" : "Pedido aguardando conferência"}</strong>
+                      <p>Todos os itens devem corresponder ao pedido atual para que a conferência possa ser concluída.</p>
                     </div>
                     <button
                       type="button"
                       disabled={conferenceBusy || detail.status !== "separado"}
                       onClick={onStartConference}
                     >
-                      {conferenceBusy ? "Iniciando..." : "Iniciar conferência"}
+                      {conferenceBusy ? "Iniciando..." : conferenceNeedsRestart ? "Refazer conferência" : "Iniciar conferência"}
                     </button>
                   </div>
                 )}
@@ -299,6 +320,17 @@ function OrderDetailModal({
                       editable
                       onChange={onConferenceChange}
                     />
+                    {conferenceIssues.length > 0 && (
+                      <div className={styles.divergenceNotice} role="alert">
+                        <strong>Não é possível concluir a conferência.</strong>
+                        <p>Existem {conferenceIssues.length} item(ns) que precisam ser corrigidos:</p>
+                        <ul>
+                          {conferenceIssues.slice(0, 5).map((issue) => (
+                            <li key={`${issue.produtoId}-${issue.tipo}`}>{issue.message}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <label className={styles.conferenceObservation}>
                       Observação da conferência (opcional)
                       <textarea
@@ -309,7 +341,11 @@ function OrderDetailModal({
                       />
                     </label>
                     <div className={styles.conferenceActions}>
-                      <button type="button" disabled={conferenceBusy} onClick={onCompleteConference}>
+                      <button
+                        type="button"
+                        disabled={conferenceBusy || conferenceIssues.length > 0}
+                        onClick={onCompleteConference}
+                      >
                         {conferenceBusy ? "Concluindo..." : "Concluir conferência"}
                       </button>
                     </div>
@@ -552,7 +588,7 @@ function OrderDetailModal({
 
               <div className={styles.formActions}>
                 <button type="button" onClick={onClose}>Cancelar</button>
-                <button type="submit" disabled={saving}>
+                <button type="submit" disabled={saving || separationIssues.length > 0}>
                   {saving
                     ? "Salvando..."
                     : form.status === flowStage.nextStatus

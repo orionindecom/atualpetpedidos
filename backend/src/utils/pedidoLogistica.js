@@ -48,6 +48,7 @@ const TRANSICOES_ADMIN = Object.freeze({
 });
 
 const CAMPOS_LOGISTICOS = Object.freeze([
+  "versaoPedido",
   "status",
   "numeroNotaFiscal",
   "dataFaturamento",
@@ -143,7 +144,25 @@ export const transicoesPermitidasLogistica = (status) => (
 );
 
 export const conferenciaConcluida = (pedido) => (
-  ["concluida", "concluida_com_divergencia"].includes(pedido?.conferencia?.status)
+  pedido?.conferencia?.status === "concluida" &&
+  (
+    pedido?.conferencia?.versaoOperacional === undefined ||
+    Number(pedido.conferencia.versaoOperacional) ===
+      Number(pedido.versaoOperacional || 1)
+  ) &&
+  (
+    Array.isArray(pedido?.conferencia?.itens) &&
+    pedido.conferencia.itens.length > 0
+      ? getConferenceCompletionBlockers(
+        pedido,
+        pedido.conferencia.itens
+      ).length === 0
+      : (pedido?.itens || []).every((item) => {
+        const separation = getItemSeparation(item);
+        return separation.quantidadeSeparada !== null &&
+          separation.quantidadeSeparada === separation.quantidadeSolicitada;
+      })
+  )
 );
 
 export const pedidoExigeConferencia = (pedido) => (
@@ -349,10 +368,18 @@ export const validarCamposPedidoPorEtapa = ({
     };
   }
 
-  if (separacaoItens && pedido?.status !== "separando") {
+  const correcaoAntesDaConclusaoDaConferencia =
+    pedido?.status === "separado" &&
+    pedidoExigeConferencia(pedido) &&
+    !conferenciaConcluida(pedido);
+  if (
+    separacaoItens &&
+    pedido?.status !== "separando" &&
+    !correcaoAntesDaConclusaoDaConferencia
+  ) {
     return {
       valid: false,
-      message: "As quantidades separadas só podem ser registradas durante a separação",
+      message: "As quantidades separadas só podem ser registradas durante a separação ou corrigidas antes da conclusão da conferência",
     };
   }
 
@@ -401,7 +428,9 @@ export const getItemSeparation = (item = {}) => {
 
   let situacaoSeparacao = "pendente";
   if (quantidadeSeparada !== null) {
-    if (quantidadeSeparada === 0 && quantidadeSolicitada > 0) {
+    if (quantidadeSeparada > quantidadeSolicitada) {
+      situacaoSeparacao = "excedente";
+    } else if (quantidadeSeparada === 0 && quantidadeSolicitada > 0) {
       situacaoSeparacao = "indisponivel";
     } else if (quantidadeFaltanteSeparacao > 0) {
       situacaoSeparacao = "parcial";
@@ -414,6 +443,9 @@ export const getItemSeparation = (item = {}) => {
     quantidadeSolicitada,
     quantidadeSeparada,
     quantidadeFaltanteSeparacao,
+    quantidadeExcedenteSeparacao: quantidadeSeparada === null
+      ? null
+      : Math.max(quantidadeSeparada - quantidadeSolicitada, 0),
     quantidadeConferida: item.quantidadeConferida ?? null,
     quantidadeFinal,
     quantidadeAtendida,
@@ -421,6 +453,143 @@ export const getItemSeparation = (item = {}) => {
     situacaoSeparacao,
     situacaoFinal: item.situacaoFinal || undefined,
   };
+};
+
+export const getSeparationCompletionBlockers = (
+  pedido,
+  separationItems = []
+) => {
+  const items = Array.isArray(pedido?.itens) ? pedido.itens : [];
+  const separationByProduct = new Map(
+    (Array.isArray(separationItems) ? separationItems : []).map((item) => [
+      String(item.produtoId),
+      item.quantidadeSeparada,
+    ])
+  );
+
+  return items.flatMap((item) => {
+    const produtoId = String(item.produtoId);
+    const separation = getItemSeparation({
+      ...item,
+      quantidadeSeparada: separationByProduct.has(produtoId)
+        ? separationByProduct.get(produtoId)
+        : item.quantidadeSeparada,
+    });
+
+    if (separation.quantidadeSeparada === separation.quantidadeSolicitada) {
+      return [];
+    }
+
+    if (separation.quantidadeSeparada === null) {
+      return [{
+        produtoId: item.produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_processado",
+        quantidadePedida: separation.quantidadeSolicitada,
+        quantidadeSeparada: null,
+        message: `${item.nomeProduto}: separação ainda não processada`,
+      }];
+    }
+
+    const tipo = separation.quantidadeSeparada > separation.quantidadeSolicitada
+      ? "quantidade_excedente"
+      : "quantidade_pendente";
+    return [{
+      produtoId: item.produtoId,
+      nomeProduto: item.nomeProduto,
+      tipo,
+      quantidadePedida: separation.quantidadeSolicitada,
+      quantidadeSeparada: separation.quantidadeSeparada,
+      message: `${item.nomeProduto}: pedido atual ${separation.quantidadeSolicitada}, separado ${separation.quantidadeSeparada}`,
+    }];
+  });
+};
+
+export const getConferenceCompletionBlockers = (
+  pedido,
+  conferenceItems = []
+) => {
+  const items = Array.isArray(pedido?.itens) ? pedido.itens : [];
+  const conferenceByProduct = new Map(
+    (Array.isArray(conferenceItems) ? conferenceItems : []).map((item) => [
+      String(item.produtoId),
+      item,
+    ])
+  );
+  const blockers = [];
+
+  for (const item of items) {
+    const separation = getItemSeparation(item);
+    const conferenceItem = conferenceByProduct.get(String(item.produtoId));
+    const checkedValue = conferenceItem?.quantidadeConferida;
+    const hasCheckedValue =
+      checkedValue !== undefined &&
+      checkedValue !== null &&
+      checkedValue !== "" &&
+      Number.isFinite(Number(checkedValue));
+
+    if (separation.quantidadeSeparada === null) {
+      blockers.push({
+        produtoId: item.produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_processado",
+        quantidadePedida: separation.quantidadeSolicitada,
+        quantidadeSeparada: null,
+        message: `${item.nomeProduto}: separação ainda não processada`,
+      });
+      continue;
+    }
+
+    if (separation.quantidadeSeparada !== separation.quantidadeSolicitada) {
+      blockers.push({
+        produtoId: item.produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "quantidade_separada_divergente",
+        quantidadePedida: separation.quantidadeSolicitada,
+        quantidadeSeparada: separation.quantidadeSeparada,
+        message: `${item.nomeProduto}: pedido atual ${separation.quantidadeSolicitada}, separado ${separation.quantidadeSeparada}`,
+      });
+      continue;
+    }
+
+    if (!conferenceItem || !hasCheckedValue) {
+      blockers.push({
+        produtoId: item.produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_conferido",
+        quantidadePedida: separation.quantidadeSolicitada,
+        quantidadeSeparada: separation.quantidadeSeparada,
+        message: `${item.nomeProduto}: item ainda não conferido`,
+      });
+      continue;
+    }
+
+    if (Number(checkedValue) !== separation.quantidadeSolicitada) {
+      blockers.push({
+        produtoId: item.produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "quantidade_conferida_divergente",
+        quantidadePedida: separation.quantidadeSolicitada,
+        quantidadeSeparada: separation.quantidadeSeparada,
+        quantidadeConferida: Number(checkedValue),
+        message: `${item.nomeProduto}: pedido atual ${separation.quantidadeSolicitada}, conferido ${Number(checkedValue)}`,
+      });
+    }
+  }
+
+  for (const conferenceItem of conferenceByProduct.values()) {
+    if (items.some((item) => String(item.produtoId) === String(conferenceItem.produtoId))) {
+      continue;
+    }
+    blockers.push({
+      produtoId: conferenceItem.produtoId,
+      nomeProduto: conferenceItem.nomeProduto || "Item removido",
+      tipo: "item_removido",
+      message: `${conferenceItem.nomeProduto || "Item"}: não pertence mais ao pedido atual`,
+    });
+  }
+
+  return blockers;
 };
 
 export const enrichOrderSeparation = (pedido) => {
@@ -435,7 +604,11 @@ export const enrichOrderSeparation = (pedido) => {
   return {
     ...source,
     itens,
-    temDivergencia: itens.some((item) => Number(item.quantidadeFaltante) > 0),
+    temDivergencia: itens.some((item) => (
+      item.quantidadeSeparada !== null &&
+      Number(item.quantidadeSeparada) !== Number(item.quantidadeSolicitada)
+    )),
+    temItemNaoProcessado: itens.some((item) => item.quantidadeSeparada === null),
     entregaFinalizada: pedidoPossuiEntregaConfirmada(source),
   };
 };
@@ -640,6 +813,7 @@ export const validateLogisticsOrderPayload = (source) => {
   let conferencia;
   let fechamentoLogistico;
   let novaOcorrencia;
+  let versaoPedido;
 
   const fields = Object.keys(body);
   const forbiddenFields = fields.filter((field) => !CAMPOS_LOGISTICOS.includes(field));
@@ -650,6 +824,15 @@ export const validateLogisticsOrderPayload = (source) => {
   if (possuiCampo(body, "status")) {
     if (!PEDIDO_STATUS.includes(body.status)) errors.status = "Status inválido";
     else data.status = body.status;
+  }
+
+  if (possuiCampo(body, "versaoPedido")) {
+    const parsedVersion = Number(body.versaoPedido);
+    if (!Number.isInteger(parsedVersion) || parsedVersion < 0) {
+      errors.versaoPedido = "Versão do pedido inválida";
+    } else {
+      versaoPedido = parsedVersion;
+    }
   }
 
   for (const [field, maxLength] of Object.entries(LIMITES_TEXTO)) {
@@ -715,6 +898,7 @@ export const validateLogisticsOrderPayload = (source) => {
     conferencia,
     fechamentoLogistico,
     novaOcorrencia,
+    versaoPedido,
   };
 };
 
@@ -792,6 +976,10 @@ export const sanitizeClientOrder = (pedido) => {
   delete source.fechamentoLogistico;
   delete source.fechamentoLogisticoObrigatorio;
   delete source.ocorrencias;
+  delete source.historicoAlteracoes;
+  delete source.historicoConferencias;
+  delete source.versaoOperacional;
+  delete source.__v;
   delete source.temDivergencia;
   source.itens = Array.isArray(source.itens)
     ? source.itens.map((item) => ({

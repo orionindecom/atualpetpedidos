@@ -15,11 +15,13 @@ import logisticaRouter from "../src/routes/logisticaRoutes.js";
 import pedidoRouter from "../src/routes/pedidoRoutes.js";
 import {
   aprovarPedidoAdmin,
+  atualizarPedidoAdmin,
   atualizarStatusPedido,
   confirmarRecebimento,
 } from "../src/controllers/pedidoController.js";
 import {
   applyLogisticsOrderUpdate,
+  atualizarPedidoLogistica,
   buildLogisticsOrderFilter,
   parseLogisticsOrderQuery,
 } from "../src/controllers/logisticaController.js";
@@ -27,12 +29,17 @@ import {
   enrichOrderSeparation,
   enrichInternalOrderDetail,
   buildClientReceiptConfirmationUpdate,
+  getItemSeparation,
   sanitizeClientOrder,
   transicaoLogisticaPermitida,
   transicoesPermitidasParaPedido,
   validateLogisticsClosing,
   validateLogisticsOrderPayload,
 } from "../src/utils/pedidoLogistica.js";
+import {
+  applyAdminOrderEdit,
+  pedidoPodeSerEditadoPeloAdmin,
+} from "../src/utils/pedidoEdicaoAdmin.js";
 import { buildSeparationPdfData } from "../src/services/pdfSeparacaoService.js";
 import { buildOrderAuditTimeline } from "../src/utils/pedidoAuditoria.js";
 import {
@@ -54,6 +61,7 @@ const conferenciaUsuario = () => ({
 const criarPedidoParaConferencia = ({
   status = "separado",
   conferencia = { status: "pendente" },
+  segundaQuantidadeSeparada = 10,
 } = {}) => {
   const primeiroId = new mongoose.Types.ObjectId();
   const segundoId = new mongoose.Types.ObjectId();
@@ -73,8 +81,8 @@ const criarPedidoParaConferencia = ({
         produtoId: segundoId,
         nomeProduto: "Produto Y",
         quantidade: 10,
-        quantidadeSeparada: 8,
-        situacaoSeparacao: "parcial",
+        quantidadeSeparada: segundaQuantidadeSeparada,
+        situacaoSeparacao: segundaQuantidadeSeparada === 10 ? "completo" : "parcial",
       },
     ],
   };
@@ -791,6 +799,69 @@ test("separacao rejeita quantidade negativa, acima da solicitada e conclusao pen
   assert.equal(pedido.status, "separando");
 });
 
+test("conclusão da separação exige igualdade atual em todos os itens", () => {
+  const produtoId = new mongoose.Types.ObjectId();
+  const usuario = conferenciaUsuario();
+  const pedido = {
+    status: "separando",
+    conferenciaObrigatoria: true,
+    itens: [{
+      produtoId,
+      nomeProduto: "Shampoo",
+      quantidade: 10,
+      quantidadeSeparada: 8,
+    }],
+  };
+
+  const parcial = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "separado" },
+    usuario,
+  });
+  assert.equal(parcial.valid, false);
+  assert.match(parcial.message, /Não é possível concluir a separação/);
+  assert.match(parcial.message, /Shampoo: pedido atual 10, separado 8/);
+  assert.equal(parcial.blockers[0].tipo, "quantidade_pendente");
+  assert.equal(pedido.status, "separando");
+
+  const completo = applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "separado" },
+    separacaoItens: [{ produtoId: String(produtoId), quantidadeSeparada: 10 }],
+    usuario,
+  });
+  assert.equal(completo.valid, true);
+  assert.equal(pedido.status, "separado");
+  assert.equal(pedido.conferencia.status, "pendente");
+
+  const pedidoComVariosItens = {
+    status: "separando",
+    itens: [
+      {
+        produtoId: new mongoose.Types.ObjectId(),
+        nomeProduto: "Item completo",
+        quantidade: 4,
+        quantidadeSeparada: 4,
+      },
+      {
+        produtoId: new mongoose.Types.ObjectId(),
+        nomeProduto: "Item parcial",
+        quantidade: 5,
+        quantidadeSeparada: 3,
+      },
+    ],
+  };
+  const varios = applyLogisticsOrderUpdate({
+    pedido: pedidoComVariosItens,
+    data: { status: "separado" },
+    usuario,
+  });
+  assert.equal(varios.valid, false);
+  assert.equal(varios.blockers.length, 1);
+  assert.equal(varios.blockers[0].nomeProduto, "Item parcial");
+  assert.equal(pedidoComVariosItens.status, "separando");
+});
+
 test("1. pedido nao pode iniciar conferencia antes da separacao terminar", () => {
   const pedido = criarPedidoParaConferencia({ status: "separando" });
   delete pedido.conferencia;
@@ -800,7 +871,7 @@ test("1. pedido nao pode iniciar conferencia antes da separacao terminar", () =>
   assert.equal(pedido.conferencia, undefined);
 });
 
-test("2. pedido separado corretamente entra em conferencia pendente", () => {
+test("2. pedido separado corretamente entra em conferencia pendente e aceita correção antes da conclusão", () => {
   const produtoId = new mongoose.Types.ObjectId();
   const pedido = {
     status: "separando",
@@ -824,8 +895,9 @@ test("2. pedido separado corretamente entra em conferencia pendente", () => {
     separacaoItens: [{ produtoId: String(produtoId), quantidadeSeparada: 3 }],
     usuario: conferenciaUsuario(),
   });
-  assert.equal(tentativaAlteracao.valid, false);
-  assert.equal(pedido.itens[0].quantidadeSeparada, 4);
+  assert.equal(tentativaAlteracao.valid, true);
+  assert.equal(pedido.itens[0].quantidadeSeparada, 3);
+  assert.equal(pedido.conferencia.status, "pendente");
 });
 
 test("3. conferencia correta exige todos os itens e pode ser concluida", () => {
@@ -854,41 +926,43 @@ test("3. conferencia correta exige todos os itens e pode ser concluida", () => {
   assert.equal(pedido.conferencia.totalDivergencias, 0);
 });
 
-test("4. conferencia divergente registra diferenca negativa por item", () => {
+test("4. conferencia divergente é bloqueada sem gravar uma conclusão inválida", () => {
   const pedido = criarPedidoParaConferencia();
   iniciarConferencia(pedido);
   const result = concluirConferencia({
     pedido,
-    quantidades: [11, 8],
+    quantidades: [11, 10],
     observacao: "Uma unidade nÃ£o estava no volume.",
   });
-  assert.equal(result.valid, true);
-  assert.equal(pedido.conferencia.status, "concluida_com_divergencia");
-  assert.equal(pedido.conferencia.itens[0].diferenca, -1);
-  assert.equal(pedido.conferencia.totalDivergencias, 1);
-  assert.match(pedido.ocorrencias.at(-1).conteudo, /diferen.a -1/);
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Não é possível concluir a conferência/);
+  assert.match(result.message, /Produto X/);
+  assert.equal(pedido.conferencia.status, "em_andamento");
+  assert.equal(pedido.conferencia.itens, undefined);
 });
 
-test("5. quantidade original da separacao permanece preservada", () => {
-  const pedido = criarPedidoParaConferencia();
+test("5. separação parcial bloqueia a conferência e permanece preservada", () => {
+  const pedido = criarPedidoParaConferencia({ segundaQuantidadeSeparada: 8 });
   iniciarConferencia(pedido);
-  concluirConferencia({ pedido, quantidades: [11, 7] });
+  const result = concluirConferencia({ pedido, quantidades: [12, 8] });
+  assert.equal(result.valid, false);
   assert.equal(pedido.itens[0].quantidadeSeparada, 12);
   assert.equal(pedido.itens[1].quantidadeSeparada, 8);
-  assert.equal(pedido.conferencia.itens[0].quantidadeSeparada, 12);
-  assert.equal(pedido.conferencia.itens[1].quantidadeSeparada, 8);
+  assert.equal(pedido.itens[0].quantidadeConferida, undefined);
+  assert.equal(pedido.conferencia.status, "em_andamento");
 });
 
-test("6. quantidade final e faltante ficam consistentes apos divergencia", () => {
+test("6. conclusão correta grava quantidades finais consistentes", () => {
   const pedido = criarPedidoParaConferencia();
   iniciarConferencia(pedido);
-  concluirConferencia({ pedido, quantidades: [11, 7] });
+  const result = concluirConferencia({ pedido, quantidades: [12, 10] });
+  assert.equal(result.valid, true);
   const serialized = enrichOrderSeparation(pedido);
-  assert.equal(serialized.itens[0].quantidadeFinal, 11);
-  assert.equal(serialized.itens[0].quantidadeAtendida, 11);
-  assert.equal(serialized.itens[0].quantidadeFaltante, 1);
-  assert.equal(serialized.itens[1].quantidadeFinal, 7);
-  assert.equal(serialized.itens[1].quantidadeFaltante, 3);
+  assert.equal(serialized.itens[0].quantidadeFinal, 12);
+  assert.equal(serialized.itens[0].quantidadeAtendida, 12);
+  assert.equal(serialized.itens[0].quantidadeFaltante, 0);
+  assert.equal(serialized.itens[1].quantidadeFinal, 10);
+  assert.equal(serialized.itens[1].quantidadeFaltante, 0);
 });
 
 test("7. faturamento nao e oferecido enquanto a conferencia esta pendente", () => {
@@ -905,6 +979,34 @@ test("7. faturamento nao e oferecido enquanto a conferencia esta pendente", () =
     transicoesPermitidasParaPedido(pedido, { admin: true }).includes("faturado"),
     true
   );
+});
+
+test("barreira Conferência para Faturamento rejeita conferência de versão antiga", () => {
+  const pedido = criarPedidoParaConferencia();
+  iniciarConferencia(pedido);
+  assert.equal(concluirConferencia({ pedido }).valid, true);
+  assert.equal(
+    transicoesPermitidasParaPedido(pedido, { admin: true }).includes("faturado"),
+    true
+  );
+
+  pedido.versaoOperacional = Number(pedido.versaoOperacional || 1) + 1;
+  assert.equal(
+    transicoesPermitidasParaPedido(pedido, { admin: true }).includes("faturado"),
+    false
+  );
+  const result = applyLogisticsOrderUpdate({
+    pedido,
+    data: {
+      status: "faturado",
+      numeroNotaFiscal: "NF-VERSAO-ANTIGA",
+      dataFaturamento: new Date("2026-08-13T18:00:00.000Z"),
+    },
+    usuario: { _id: objectId, tipo: "admin", nomeResponsavel: "Admin" },
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.message, /Conclua a conferência de todos os itens/);
+  assert.equal(pedido.status, "separado");
 });
 
 test("8. backend administrativo rejeita tentativa de pular conferencia", async () => {
@@ -966,8 +1068,21 @@ test("9. conferencia registra operador e horarios para o Admin", () => {
 
 test("10. Admin continua visualizando divergencias antigas", () => {
   const pedido = criarPedidoParaConferencia();
-  iniciarConferencia(pedido);
-  concluirConferencia({ pedido, quantidades: [10, 8] });
+  pedido.conferencia = {
+    status: "concluida_com_divergencia",
+    itens: [{
+      produtoId: pedido.itens[0].produtoId,
+      nomeProduto: pedido.itens[0].nomeProduto,
+      quantidadeSolicitada: 12,
+      quantidadeSeparada: 12,
+      quantidadeFaltanteSeparacao: 0,
+      quantidadeConferida: 10,
+      diferenca: -2,
+      situacaoFinal: "parcial",
+    }],
+    totalItens: 1,
+    totalDivergencias: 1,
+  };
   pedido.status = "enviado";
   const adminView = enrichOrderSeparation(pedido);
   assert.equal(adminView.conferencia.status, "concluida_com_divergencia");
@@ -1039,19 +1154,19 @@ test("13. recarregar durante e depois da conferencia preserva os dados", async (
   const durante = Pedido.hydrate(pedido.toObject());
   assert.equal(durante.conferencia.status, "em_andamento");
   assert.equal(durante.conferencia.iniciadoPor.usuarioNome, "Marcos Conferente");
-  concluirConferencia({ pedido: durante, usuario, quantidades: [11, 8] });
+  concluirConferencia({ pedido: durante, usuario, quantidades: [12, 10] });
   await durante.validate();
 
   const depois = Pedido.hydrate(durante.toObject());
-  assert.equal(depois.conferencia.status, "concluida_com_divergencia");
-  assert.equal(depois.conferencia.itens[0].quantidadeConferida, 11);
+  assert.equal(depois.conferencia.status, "concluida");
+  assert.equal(depois.conferencia.itens[0].quantidadeConferida, 12);
   assert.equal(depois.itens[0].quantidadeSeparada, 12);
 });
 
 test("14. conferencia concluida persiste apos faturamento, envio e entrega", () => {
   const pedido = criarPedidoParaConferencia();
   iniciarConferencia(pedido);
-  concluirConferencia({ pedido, quantidades: [11, 8] });
+  concluirConferencia({ pedido, quantidades: [12, 10] });
   const conferenciaConcluida = pedido.conferencia;
 
   const faturamento = applyLogisticsOrderUpdate({
@@ -1082,7 +1197,376 @@ test("14. conferencia concluida persiste apos faturamento, envio e entrega", () 
   assert.equal(envio.valid, true);
   assert.equal(pedido.status, "entregue");
   assert.equal(pedido.conferencia, conferenciaConcluida);
-  assert.equal(pedido.conferencia.status, "concluida_com_divergencia");
+  assert.equal(pedido.conferencia.status, "concluida");
+});
+
+const criarPedidoParaEdicaoAdmin = ({
+  quantidade = 10,
+  quantidadeSeparada = 8,
+  status = "separado",
+  conferencia = {
+    status: "em_andamento",
+    iniciadaEm: new Date("2026-08-13T12:00:00.000Z"),
+    iniciadoPor: {
+      usuarioId: new mongoose.Types.ObjectId(),
+      usuarioNome: "Conferente anterior",
+      usuarioTipo: "logistica",
+    },
+    versaoOperacional: 1,
+  },
+} = {}) => ({
+  status,
+  conferenciaObrigatoria: true,
+  fechamentoLogisticoObrigatorio: true,
+  versaoOperacional: 1,
+  valorTotal: quantidade * 10,
+  itens: [{
+    produtoId: new mongoose.Types.ObjectId(),
+    nomeProduto: "Shampoo",
+    quantidade,
+    quantidadeSeparada,
+    situacaoSeparacao: quantidadeSeparada === quantidade ? "completo" : "parcial",
+    valorUnitario: 10,
+    subtotal: quantidade * 10,
+  }],
+  conferencia,
+  ocorrencias: [],
+  historicoStatus: [],
+});
+
+const adminEditor = () => ({
+  _id: new mongoose.Types.ObjectId(),
+  tipo: "admin",
+  nomeResponsavel: "Ana Admin",
+});
+
+const editarQuantidadeComoAdmin = (pedido, quantidade, valorUnitario = 10) => (
+  applyAdminOrderEdit({
+    pedido,
+    itensPedido: [{
+      produtoId: pedido.itens[0].produtoId,
+      nomeProduto: pedido.itens[0].nomeProduto,
+      quantidade,
+      valorUnitario,
+      subtotal: quantidade * valorUnitario,
+    }],
+    valorTotal: quantidade * valorUnitario,
+    observacao: "Pedido negociado com o cliente",
+    usuario: adminEditor(),
+    now: new Date("2026-08-13T13:00:00.000Z"),
+  })
+);
+
+test("edição Admin 10/8 para 8 preserva separação, recalcula total e exige nova conferência", () => {
+  const pedido = criarPedidoParaEdicaoAdmin();
+  const result = editarQuantidadeComoAdmin(pedido, 8);
+
+  assert.equal(result.separationReopened, false);
+  assert.equal(pedido.status, "separado");
+  assert.equal(pedido.itens[0].quantidade, 8);
+  assert.equal(pedido.itens[0].quantidadeSeparada, 8);
+  assert.equal(pedido.itens[0].situacaoSeparacao, "completo");
+  assert.equal(pedido.valorTotal, 80);
+  assert.equal(pedido.conferencia.status, "pendente");
+  assert.equal(pedido.versaoOperacional, 2);
+  assert.equal(pedido.historicoConferencias.length, 1);
+  assert.equal(pedido.historicoAlteracoes[0].totalAnterior, 100);
+  assert.equal(pedido.historicoAlteracoes[0].totalNovo, 80);
+  assert.equal(buildSeparationPdfData(pedido).itens[0].quantidade, 8);
+  const clientView = sanitizeClientOrder(pedido);
+  assert.equal(clientView.itens[0].quantidade, 8);
+  assert.equal(clientView.itens[0].subtotal, 80);
+  assert.equal(clientView.valorTotal, 80);
+});
+
+test("edição Admin 10/8 para 6 mantém as 8 físicas e reabre separação inconsistente", () => {
+  const pedido = criarPedidoParaEdicaoAdmin();
+  const result = editarQuantidadeComoAdmin(pedido, 6);
+  const separation = getItemSeparation(pedido.itens[0]);
+
+  assert.equal(result.separationReopened, true);
+  assert.equal(pedido.status, "separando");
+  assert.equal(pedido.itens[0].quantidadeSeparada, 8);
+  assert.equal(separation.situacaoSeparacao, "excedente");
+  assert.equal(separation.quantidadeExcedenteSeparacao, 2);
+  assert.equal(pedido.conferencia, undefined);
+});
+
+test("edição Admin 10/8 para 12 preserva trabalho e deixa quatro unidades pendentes", () => {
+  const pedido = criarPedidoParaEdicaoAdmin();
+  editarQuantidadeComoAdmin(pedido, 12);
+  const separation = getItemSeparation(pedido.itens[0]);
+
+  assert.equal(pedido.status, "separando");
+  assert.equal(separation.quantidadeSeparada, 8);
+  assert.equal(separation.quantidadeFaltanteSeparacao, 4);
+  assert.equal(separation.situacaoSeparacao, "parcial");
+});
+
+test("barreira de separação acompanha a quantidade alterada pelo Admin", () => {
+  const concluir = (pedido, separacaoItens) => applyLogisticsOrderUpdate({
+    pedido,
+    data: { status: "separado" },
+    separacaoItens,
+    usuario: conferenciaUsuario(),
+  });
+  const criarEmSeparacao = () => criarPedidoParaEdicaoAdmin({
+    status: "separando",
+    conferencia: undefined,
+  });
+
+  const reduzidoParaOito = criarEmSeparacao();
+  editarQuantidadeComoAdmin(reduzidoParaOito, 8);
+  const exato = concluir(reduzidoParaOito);
+  assert.equal(exato.valid, true);
+  assert.equal(reduzidoParaOito.status, "separado");
+
+  const aumentadoParaDoze = criarEmSeparacao();
+  editarQuantidadeComoAdmin(aumentadoParaDoze, 12);
+  const aindaParcial = concluir(aumentadoParaDoze);
+  assert.equal(aindaParcial.valid, false);
+  assert.equal(aindaParcial.blockers[0].tipo, "quantidade_pendente");
+  assert.match(aindaParcial.blockers[0].message, /pedido atual 12, separado 8/);
+
+  const reduzidoParaSeis = criarEmSeparacao();
+  editarQuantidadeComoAdmin(reduzidoParaSeis, 6);
+  assert.equal(getItemSeparation(reduzidoParaSeis.itens[0]).situacaoSeparacao, "excedente");
+  const excedente = concluir(reduzidoParaSeis);
+  assert.equal(excedente.valid, false);
+  assert.equal(excedente.blockers[0].tipo, "quantidade_excedente");
+  assert.match(excedente.blockers[0].message, /pedido atual 6, separado 8/);
+
+  const corrigido = concluir(reduzidoParaSeis, [{
+    produtoId: String(reduzidoParaSeis.itens[0].produtoId),
+    quantidadeSeparada: 6,
+  }]);
+  assert.equal(corrigido.valid, true);
+  assert.equal(reduzidoParaSeis.status, "separado");
+});
+
+test("remoção administrativa elimina exigência atual sem apagar auditoria da conferência", () => {
+  const pedido = criarPedidoParaEdicaoAdmin({
+    quantidade: 8,
+    quantidadeSeparada: 8,
+  });
+  const remainingId = new mongoose.Types.ObjectId();
+  pedido.itens.push({
+    produtoId: remainingId,
+    nomeProduto: "Condicionador",
+    quantidade: 5,
+    quantidadeSeparada: 5,
+    situacaoSeparacao: "completo",
+    valorUnitario: 20,
+    subtotal: 100,
+  });
+  pedido.valorTotal = 180;
+
+  const result = applyAdminOrderEdit({
+    pedido,
+    itensPedido: [{
+      produtoId: remainingId,
+      nomeProduto: "Condicionador",
+      quantidade: 5,
+      valorUnitario: 20,
+      subtotal: 100,
+    }],
+    valorTotal: 100,
+    observacao: "Shampoo removido",
+    usuario: adminEditor(),
+  });
+
+  assert.equal(result.separationReopened, false);
+  assert.equal(pedido.itens.length, 1);
+  assert.equal(String(pedido.itens[0].produtoId), String(remainingId));
+  assert.equal(pedido.conferencia.status, "pendente");
+  assert.ok(pedido.historicoAlteracoes[0].itens.some((item) => item.tipo === "removido"));
+  assert.equal(pedido.historicoConferencias[0].conferencia.iniciadoPor.usuarioNome, "Conferente anterior");
+});
+
+test("histórico administrativo aparece na timeline com valores e autoria", () => {
+  const pedido = criarPedidoParaEdicaoAdmin();
+  editarQuantidadeComoAdmin(pedido, 8);
+  pedido.createdAt = new Date("2026-08-13T11:00:00.000Z");
+  const timeline = buildOrderAuditTimeline(pedido);
+  const event = timeline.find((entry) => entry.tipo === "pedido_alterado_admin");
+  assert.equal(event.responsavelNome, "Ana Admin");
+  assert.match(event.detalhes, /100\.00.*80\.00/);
+  assert.ok(timeline.some((entry) => entry.tipo === "conferencia_invalidada"));
+});
+
+test("backend rejeita conclusão direta da API quando separado difere do pedido atual", async () => {
+  const originalFindById = Pedido.findById;
+  const pedido = criarPedidoParaConferencia({ segundaQuantidadeSeparada: 8 });
+  pedido.__v = 0;
+  pedido.conferencia = {
+    status: "em_andamento",
+    versaoOperacional: 1,
+  };
+  pedido.versaoOperacional = 1;
+  pedido.save = async () => assert.fail("conferência divergente não deve ser salva");
+  Pedido.findById = () => ({ select: async () => pedido });
+  const response = createResponse();
+  try {
+    await atualizarPedidoLogistica({
+      params: { id: objectId },
+      body: {
+        versaoPedido: 0,
+        conferencia: {
+          acao: "concluir",
+          itens: pedido.itens.map((item) => ({
+            produtoId: String(item.produtoId),
+            quantidadeConferida: item.quantidadeSeparada,
+          })),
+        },
+      },
+      usuario: conferenciaUsuario(),
+      operadorLogistica: operadorLogistica(),
+    }, response);
+  } finally {
+    Pedido.findById = originalFindById;
+  }
+  assert.equal(response.statusCode, 409);
+  assert.match(response.body.message, /pedido atual/);
+  assert.equal(response.body.itens[0].tipo, "quantidade_separada_divergente");
+  assert.equal(pedido.conferencia.status, "em_andamento");
+});
+
+test("backend rejeita avanço direto da API com separação parcial", async () => {
+  const originalFindById = Pedido.findById;
+  const produtoId = new mongoose.Types.ObjectId();
+  const pedido = {
+    __v: 0,
+    status: "separando",
+    conferenciaObrigatoria: true,
+    versaoOperacional: 1,
+    itens: [{
+      produtoId,
+      nomeProduto: "Shampoo API",
+      quantidade: 10,
+      quantidadeSeparada: 8,
+    }],
+    save: async () => assert.fail("separação parcial não deve ser salva como concluída"),
+  };
+  Pedido.findById = () => ({ select: async () => pedido });
+  const response = createResponse();
+  try {
+    await atualizarPedidoLogistica({
+      params: { id: objectId },
+      body: {
+        versaoPedido: 0,
+        status: "separado",
+        separacaoItens: [{
+          produtoId: String(produtoId),
+          quantidadeSeparada: 8,
+        }],
+      },
+      usuario: conferenciaUsuario(),
+      operadorLogistica: operadorLogistica(),
+    }, response);
+  } finally {
+    Pedido.findById = originalFindById;
+  }
+
+  assert.equal(response.statusCode, 409);
+  assert.match(response.body.message, /Não é possível concluir a separação/);
+  assert.equal(response.body.itens[0].tipo, "quantidade_pendente");
+  assert.equal(pedido.status, "separando");
+});
+
+test("backend exige versão e rejeita atualização logística obsoleta", async () => {
+  const originalFindById = Pedido.findById;
+  const pedido = {
+    __v: 3,
+    status: "separando",
+    itens: [],
+    save: async () => assert.fail("payload obsoleto não deve ser salvo"),
+  };
+  Pedido.findById = () => ({ select: async () => pedido });
+  try {
+    const missing = createResponse();
+    await atualizarPedidoLogistica({
+      params: { id: objectId },
+      body: { status: "separando" },
+      usuario: conferenciaUsuario(),
+    }, missing);
+    assert.equal(missing.statusCode, 428);
+
+    const stale = createResponse();
+    await atualizarPedidoLogistica({
+      params: { id: objectId },
+      body: { versaoPedido: 2, status: "separando" },
+      usuario: conferenciaUsuario(),
+    }, stale);
+    assert.equal(stale.statusCode, 409);
+    assert.equal(stale.body.versaoAtual, 3);
+  } finally {
+    Pedido.findById = originalFindById;
+  }
+});
+
+test("backend rejeita edição comercial de pedido faturado e versão Admin obsoleta", async () => {
+  const originalFindById = Pedido.findById;
+  const produtoId = new mongoose.Types.ObjectId();
+  const response = createResponse();
+  Pedido.findById = () => ({
+    select: async () => ({ __v: 4, status: "faturado" }),
+  });
+  try {
+    await atualizarPedidoAdmin({
+      params: { id: objectId },
+      body: {
+        versaoPedido: 4,
+        itens: [{ produtoId: String(produtoId), quantidade: 1 }],
+      },
+      usuario: adminEditor(),
+    }, response);
+    assert.equal(response.statusCode, 409);
+    assert.match(response.body.message, /faturados não podem/);
+
+    Pedido.findById = () => ({
+      select: async () => ({ __v: 5, status: "separando" }),
+    });
+    const stale = createResponse();
+    await atualizarPedidoAdmin({
+      params: { id: objectId },
+      body: {
+        versaoPedido: 4,
+        itens: [{ produtoId: String(produtoId), quantidade: 1 }],
+      },
+      usuario: adminEditor(),
+    }, stale);
+    assert.equal(stale.statusCode, 409);
+    assert.equal(stale.body.versaoAtual, 5);
+  } finally {
+    Pedido.findById = originalFindById;
+  }
+});
+
+test("schema e política administrativa permitem edição somente antes do faturamento", async () => {
+  assert.equal(pedidoPodeSerEditadoPeloAdmin("aguardando_aprovacao"), true);
+  assert.equal(pedidoPodeSerEditadoPeloAdmin("separando"), true);
+  assert.equal(pedidoPodeSerEditadoPeloAdmin("separado"), true);
+  assert.equal(pedidoPodeSerEditadoPeloAdmin("faturado"), false);
+  assert.equal(Pedido.schema.options.optimisticConcurrency, true);
+  assert.ok(Pedido.schema.path("historicoAlteracoes"));
+  assert.ok(Pedido.schema.path("historicoConferencias"));
+});
+
+test("pedido editado com conferência arquivada continua válido no schema", async () => {
+  const base = criarPedidoParaEdicaoAdmin();
+  const pedido = new Pedido({
+    numeroPedido: "PED-EDICAO-SCHEMA",
+    clienteId: new mongoose.Types.ObjectId(),
+    tabelaPrecoId: new mongoose.Types.ObjectId(),
+    dia: 13,
+    mes: 8,
+    ano: 2026,
+    ...base,
+  });
+  editarQuantidadeComoAdmin(pedido, 8);
+  await assert.doesNotReject(() => pedido.validate());
+  assert.equal(pedido.historicoAlteracoes.length, 1);
+  assert.equal(pedido.historicoConferencias.length, 1);
 });
 
 test("fechamento 1. pedido historico recebe isencao por padrao no schema", () => {

@@ -17,6 +17,10 @@ import {
   validarTransicaoPedido,
 } from "../utils/pedidoLogistica.js";
 import {
+  applyAdminOrderEdit,
+  pedidoPodeSerEditadoPeloAdmin,
+} from "../utils/pedidoEdicaoAdmin.js";
+import {
   isOptionalString,
   isValidObjectId,
   sendServerError,
@@ -223,6 +227,7 @@ export const confirmarRecebimento = async (req, res) => {
     const update = buildClientReceiptConfirmationUpdate({
       usuario: req.usuario,
     });
+    update.$inc = { __v: 1 };
     const pedido = await Pedido.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -283,7 +288,7 @@ export const buscarPedidoPorId = async (req, res) => {
   try {
     const query = Pedido.findById(req.params.id);
     if (req.usuario.tipo === "admin") {
-      query.select("+historicoStatus +observacaoLogistica +ocorrencias");
+      query.select("+historicoStatus +observacaoLogistica +ocorrencias +historicoAlteracoes +historicoConferencias");
     }
     const pedido = await query;
 
@@ -340,7 +345,7 @@ export const gerarPdf = async (req, res) => {
 export const gerarRelatorioPedidoAdmin = async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id)
-      .select("+historicoStatus +observacaoLogistica +ocorrencias")
+      .select("+historicoStatus +observacaoLogistica +ocorrencias +historicoAlteracoes +historicoConferencias")
       .lean()
       .maxTimeMS(5000);
 
@@ -446,6 +451,7 @@ export const aprovarPedidoAdmin = async (req, res) => {
             now,
           }),
         },
+        $inc: { __v: 1 },
       },
       {
         new: true,
@@ -479,15 +485,21 @@ export const aprovarPedidoAdmin = async (req, res) => {
 
 export const atualizarPedidoAdmin = async (req, res) => {
   try {
-    const { itens, observacao } = req.body;
+    const { itens, observacao, versaoPedido } = req.body;
 
-    if (!validarItens(itens) || !isOptionalString(observacao, 1000)) {
+    if (
+      !validarItens(itens) ||
+      !isOptionalString(observacao, 1000) ||
+      !Number.isInteger(Number(versaoPedido)) ||
+      Number(versaoPedido) < 0
+    ) {
       return res.status(400).json({
         message: "Dados do pedido inválidos",
       });
     }
 
-    const pedido = await Pedido.findById(req.params.id).select("+historicoStatus");
+    const pedido = await Pedido.findById(req.params.id)
+      .select("+historicoStatus +ocorrencias +historicoAlteracoes +historicoConferencias");
 
     if (!pedido) {
       return res.status(404).json({
@@ -495,15 +507,18 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    if (pedidoPossuiEntregaConfirmada(pedido)) {
+    if (Number(pedido.__v || 0) !== Number(versaoPedido)) {
       return res.status(409).json({
-        message: "Pedidos entregues são mantidos somente para consulta",
+        message: "Este pedido foi atualizado por outra pessoa. Reabra a edição para usar os dados atuais",
+        versaoAtual: Number(pedido.__v || 0),
       });
     }
 
-    if (!["aguardando_aprovacao", "aprovado", "novo", "em_analise"].includes(pedido.status)) {
+    if (!pedidoPodeSerEditadoPeloAdmin(pedido)) {
       return res.status(409).json({
-        message: "Os itens não podem ser alterados depois do início da separação",
+        message: pedido.status === "faturado"
+          ? "Pedidos faturados não podem mais ter itens ou quantidades alterados"
+          : "Os itens deste pedido não podem mais ser alterados nesta etapa",
       });
     }
 
@@ -518,17 +533,30 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    pedido.itens = itensPedido;
-    pedido.valorTotal = valorTotal;
-    pedido.observacao = observacao?.trim() ?? pedido.observacao;
+    const result = applyAdminOrderEdit({
+      pedido,
+      itensPedido,
+      valorTotal,
+      observacao: observacao?.trim() ?? pedido.observacao,
+      usuario: req.usuario,
+    });
 
     await pedido.save();
 
     return res.status(200).json({
-      message: "Pedido atualizado com sucesso",
-      pedido,
+      message: result.separationReopened
+        ? "Pedido atualizado. A separação foi reaberta para adequação às quantidades atuais"
+        : result.physicalOrderChanged
+          ? "Pedido atualizado. A conferência deverá validar a versão atual"
+          : "Pedido atualizado com sucesso",
+      pedido: enrichInternalOrderDetail(pedido),
     });
   } catch (error) {
+    if (error?.name === "VersionError") {
+      return res.status(409).json({
+        message: "Este pedido foi atualizado por outra pessoa. Reabra a edição antes de salvar novamente",
+      });
+    }
     return sendServerError(res);
   }
 };

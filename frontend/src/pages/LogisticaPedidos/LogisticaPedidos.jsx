@@ -277,6 +277,7 @@ function LogisticaPedidos() {
   };
 
   const startConference = () => runConferenceAction({
+    versaoPedido: Number(detail.__v || 0),
     conferencia: { acao: "iniciar" },
   });
 

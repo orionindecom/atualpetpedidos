@@ -66,6 +66,16 @@ const occurrenceDuplicatesLogisticsClosing = (entry, closing) => (
   asValidDate(entry.criadaEm)?.getTime() === asValidDate(closing?.preenchidoEm)?.getTime()
 );
 
+const occurrenceDuplicatesAdminEdit = (entry, history) => (
+  !entry.produtoId &&
+  entry.tipo === "informacao_operacional" &&
+  String(entry.conteudo || "").startsWith("Pedido alterado pelo Admin") &&
+  history.some((change) => (
+    asValidDate(change.alteradoEm)?.getTime() ===
+    asValidDate(entry.criadaEm)?.getTime()
+  ))
+);
+
 const separationSummary = (items = []) => {
   const separated = items.filter((item) => (
     item.quantidadeSeparada !== null && item.quantidadeSeparada !== undefined
@@ -166,6 +176,75 @@ export const buildOrderAuditTimeline = (pedido) => {
     details: "Data de entrega registrada.",
   });
 
+  for (const entry of source.historicoAlteracoes || []) {
+    const itemDetails = (entry.itens || []).slice(0, 10).map((item) => {
+      if (item.tipo === "adicionado") {
+        return `${item.nomeProduto}: adicionado com ${item.quantidadeNova} unidade(s)`;
+      }
+      if (item.tipo === "removido") {
+        return `${item.nomeProduto}: removido (antes ${item.quantidadeAnterior})`;
+      }
+      if (item.tipo === "quantidade_alterada") {
+        return `${item.nomeProduto}: ${item.quantidadeAnterior} -> ${item.quantidadeNova}`;
+      }
+      return `${item.nomeProduto}: preço unitário alterado`;
+    });
+    const remaining = Math.max((entry.itens || []).length - itemDetails.length, 0);
+    addEvent({
+      tipo: "pedido_alterado_admin",
+      data: entry.alteradoEm,
+      titulo: "Pedido alterado pelo Admin",
+      ...userData(entry),
+      detalhes: `Total: R$ ${Number(entry.totalAnterior || 0).toFixed(2)} -> R$ ${Number(entry.totalNovo || 0).toFixed(2)}. ${itemDetails.join("; ")}${remaining > 0 ? `; e mais ${remaining} alteração(ões)` : ""}.`,
+      dados: {
+        versaoOperacionalAnterior: entry.versaoOperacionalAnterior,
+        versaoOperacionalNova: entry.versaoOperacionalNova,
+        totalAnterior: entry.totalAnterior,
+        totalNovo: entry.totalNovo,
+        itens: entry.itens,
+      },
+    });
+  }
+
+  for (const archived of source.historicoConferencias || []) {
+    const archivedConference = archived.conferencia || {};
+    if (archivedConference.iniciadaEm) {
+      addEvent({
+        tipo: "conferencia_iniciada",
+        data: archivedConference.iniciadaEm,
+        titulo: "Conferência iniciada (versão anterior)",
+        ...userData(archivedConference.iniciadoPor),
+      });
+    }
+    if (archivedConference.concluidaEm) {
+      const totalItems = archivedConference.totalItens ??
+        archivedConference.itens?.length ?? 0;
+      const totalDifferences = archivedConference.totalDivergencias ??
+        (archivedConference.itens || []).filter((item) => item.diferenca !== 0).length;
+      addEvent({
+        tipo: "conferencia_concluida",
+        data: archivedConference.concluidaEm,
+        titulo: "Conferência concluída (versão anterior)",
+        ...userData(archivedConference.concluidoPor),
+        detalhes: `${totalItems} item(ns) conferido(s) antes da alteração do pedido.`,
+        dados: {
+          totalItens: totalItems,
+          totalDivergencias: totalDifferences,
+        },
+      });
+    }
+    addEvent({
+      tipo: "conferencia_invalidada",
+      data: archived.invalidadaEm,
+      titulo: "Conferência invalidada",
+      ...userData(archived.invalidadaPor),
+      detalhes: archived.motivo,
+      dados: {
+        versaoOperacional: archivedConference.versaoOperacional,
+      },
+    });
+  }
+
   const conference = source.conferencia || {};
   if (conference.iniciadaEm) {
     addEvent({
@@ -234,7 +313,8 @@ export const buildOrderAuditTimeline = (pedido) => {
     if (
       occurrenceDuplicatesConference(entry, conference) ||
       occurrenceDuplicatesStatus(entry, statusHistory) ||
-      occurrenceDuplicatesLogisticsClosing(entry, logisticsClosing)
+      occurrenceDuplicatesLogisticsClosing(entry, logisticsClosing) ||
+      occurrenceDuplicatesAdminEdit(entry, source.historicoAlteracoes || [])
     ) continue;
     addEvent({
       tipo: "ocorrencia",

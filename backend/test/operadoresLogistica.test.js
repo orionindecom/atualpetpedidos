@@ -526,7 +526,7 @@ test("troca de operador na mesma separação preserva todos os eventos", () => {
   assert.equal(order.ocorrencias.some((entry) => entry.operadorNome === "Pedro"), true);
 });
 
-test("Wesley separa, Pedro confere divergência e registra ocorrência", () => {
+test("Wesley separa e Pedro precisa corrigir a divergência antes de concluir", () => {
   const productId = new mongoose.Types.ObjectId();
   const sharedUser = { _id: logisticsUserId, tipo: "logistica", nomeResponsavel: "Logística" };
   const pedro = { _id: new mongoose.Types.ObjectId(), nome: "Pedro" };
@@ -552,7 +552,7 @@ test("Wesley separa, Pedro confere divergência e registra ocorrência", () => {
     usuario: sharedUser,
     operador: pedro,
   });
-  applyLogisticsOrderUpdate({
+  const divergence = applyLogisticsOrderUpdate({
     pedido: order,
     data: {},
     conferencia: {
@@ -563,6 +563,22 @@ test("Wesley separa, Pedro confere divergência e registra ocorrência", () => {
     usuario: sharedUser,
     operador: pedro,
   });
+  assert.equal(divergence.valid, false);
+  assert.match(divergence.message, /Não é possível concluir/);
+  assert.equal(order.conferencia.status, "em_andamento");
+
+  const corrected = applyLogisticsOrderUpdate({
+    pedido: order,
+    data: {},
+    conferencia: {
+      acao: "concluir",
+      itens: [{ produtoId: String(productId), quantidadeConferida: 5 }],
+      observacao: "Quantidade física corrigida e validada",
+    },
+    usuario: sharedUser,
+    operador: pedro,
+  });
+  assert.equal(corrected.valid, true);
   applyLogisticsOrderUpdate({
     pedido: order,
     data: {},
@@ -579,7 +595,7 @@ test("Wesley separa, Pedro confere divergência e registra ocorrência", () => {
   assert.equal(order.historicoStatus[1].operadorNome, "Wesley");
   assert.equal(order.conferencia.iniciadoPor.operadorNome, "Pedro");
   assert.equal(order.conferencia.concluidoPor.operadorNome, "Pedro");
-  assert.equal(order.conferencia.totalDivergencias, 1);
+  assert.equal(order.conferencia.totalDivergencias, 0);
   assert.equal(order.ocorrencias.at(-1).operadorNome, "Pedro");
 });
 

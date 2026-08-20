@@ -28,7 +28,7 @@ const itemPedidoSchema = new mongoose.Schema(
 
     situacaoSeparacao: {
       type: String,
-      enum: ["pendente", "completo", "parcial", "indisponivel"],
+      enum: ["pendente", "completo", "parcial", "indisponivel", "excedente"],
       default: undefined,
     },
 
@@ -316,6 +316,114 @@ const conferenciaSchema = new mongoose.Schema(
       type: Number,
       min: 0,
     },
+    versaoOperacional: {
+      type: Number,
+      min: 1,
+    },
+  },
+  { _id: false }
+);
+
+const historicoConferenciaSchema = new mongoose.Schema(
+  {
+    conferencia: {
+      type: conferenciaSchema,
+      required: true,
+    },
+    invalidadaEm: {
+      type: Date,
+      required: true,
+    },
+    invalidadaPor: {
+      type: conferenciaUsuarioSchema,
+      required: true,
+    },
+    motivo: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const alteracaoItemPedidoSchema = new mongoose.Schema(
+  {
+    produtoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Produto",
+      required: true,
+    },
+    nomeProduto: {
+      type: String,
+      trim: true,
+      maxlength: 255,
+      required: true,
+    },
+    tipo: {
+      type: String,
+      enum: ["adicionado", "removido", "quantidade_alterada", "preco_alterado"],
+      required: true,
+    },
+    quantidadeAnterior: Number,
+    quantidadeNova: Number,
+    valorUnitarioAnterior: Number,
+    valorUnitarioNovo: Number,
+    subtotalAnterior: Number,
+    subtotalNovo: Number,
+    quantidadeSeparadaNoMomento: Number,
+  },
+  { _id: false }
+);
+
+const historicoAlteracaoPedidoSchema = new mongoose.Schema(
+  {
+    alteradoEm: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    usuarioId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
+    usuarioNome: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+    usuarioTipo: {
+      type: String,
+      enum: ["admin"],
+      required: true,
+    },
+    versaoOperacionalAnterior: {
+      type: Number,
+      min: 1,
+      required: true,
+    },
+    versaoOperacionalNova: {
+      type: Number,
+      min: 1,
+      required: true,
+    },
+    totalAnterior: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
+    totalNovo: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
+    itens: {
+      type: [alteracaoItemPedidoSchema],
+      required: true,
+      default: undefined,
+    },
   },
   { _id: false }
 );
@@ -484,6 +592,25 @@ const pedidoSchema = new mongoose.Schema(
       default: undefined,
     },
 
+    versaoOperacional: {
+      type: Number,
+      min: 1,
+      default: 1,
+      required: true,
+    },
+
+    historicoConferencias: {
+      type: [historicoConferenciaSchema],
+      default: undefined,
+      select: false,
+    },
+
+    historicoAlteracoes: {
+      type: [historicoAlteracaoPedidoSchema],
+      default: undefined,
+      select: false,
+    },
+
     fechamentoLogisticoObrigatorio: {
       type: Boolean,
       default: false,
@@ -550,6 +677,7 @@ const pedidoSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    optimisticConcurrency: true,
   }
 );
 

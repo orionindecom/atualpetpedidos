@@ -185,6 +185,7 @@ function AdminPedidos() {
   };
 
   const iniciarConferencia = () => executarAcaoConferencia({
+    versaoPedido: Number(detail.__v || 0),
     conferencia: { acao: "iniciar" },
   });
 
@@ -324,6 +325,7 @@ function AdminPedidos() {
       await api.put(`/pedidos/${modalPedido._id}`, {
         itens,
         observacao: modalPedido.observacao || "",
+        versaoPedido: Number(modalPedido.__v || 0),
       });
 
       alert("Pedido atualizado com sucesso");

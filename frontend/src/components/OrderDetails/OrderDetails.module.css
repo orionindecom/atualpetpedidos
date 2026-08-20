@@ -192,7 +192,8 @@
 .itemIdentity strong { overflow: hidden; text-overflow: ellipsis; }
 .itemIdentity span { width: fit-content; color: var(--text-muted); font-size: 10px; font-weight: 700; }
 .itemIdentity span[data-item-status="parcial"],
-.itemIdentity span[data-item-status="indisponivel"] { color: #b45309; }
+.itemIdentity span[data-item-status="indisponivel"],
+.itemIdentity span[data-item-status="excedente"] { color: #b45309; }
 .quantityCell,
 .priceCell { text-align: right; }
 .quantityCell span,

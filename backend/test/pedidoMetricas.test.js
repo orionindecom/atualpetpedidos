@@ -308,6 +308,32 @@ test("filtro por operador usa snapshots inclusive de operador desativado", () =>
   assert.deepEqual(filtered.operadores.map((operator) => operator.operador), ["Wesley"]);
 });
 
+test("métricas preservam a conferência arquivada após alteração administrativa", () => {
+  const order = createControlledOrder();
+  order.historicoConferencias = [{
+    conferencia: order.conferencia,
+    invalidadaEm: new Date("2026-08-12T11:00:00.000Z"),
+    invalidadaPor: operatorSnapshot(wesleyId, "Wesley"),
+    motivo: "Pedido alterado pelo Admin",
+  }];
+  order.conferencia = { status: "pendente" };
+
+  assert.equal(pedidoTemParticipacaoOperador(order, wesleyId), true);
+  const result = calcularMetricasOperadores({
+    pedidos: [order],
+    operadores: [{ _id: wesleyId, nome: "Wesley", ativo: true }],
+    inicio: new Date("2026-08-12T00:00:00Z"),
+    fim: new Date("2026-08-12T23:59:59Z"),
+    operadorId: String(wesleyId),
+  });
+  const wesley = result.operadores[0];
+  assert.equal(wesley.conferenciasIniciadas, 1);
+  assert.equal(wesley.conferenciasConcluidas, 1);
+  assert.equal(wesley.tempoConferencia.mediaMs, 15 * MINUTE);
+  assert.equal(wesley.itensProcessados, 2);
+  assert.equal(wesley.unidadesProcessadas, 12);
+});
+
 test("pedidos ativos diferenciam fila, operação e acima do padrão; entregues não entram", () => {
   const awaiting = {
     _id: new mongoose.Types.ObjectId(),

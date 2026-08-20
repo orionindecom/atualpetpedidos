@@ -6,6 +6,7 @@ const ITEM_STATUS_LABELS = {
   completo: "Completo",
   parcial: "Falta parcial",
   indisponivel: "Indisponível",
+  excedente: "Acima do pedido atual",
 };
 
 function OrderItems({
@@ -33,9 +34,14 @@ function OrderItems({
         const missing = separated === null
           ? null
           : Math.max(Number(item.quantidade) - separated, 0);
+        const excess = separated === null
+          ? null
+          : Math.max(separated - Number(item.quantidade), 0);
         let itemStatus = item.situacaoSeparacao || "pendente";
         if (editable && deriveEditableStatus && separated !== null) {
-          itemStatus = separated === 0 && Number(item.quantidade) > 0
+          itemStatus = excess > 0
+            ? "excedente"
+            : separated === 0 && Number(item.quantidade) > 0
             ? "indisponivel"
             : missing > 0
               ? "parcial"
@@ -74,9 +80,9 @@ function OrderItems({
                 <strong>{separated ?? "—"}</strong>
               )}
             </div>}
-            {showFulfillment && <div className={styles.quantityCell} data-shortage={missing > 0 || undefined}>
-              <span>Faltante</span>
-              <strong>{missing ?? "—"}</strong>
+            {showFulfillment && <div className={styles.quantityCell} data-shortage={(missing > 0 || excess > 0) || undefined}>
+              <span>{excess > 0 ? "Excedente" : "Faltante"}</span>
+              <strong>{excess > 0 ? excess : missing ?? "—"}</strong>
             </div>}
             {showPrices && (
               <div className={styles.priceCell}>

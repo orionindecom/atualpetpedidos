@@ -12,6 +12,8 @@ import {
   getOrderFlowStage,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
+  getConferenceCompletionIssues,
+  getSeparationCompletionIssues,
   isLogisticsClosingComplete,
 } from "../src/utils/orderOperations.js";
 
@@ -164,6 +166,38 @@ test("payload progressivo nao antecipa separacao ou dados comerciais", () => {
   assert.equal(Object.hasOwn(payload, "itens"), false);
 });
 
+test("interface permite salvar parcial e bloqueia somente a conclusão da separação", () => {
+  const pedido = {
+    status: "separando",
+    itens: [{
+      produtoId: "507f1f77bcf86cd799439011",
+      nomeProduto: "Shampoo",
+      quantidade: 10,
+      quantidadeSeparada: 8,
+    }],
+  };
+  const form = buildOrderOperationsForm(pedido);
+  form.status = "separando";
+  assert.deepEqual(buildOrderOperationsPayload(pedido, form).separacaoItens, [{
+    produtoId: "507f1f77bcf86cd799439011",
+    quantidadeSeparada: 8,
+  }]);
+
+  form.status = "separado";
+  const issues = getSeparationCompletionIssues(pedido, form);
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].tipo, "quantidade_pendente");
+  assert.match(issues[0].message, /Shampoo: pedido atual 10, separado 8/);
+
+  form.separacao["507f1f77bcf86cd799439011"] = 10;
+  assert.deepEqual(getSeparationCompletionIssues(pedido, form), []);
+
+  const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
+  assert.match(modal, /Não é possível concluir a separação/);
+  assert.match(modal, /finishingSeparation && separationIssues\.length > 0/);
+  assert.match(modal, /disabled=\{saving \|\| separationIssues\.length > 0\}/);
+});
+
 test("etapas do detalhe definem uma unica proxima acao operacional", () => {
   assert.equal(getOrderFlowStage({ status: "aprovado" }).nextStatus, "separando");
   assert.equal(getOrderFlowStage({ status: "separando" }).showSeparationEditor, true);
@@ -246,6 +280,7 @@ test("payload do fechamento normaliza virgula sem incluir status", () => {
     observacaoVolumes: "  Quatro caixas  ",
   });
   assert.deepEqual(payload, {
+    versaoPedido: 0,
     fechamentoLogistico: {
       quantidadeVolumes: "4",
       pesoTotalKg: "38.5",
@@ -317,6 +352,7 @@ test("conferencia preenche os valores separados e monta payload por item", () =>
   form.observacaoConferencia = "Uma unidade divergente";
 
   assert.deepEqual(buildConferencePayload(pedido, form), {
+    versaoPedido: 0,
     conferencia: {
       acao: "concluir",
       itens: [
@@ -326,7 +362,70 @@ test("conferencia preenche os valores separados e monta payload por item", () =>
       observacao: "Uma unidade divergente",
     },
   });
-  assert.equal(Object.hasOwn(buildOrderOperationsPayload(pedido, form), "separacaoItens"), false);
+  assert.equal(Object.hasOwn(buildOrderOperationsPayload(pedido, form), "separacaoItens"), true);
+  const issues = getConferenceCompletionIssues(pedido, form);
+  assert.equal(issues.length, 2);
+  assert.match(issues[0].message, /Produto|pedido atual/);
+});
+
+test("interface explica e bloqueia conferência parcial ou não conferida", () => {
+  const partialOrder = {
+    __v: 7,
+    status: "separado",
+    conferenciaObrigatoria: true,
+    conferencia: { status: "em_andamento" },
+    itens: [{
+      produtoId: "507f1f77bcf86cd799439011",
+      nomeProduto: "Shampoo",
+      quantidade: 10,
+      quantidadeSeparada: 8,
+    }],
+  };
+  const partialForm = buildOrderOperationsForm(partialOrder);
+  const partialIssues = getConferenceCompletionIssues(partialOrder, partialForm);
+  assert.equal(partialIssues[0].tipo, "quantidade_separada_divergente");
+  assert.match(partialIssues[0].message, /pedido atual 10, separado 8/);
+
+  const uncheckedOrder = {
+    ...partialOrder,
+    itens: [{ ...partialOrder.itens[0], quantidadeSeparada: 10 }],
+  };
+  const uncheckedForm = buildOrderOperationsForm(uncheckedOrder);
+  uncheckedForm.conferencia["507f1f77bcf86cd799439011"] = "";
+  assert.equal(
+    getConferenceCompletionIssues(uncheckedOrder, uncheckedForm)[0].tipo,
+    "nao_conferido"
+  );
+
+  uncheckedForm.conferencia["507f1f77bcf86cd799439011"] = 10;
+  assert.deepEqual(getConferenceCompletionIssues(uncheckedOrder, uncheckedForm), []);
+  assert.equal(buildConferencePayload(uncheckedOrder, uncheckedForm).versaoPedido, 7);
+
+  const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
+  assert.match(modal, /Não é possível concluir a conferência/);
+  assert.match(modal, /conferenceIssues\.length > 0/);
+  assert.match(modal, /disabled=\{conferenceBusy \|\| conferenceIssues\.length > 0\}/);
+});
+
+test("payloads mutáveis carregam versão para impedir atualizações perdidas", () => {
+  const pedido = {
+    __v: 9,
+    status: "separando",
+    itens: [{
+      produtoId: "507f1f77bcf86cd799439011",
+      quantidade: 10,
+      quantidadeSeparada: 8,
+    }],
+  };
+  const form = buildOrderOperationsForm(pedido);
+  assert.equal(buildOrderOperationsPayload(pedido, form).versaoPedido, 9);
+  assert.equal(buildLogisticsClosingPayload(form).versaoPedido, 9);
+
+  const admin = readSource("../src/pages/AdminPedidos/AdminPedidos.jsx");
+  const logistics = readSource("../src/pages/LogisticaPedidos/LogisticaPedidos.jsx");
+  assert.match(admin, /versaoPedido: Number\(modalPedido\.__v \|\| 0\)/);
+  assert.match(admin, /versaoPedido: Number\(detail\.__v \|\| 0\)/);
+  assert.match(logistics, /versaoPedido: Number\(detail\.__v \|\| 0\)/);
 });
 
 test("Admin e Logistica compartilham conferencia e cliente nao recebe detalhes internos", () => {

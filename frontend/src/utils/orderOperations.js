@@ -4,7 +4,37 @@ const toDateInput = (value) => {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 };
 
-const CONFERENCE_FINISHED = new Set(["concluida", "concluida_com_divergencia"]);
+export const isConferenceFinishedForCurrentOrder = (pedido = {}) => {
+  if (pedido.conferencia?.status !== "concluida") return false;
+  if (
+    pedido.conferencia?.versaoOperacional !== undefined &&
+    Number(pedido.conferencia.versaoOperacional) !==
+      Number(pedido.versaoOperacional || 1)
+  ) return false;
+  const items = pedido.itens || [];
+  const conferenceItems = pedido.conferencia?.itens;
+
+  if (!Array.isArray(conferenceItems) || conferenceItems.length === 0) {
+    return items.every((item) => (
+      item.quantidadeSeparada !== undefined &&
+      item.quantidadeSeparada !== null &&
+      Number(item.quantidadeSeparada) === Number(item.quantidade)
+    ));
+  }
+
+  const conferenceByProduct = new Map(
+    conferenceItems.map((item) => [String(item.produtoId), item])
+  );
+  return conferenceItems.length === items.length && items.every((item) => {
+    const conferenceItem = conferenceByProduct.get(String(item.produtoId));
+    const requested = Number(item.quantidadeSolicitada ?? item.quantidade ?? 0);
+    return conferenceItem &&
+      Number(item.quantidadeSeparada) === requested &&
+      Number(conferenceItem.quantidadeSolicitada) === requested &&
+      Number(conferenceItem.quantidadeSeparada) === requested &&
+      Number(conferenceItem.quantidadeConferida) === requested;
+  });
+};
 
 export const isLogisticsClosingComplete = (pedido = {}) => {
   const closing = pedido.fechamentoLogistico;
@@ -19,7 +49,7 @@ export const isLogisticsClosingComplete = (pedido = {}) => {
 };
 
 export const getOrderFlowStage = (pedido = {}) => {
-  const conferenceFinished = CONFERENCE_FINISHED.has(pedido.conferencia?.status);
+  const conferenceFinished = isConferenceFinishedForCurrentOrder(pedido);
   const logisticsClosingFinished = isLogisticsClosingComplete(pedido);
   const terminal = pedido.status === "entregue" ||
     pedido.status === "cancelado" ||
@@ -71,6 +101,8 @@ export const getOrderFlowStage = (pedido = {}) => {
         : "A separação terminou; inicie a conferência dos itens.",
       conferenceFocused: true,
       showConference: true,
+      showSeparationEditor: true,
+      showOccurrence: true,
       terminal: false,
     };
   }
@@ -133,6 +165,7 @@ export const getOrderFlowStage = (pedido = {}) => {
 };
 
 export const buildOrderOperationsForm = (pedido) => ({
+  versaoPedido: Number(pedido.__v || 0),
   status: pedido.status || "aguardando_aprovacao",
   numeroNotaFiscal: pedido.numeroNotaFiscal || "",
   dataFaturamento: toDateInput(pedido.dataFaturamento),
@@ -159,6 +192,7 @@ export const buildOrderOperationsForm = (pedido) => ({
 
 export const buildOrderOperationsPayload = (pedido, form) => {
   const payload = {
+    versaoPedido: Number(pedido.__v || 0),
     status: form.status,
     observacaoHistorico: form.observacaoHistorico,
   };
@@ -179,15 +213,10 @@ export const buildOrderOperationsPayload = (pedido, form) => {
     });
   }
 
-  const conferenciaProtegeSeparacao = [
-    "pendente",
-    "em_andamento",
-    "concluida",
-    "concluida_com_divergencia",
-  ].includes(pedido.conferencia?.status);
+  const conferenciaProtegeSeparacao = isConferenceFinishedForCurrentOrder(pedido);
   if (
     !conferenciaProtegeSeparacao &&
-    pedido.status === "separando" &&
+    ["separando", "separado"].includes(pedido.status) &&
     form.status !== "cancelado"
   ) {
     payload.separacaoItens = (pedido.itens || []).map((item) => ({
@@ -208,6 +237,7 @@ export const buildOrderOperationsPayload = (pedido, form) => {
 };
 
 export const buildConferencePayload = (pedido, form) => ({
+  versaoPedido: Number(pedido.__v || 0),
   conferencia: {
     acao: "concluir",
     itens: (pedido.itens || []).map((item) => {
@@ -222,6 +252,7 @@ export const buildConferencePayload = (pedido, form) => ({
 });
 
 export const buildLogisticsClosingPayload = (form) => ({
+  versaoPedido: Number(form.versaoPedido || 0),
   fechamentoLogistico: {
     quantidadeVolumes: form.quantidadeVolumes,
     pesoTotalKg: typeof form.pesoTotalKg === "string"
@@ -230,3 +261,87 @@ export const buildLogisticsClosingPayload = (form) => ({
     observacaoVolumes: form.observacaoVolumes.trim(),
   },
 });
+
+export const getSeparationCompletionIssues = (pedido, form) => (
+  (pedido.itens || []).flatMap((item) => {
+    const produtoId = String(item.produtoId);
+    const requested = Number(item.quantidadeSolicitada ?? item.quantidade ?? 0);
+    const formValue = form?.separacao?.[produtoId];
+    const currentValue = item.quantidadeSeparada;
+    const separatedValue = formValue !== undefined ? formValue : currentValue;
+    const hasSeparated =
+      separatedValue !== null &&
+      separatedValue !== undefined &&
+      separatedValue !== "" &&
+      Number.isFinite(Number(separatedValue));
+    const separated = hasSeparated ? Number(separatedValue) : null;
+
+    if (separated === requested) return [];
+    if (separated === null) {
+      return [{
+        produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_processado",
+        message: `${item.nomeProduto}: separação ainda não processada`,
+      }];
+    }
+    return [{
+      produtoId,
+      nomeProduto: item.nomeProduto,
+      tipo: separated > requested ? "quantidade_excedente" : "quantidade_pendente",
+      message: `${item.nomeProduto}: pedido atual ${requested}, separado ${separated}`,
+    }];
+  })
+);
+
+export const getConferenceCompletionIssues = (pedido, form) => (
+  (pedido.itens || []).flatMap((item) => {
+    const produtoId = String(item.produtoId);
+    const requested = Number(item.quantidadeSolicitada ?? item.quantidade ?? 0);
+    const hasSeparated =
+      item.quantidadeSeparada !== null &&
+      item.quantidadeSeparada !== undefined &&
+      item.quantidadeSeparada !== "";
+    const separated = hasSeparated ? Number(item.quantidadeSeparada) : null;
+    const checkedValue = form?.conferencia?.[produtoId];
+    const hasChecked =
+      checkedValue !== null &&
+      checkedValue !== undefined &&
+      checkedValue !== "" &&
+      Number.isFinite(Number(checkedValue));
+
+    if (separated === null) {
+      return [{
+        produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_processado",
+        message: `${item.nomeProduto}: separação ainda não processada`,
+      }];
+    }
+    if (separated !== requested) {
+      return [{
+        produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "quantidade_separada_divergente",
+        message: `${item.nomeProduto}: pedido atual ${requested}, separado ${separated}`,
+      }];
+    }
+    if (!hasChecked) {
+      return [{
+        produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "nao_conferido",
+        message: `${item.nomeProduto}: item ainda não conferido`,
+      }];
+    }
+    if (Number(checkedValue) !== requested) {
+      return [{
+        produtoId,
+        nomeProduto: item.nomeProduto,
+        tipo: "quantidade_conferida_divergente",
+        message: `${item.nomeProduto}: pedido atual ${requested}, conferido ${Number(checkedValue)}`,
+      }];
+    }
+    return [];
+  })
+);

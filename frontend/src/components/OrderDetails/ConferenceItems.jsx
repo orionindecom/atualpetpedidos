@@ -4,6 +4,7 @@ const FINAL_STATUS_LABELS = {
   completo: "Completo",
   parcial: "Atendimento parcial",
   indisponivel: "Indisponível",
+  excedente: "Acima do pedido atual",
 };
 
 function ConferenceItems({
@@ -29,14 +30,19 @@ function ConferenceItems({
           checkedValue !== undefined &&
           checkedValue !== "";
         const checked = hasChecked ? Number(checkedValue) : null;
-        const difference = checked === null ? null : checked - separated;
+        const difference = checked === null ? null : checked - requested;
+        const currentStatus = separated > requested
+          ? "excedente"
+          : separated < requested
+            ? separated === 0 ? "indisponivel" : "parcial"
+            : checked === requested ? "completo" : item.situacaoFinal;
 
         return (
           <div className={`${styles.itemRow} ${styles.conferenceRow}`} key={`${produtoId}-${item.nomeProduto}`}>
             <div className={styles.itemIdentity}>
               <strong>{item.nomeProduto}</strong>
-              <span data-item-status={item.situacaoFinal}>
-                {FINAL_STATUS_LABELS[item.situacaoFinal] || "Aguardando conferência"}
+              <span data-item-status={currentStatus}>
+                {FINAL_STATUS_LABELS[currentStatus] || "Aguardando conferência"}
               </span>
             </div>
             <div className={styles.quantityCell}>
@@ -69,7 +75,7 @@ function ConferenceItems({
               )}
             </div>
             <div className={styles.quantityCell} data-shortage={difference < 0 || undefined}>
-              <span>Diferença</span>
+              <span>Diferença pedido</span>
               <strong>{difference ?? "—"}</strong>
             </div>
           </div>

@@ -42,6 +42,7 @@ const ORDER_PROJECTION = Object.freeze({
   aprovacao: 1,
   conferenciaObrigatoria: 1,
   conferencia: 1,
+  historicoConferencias: 1,
   fechamentoLogisticoObrigatorio: 1,
   fechamentoLogistico: 1,
   historicoStatus: 1,
@@ -141,6 +142,11 @@ export const pedidoTemParticipacaoOperador = (pedido, operadorId) => {
     (pedido.ocorrencias || []).some((entry) => stringId(entry.operadorId) === expected) ||
     stringId(pedido.conferencia?.iniciadoPor?.operadorId) === expected ||
     stringId(pedido.conferencia?.concluidoPor?.operadorId) === expected ||
+    (pedido.historicoConferencias || []).some((entry) => (
+      stringId(entry.conferencia?.iniciadoPor?.operadorId) === expected ||
+      stringId(entry.conferencia?.concluidoPor?.operadorId) === expected ||
+      stringId(entry.invalidadaPor?.operadorId) === expected
+    )) ||
     stringId(pedido.fechamentoLogistico?.preenchidoPor?.operadorId) === expected;
 };
 
@@ -456,6 +462,32 @@ export const calcularMetricasOperadores = ({
       }
     }
 
+    for (const archived of pedido.historicoConferencias || []) {
+      const conference = archived.conferencia || {};
+      const startAt = asValidDate(conference.iniciadaEm);
+      const endAt = asValidDate(conference.concluidaEm);
+      const duration = duracaoValida(startAt, endAt);
+      const startOperator = stringId(conference.iniciadoPor?.operadorId);
+      const endOperator = stringId(conference.concluidoPor?.operadorId);
+      if (duration === null || !inPeriod(endAt, inicio, fim)) continue;
+      if (startOperator && startOperator === endOperator) {
+        const summary = getSummary(endOperator, conference.concluidoPor);
+        if (summary) {
+          summary.conferenceDurations.push(duration);
+          const checkedItems = conference.itens || [];
+          summary.itensProcessados += checkedItems.length;
+          summary.unidadesProcessadas += checkedItems.reduce(
+            (total, item) => total + (Number.isFinite(Number(item.quantidadeConferida))
+              ? Number(item.quantidadeConferida)
+              : 0),
+            0
+          );
+        }
+      } else if (startOperator || endOperator) {
+        conferenceCyclesWithoutAttribution += 1;
+      }
+    }
+
     const divergenceCount = (pedido.conferencia?.itens || []).filter((item) => (
       Number.isFinite(Number(item.diferenca)) && Number(item.diferenca) !== 0
     )).length;
@@ -604,6 +636,9 @@ const operatorParticipationMatch = (operatorObjectId) => ({
     { "ocorrencias.operadorId": operatorObjectId },
     { "conferencia.iniciadoPor.operadorId": operatorObjectId },
     { "conferencia.concluidoPor.operadorId": operatorObjectId },
+    { "historicoConferencias.conferencia.iniciadoPor.operadorId": operatorObjectId },
+    { "historicoConferencias.conferencia.concluidoPor.operadorId": operatorObjectId },
+    { "historicoConferencias.invalidadaPor.operadorId": operatorObjectId },
     { "fechamentoLogistico.preenchidoPor.operadorId": operatorObjectId },
   ],
 });
@@ -644,6 +679,22 @@ const eventPeriodMatch = ({ inicio, fim, operatorObjectId }) => {
       },
       conferenceStart,
       conferenceEnd,
+      {
+        historicoConferencias: {
+          $elemMatch: {
+            "conferencia.iniciadaEm": { $gte: inicio, $lte: fim },
+            "conferencia.iniciadoPor.operadorId": operatorObjectId || { $exists: true },
+          },
+        },
+      },
+      {
+        historicoConferencias: {
+          $elemMatch: {
+            "conferencia.concluidaEm": { $gte: inicio, $lte: fim },
+            "conferencia.concluidoPor.operadorId": operatorObjectId || { $exists: true },
+          },
+        },
+      },
       logisticsClosing,
     ],
   };
