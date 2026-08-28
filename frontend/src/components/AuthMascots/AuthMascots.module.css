@@ -1,0 +1,84 @@
+.visual {
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.visual > :not(.mascots) {
+  position: relative;
+  z-index: 2;
+}
+
+.mascots {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .visual {
+    margin-top: clamp(52px, 14vw, 60px);
+    margin-bottom: clamp(62px, 18vw, 78px);
+  }
+
+  .mascots {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  .mascot {
+    position: absolute;
+    display: block;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .jocaMascot {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: clamp(108px, 34%, 138px);
+    pointer-events: none;
+  }
+
+  .jocaBehind,
+  .jocaGrip {
+    bottom: calc(100% - 12px);
+    left: 0;
+    width: 100%;
+  }
+
+  .jocaBehind {
+    z-index: 1;
+  }
+
+  .jocaGrip {
+    z-index: 3;
+    clip-path: inset(73% 0 0 0);
+  }
+
+  .ziki {
+    z-index: 1;
+    top: clamp(-92px, -22vw, -78px);
+    right: clamp(-10px, -2vw, -6px);
+    width: clamp(166px, 46vw, 204px);
+  }
+
+  .jocaFeet {
+    z-index: 1;
+    bottom: -66px;
+    left: 50%;
+    width: 125%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 350px) {
+  .ziki {
+    right: -6px;
+    width: 156px;
+  }
+}

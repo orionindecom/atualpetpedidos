@@ -1,7 +1,7 @@
 .page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(520px, 0.9fr);
   background: #f5f7fa;
 }
 
@@ -71,7 +71,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: clamp(24px, 3vw, 48px);
+}
+
+.formVisual {
+  max-width: 720px;
 }
 
 .card {
@@ -238,6 +242,16 @@
   display: none;
 }
 
+@media (min-width: 951px) and (max-width: 1100px) {
+  .formArea {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 28px;
+  }
+}
+
 @media (max-width: 950px) {
   .page {
     grid-template-columns: 1fr;
@@ -281,10 +295,18 @@
     flex-direction: column;
   }
 
+  .formVisual {
+    max-width: 430px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
   .mobileIntro {
     width: 100%;
     max-width: 430px;
     margin: 0 auto 12px;
+    position: relative;
+    z-index: 4;
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -314,7 +336,7 @@
   .card {
     width: 100%;
     max-width: 430px;
-    margin: 0 auto;
+    margin: 0;
     padding: 18px;
     border: 1px solid rgba(15, 23, 42, 0.06);
     border-radius: 22px;

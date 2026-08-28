@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import logo from "../../assets/logo-atualpet-white.png";
+import AuthMascots from "../../components/AuthMascots/AuthMascots";
+import mascotStyles from "../../components/AuthMascots/AuthMascots.module.css";
+import AuthInstitutionalArt from "../../components/AuthInstitutionalArt/AuthInstitutionalArt";
 import {
   formatRegistrationDocument,
   formatRegistrationPhone,
@@ -99,21 +102,7 @@ function CadastroGroomer() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.info}>
-        <div className={styles.brand}>
-          <div className={styles.logo}><img src={logo} alt="AtualPet" /></div>
-          <div><h1>AtualPet</h1><p>Portal Groomer</p></div>
-        </div>
-        <div className={styles.texto}>
-          <h2>Conteúdo profissional para quem transforma o cuidado pet.</h2>
-          <p>Solicite seu acesso a treinamentos e materiais selecionados pela AtualPet.</p>
-        </div>
-        <div className={styles.passos}>
-          <span>1. Envie seus dados profissionais</span>
-          <span>2. Aguarde a análise da AtualPet</span>
-          <span>3. Acesse conteúdos para Groomers</span>
-        </div>
-      </section>
+      <AuthInstitutionalArt />
 
       <section className={styles.formArea}>
         <div className={styles.mobileIntro}>
@@ -122,17 +111,20 @@ function CadastroGroomer() {
           <span>Portal Groomer</span>
         </div>
 
-        <form className={styles.card} onSubmit={submit} noValidate>
-          <div className={styles.mobileCardHeader}>
-            <h1>Cadastro de Groomer</h1>
-            <p>Preencha seus dados para solicitar acesso aos conteúdos profissionais.</p>
-          </div>
-          <h2>Solicitar acesso Groomer</h2>
-          <p>O acesso será liberado somente após aprovação administrativa.</p>
+        <div className={`${mascotStyles.visual} ${styles.formVisual}`}>
+          <AuthMascots />
 
-          {feedback && <div className={styles.feedback} role="alert"><strong>{feedback}</strong></div>}
+          <form className={styles.card} onSubmit={submit} noValidate>
+            <div className={styles.mobileCardHeader}>
+              <h1>Cadastro de Groomer</h1>
+              <p>Preencha seus dados para solicitar acesso aos conteúdos profissionais.</p>
+            </div>
+            <h2>Solicitar acesso Groomer</h2>
+            <p>O acesso será liberado somente após aprovação administrativa.</p>
 
-          <div className={styles.grid}>
+            {feedback && <div className={styles.feedback} role="alert"><strong>{feedback}</strong></div>}
+
+            <div className={styles.grid}>
             <fieldset className={styles.section}>
               <legend>Dados profissionais</legend>
               <label>Nome completo *
@@ -195,13 +187,14 @@ function CadastroGroomer() {
                 {fieldError("confirmarSenha")}
               </label>
             </fieldset>
-          </div>
+            </div>
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Enviando solicitação..." : "Enviar solicitação"}
-          </button>
-          <div className={styles.footer}><span>Já possui acesso?</span><Link to="/login">Entrar no portal</Link></div>
-        </form>
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Enviando solicitação..." : "Enviar solicitação"}
+            </button>
+            <div className={styles.footer}><span>Já possui acesso?</span><Link to="/login">Entrar na Central</Link></div>
+          </form>
+        </div>
       </section>
     </div>
   );
