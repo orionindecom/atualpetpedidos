@@ -1,4 +1,4 @@
-import centralComercialArt from "../../assets/auth/central-comercial-auth.png";
+import centralComercialArt from "../../assets/auth/central-comercial-auth.jpeg";
 import styles from "./AuthInstitutionalArt.module.css";
 
 function AuthInstitutionalArt() {

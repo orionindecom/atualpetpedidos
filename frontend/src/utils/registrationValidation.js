@@ -16,6 +16,12 @@ const FIELD_NAMES = new Set([
   "observacaoCadastro",
 ]);
 
+export const REGISTRATION_STEP_FIELDS = Object.freeze([
+  Object.freeze(["razaoSocial", "nomeFantasia", "cnpj"]),
+  Object.freeze(["nomeResponsavel", "email", "telefone", "whatsapp"]),
+  Object.freeze(["senha", "confirmarSenha"]),
+]);
+
 export const normalizeRegistrationDigits = (value) => (
   String(value ?? "").replace(/\D/g, "")
 );
@@ -177,6 +183,19 @@ export const validateRegistrationForm = (form = {}) => {
 
   return errors;
 };
+
+export const validateRegistrationStep = (form = {}, stepIndex = 0) => {
+  const stepFields = new Set(REGISTRATION_STEP_FIELDS[stepIndex] || []);
+  return Object.fromEntries(
+    Object.entries(validateRegistrationForm(form)).filter(([field]) => stepFields.has(field))
+  );
+};
+
+export const getRegistrationStepForErrors = (errors = {}) => (
+  REGISTRATION_STEP_FIELDS.findIndex((stepFields) => (
+    stepFields.some((field) => Boolean(errors[field]))
+  ))
+);
 
 export const validateGroomerRegistrationForm = (form = {}) => {
   const errors = validateRegistrationForm({

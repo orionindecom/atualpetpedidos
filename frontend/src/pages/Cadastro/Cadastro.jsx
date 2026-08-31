@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import logo from "../../assets/logo-atualpet-white.png";
@@ -8,8 +8,11 @@ import AuthInstitutionalArt from "../../components/AuthInstitutionalArt/AuthInst
 import {
   formatRegistrationDocument,
   formatRegistrationPhone,
+  getRegistrationStepForErrors,
   getRegistrationApiFieldErrors,
+  REGISTRATION_STEP_FIELDS,
   validateRegistrationForm,
+  validateRegistrationStep,
 } from "../../utils/registrationValidation";
 import styles from "./Cadastro.module.css";
 
@@ -25,6 +28,12 @@ const INITIAL_FORM = Object.freeze({
   whatsapp: "",
 });
 
+const REGISTRATION_STEPS = Object.freeze([
+  Object.freeze({ title: "Empresa", description: "Conte sobre a sua empresa." }),
+  Object.freeze({ title: "Contato", description: "Informe quem será o contato da empresa." }),
+  Object.freeze({ title: "Acesso", description: "Crie os dados de acesso à Central." }),
+]);
+
 const maskFieldValue = (name, value) => {
   if (name === "cnpj") return formatRegistrationDocument(value);
   if (["telefone", "whatsapp"].includes(name)) return formatRegistrationPhone(value);
@@ -33,10 +42,13 @@ const maskFieldValue = (name, value) => {
 
 function Cadastro() {
   const navigate = useNavigate();
+  const formRef = useRef(null);
+  const progressRef = useRef(null);
   const [form, setForm] = useState({ ...INITIAL_FORM });
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const alterar = (event) => {
     const { name, value } = event.target;
@@ -52,7 +64,47 @@ function Cadastro() {
 
   const focusFirstError = (formElement, fieldErrors) => {
     const firstField = Object.keys(fieldErrors)[0];
-    formElement.elements.namedItem(firstField)?.focus();
+    window.requestAnimationFrame(() => {
+      formElement.elements.namedItem(firstField)?.focus();
+    });
+  };
+
+  const scrollToStepStart = () => {
+    window.requestAnimationFrame(() => {
+      progressRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const replaceStepErrors = (stepIndex, stepErrors) => {
+    setErrors((current) => {
+      const next = { ...current };
+      REGISTRATION_STEP_FIELDS[stepIndex].forEach((field) => delete next[field]);
+      return { ...next, ...stepErrors };
+    });
+  };
+
+  const continuar = () => {
+    const stepErrors = validateRegistrationStep(form, currentStep);
+    replaceStepErrors(currentStep, stepErrors);
+
+    if (Object.keys(stepErrors).length > 0) {
+      setFeedback({
+        type: "error",
+        message: "Revise os campos destacados antes de continuar.",
+      });
+      focusFirstError(formRef.current, stepErrors);
+      return;
+    }
+
+    setFeedback(null);
+    setCurrentStep((step) => Math.min(step + 1, REGISTRATION_STEPS.length - 1));
+    scrollToStepStart();
+  };
+
+  const voltar = () => {
+    setFeedback(null);
+    setCurrentStep((step) => Math.max(step - 1, 0));
+    scrollToStepStart();
   };
 
   const cadastrar = async (event) => {
@@ -62,6 +114,8 @@ function Cadastro() {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      const errorStep = getRegistrationStepForErrors(validationErrors);
+      if (errorStep >= 0) setCurrentStep(errorStep);
       setFeedback({
         type: "error",
         message: "Revise os campos destacados antes de enviar a solicitação.",
@@ -84,6 +138,8 @@ function Cadastro() {
         ? responseData.message
         : "";
       setErrors(apiErrors);
+      const errorStep = getRegistrationStepForErrors(apiErrors);
+      if (errorStep >= 0) setCurrentStep(errorStep);
       setFeedback({
         type: "error",
         message: Object.keys(apiErrors).length > 0
@@ -121,10 +177,32 @@ function Cadastro() {
         <div className={`${mascotStyles.visual} ${styles.formVisual}`}>
           <AuthMascots />
 
-          <form className={styles.card} onSubmit={cadastrar} noValidate>
+          <form ref={formRef} className={styles.card} onSubmit={cadastrar} noValidate>
             <div className={styles.mobileCardHeader}>
               <h1>Solicitar acesso</h1>
               <p>Preencha seus dados para solicitar acesso à Central Comercial.</p>
+            </div>
+
+            <div ref={progressRef} className={styles.progress} aria-live="polite">
+              <div className={styles.progressHeading}>
+                <span>Etapa {currentStep + 1} de {REGISTRATION_STEPS.length}</span>
+                <strong>{REGISTRATION_STEPS[currentStep].title}</strong>
+              </div>
+              <p>{REGISTRATION_STEPS[currentStep].description}</p>
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-label="Progresso do cadastro"
+                aria-valuemin="1"
+                aria-valuemax={REGISTRATION_STEPS.length}
+                aria-valuenow={currentStep + 1}
+                aria-valuetext={`Etapa ${currentStep + 1} de ${REGISTRATION_STEPS.length}: ${REGISTRATION_STEPS[currentStep].title}`}
+              >
+                <span
+                  className={styles.progressFill}
+                  style={{ width: `${((currentStep + 1) / REGISTRATION_STEPS.length) * 100}%` }}
+                />
+              </div>
             </div>
 
             <h2>Solicitar cadastro</h2>
@@ -144,7 +222,10 @@ function Cadastro() {
             )}
 
             <div className={styles.grid}>
-            <fieldset className={styles.section}>
+            <fieldset
+              className={styles.section}
+              data-active={currentStep === 0}
+            >
               <legend>Dados da empresa</legend>
 
               <label>
@@ -191,7 +272,10 @@ function Cadastro() {
               </label>
             </fieldset>
 
-            <fieldset className={styles.section}>
+            <fieldset
+              className={styles.section}
+              data-active={currentStep === 1}
+            >
               <legend>Contato</legend>
 
               <label>
@@ -256,7 +340,10 @@ function Cadastro() {
               </label>
             </fieldset>
 
-            <fieldset className={styles.section}>
+            <fieldset
+              className={styles.section}
+              data-active={currentStep === 2}
+            >
               <legend>Acesso</legend>
 
               <label>
@@ -293,9 +380,26 @@ function Cadastro() {
             </fieldset>
             </div>
 
-            <button type="submit" disabled={submitting}>
+            <button className={styles.desktopSubmit} type="submit" disabled={submitting}>
               {submitting ? "Enviando solicitação..." : "Enviar solicitação"}
             </button>
+
+            <div className={styles.mobileActions} data-has-back={currentStep > 0}>
+              {currentStep > 0 && (
+                <button className={styles.backButton} type="button" onClick={voltar}>
+                  Voltar
+                </button>
+              )}
+              {currentStep < REGISTRATION_STEPS.length - 1 ? (
+                <button type="button" onClick={continuar}>
+                  Continuar
+                </button>
+              ) : (
+                <button type="submit" disabled={submitting}>
+                  {submitting ? "Enviando solicitação..." : "Enviar solicitação"}
+                </button>
+              )}
+            </div>
 
             <div className={styles.footer}>
               <span>Já possui acesso?</span>

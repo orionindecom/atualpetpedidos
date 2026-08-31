@@ -7,10 +7,12 @@ import {
   formatRegistrationPhone,
   getRegistrationDocumentType,
   getRegistrationApiFieldErrors,
+  getRegistrationStepForErrors,
   isValidRegistrationCnpj,
   isValidRegistrationCpf,
   validateRegistrationDocument,
   validateRegistrationForm,
+  validateRegistrationStep,
 } from "../src/utils/registrationValidation.js";
 
 const readSource = (relativePath) => (
@@ -102,6 +104,37 @@ test("múltiplos erros são retornados juntos e cadastro válido permanece váli
   assert.deepEqual(validateRegistrationForm(validForm()), {});
 });
 
+test("cadastro mobile valida somente os campos da etapa atual", () => {
+  const emptyForm = {
+    nomeResponsavel: "",
+    email: "",
+    senha: "",
+    confirmarSenha: "",
+    razaoSocial: "",
+    nomeFantasia: "",
+    cnpj: "",
+    telefone: "",
+    whatsapp: "",
+  };
+
+  assert.deepEqual(validateRegistrationStep(emptyForm, 0), {});
+  assert.deepEqual(Object.keys(validateRegistrationStep(emptyForm, 1)), [
+    "nomeResponsavel",
+    "email",
+  ]);
+  assert.deepEqual(Object.keys(validateRegistrationStep(emptyForm, 2)), [
+    "senha",
+    "confirmarSenha",
+  ]);
+});
+
+test("erros de validação ou da API direcionam para a primeira etapa afetada", () => {
+  assert.equal(getRegistrationStepForErrors({ senha: "Senha inválida" }), 2);
+  assert.equal(getRegistrationStepForErrors({ email: "E-mail duplicado", senha: "Senha inválida" }), 1);
+  assert.equal(getRegistrationStepForErrors({ cnpj: "CNPJ duplicado", email: "E-mail duplicado" }), 0);
+  assert.equal(getRegistrationStepForErrors({}), -1);
+});
+
 test("máscara progressiva transita de CPF para CNPJ e limita o documento", () => {
   assert.equal(formatRegistrationDocument("52998224725"), "529.982.247-25");
   assert.equal(formatRegistrationDocument("529.982.247-251"), "52.998.224/7251");
@@ -164,4 +197,16 @@ test("cadastro válido continua usando o endpoint e fluxo de sucesso existentes"
   assert.match(page, /CPF ou CNPJ/);
   assert.match(page, /formatRegistrationDocument/);
   assert.match(page, /noValidate/);
+});
+
+test("cadastro mobile possui navegação por etapas e progresso acessível", () => {
+  const page = readSource("../src/pages/Cadastro/Cadastro.jsx");
+  const css = readSource("../src/pages/Cadastro/Cadastro.module.css");
+  assert.match(page, /Etapa \{currentStep \+ 1\} de \{REGISTRATION_STEPS\.length\}/);
+  assert.match(page, /role="progressbar"/);
+  assert.match(page, /validateRegistrationStep\(form, currentStep\)/);
+  assert.match(page, />\s*Continuar\s*</);
+  assert.match(page, />\s*Voltar\s*</);
+  assert.match(css, /\.section\[data-active="false"\]/);
+  assert.match(css, /@media \(max-width: 768px\)/);
 });
