@@ -1,3 +1,4 @@
+import { temPapel } from "../middlewares/adminMiddleware.js";
 import Pedido from "../models/Pedido.js";
 import Usuario from "../models/Usuario.js";
 import PrecoProduto from "../models/PrecoProduto.js";
@@ -286,8 +287,9 @@ export const listarTodosPedidos = async (req, res) => {
 
 export const buscarPedidoPorId = async (req, res) => {
   try {
+    const gestorComercial = temPapel(req.usuario, ["admin", "comercial"]);
     const query = Pedido.findById(req.params.id);
-    if (req.usuario.tipo === "admin") {
+    if (gestorComercial) {
       query.select("+historicoStatus +observacaoLogistica +ocorrencias +historicoAlteracoes +historicoConferencias");
     }
     const pedido = await query;
@@ -299,7 +301,7 @@ export const buscarPedidoPorId = async (req, res) => {
     }
 
     if (
-      req.usuario.tipo !== "admin" &&
+      !gestorComercial &&
       String(pedido.clienteId) !== String(req.usuario._id)
     ) {
       return res.status(403).json({
@@ -308,7 +310,7 @@ export const buscarPedidoPorId = async (req, res) => {
     }
 
     return res.status(200).json(
-      req.usuario.tipo === "admin"
+      gestorComercial
         ? enrichInternalOrderDetail(pedido)
         : sanitizeClientOrder(pedido)
     );
@@ -430,7 +432,7 @@ export const aprovarPedidoAdmin = async (req, res) => {
       usuarioId: req.usuario._id,
       usuarioNome:
         req.usuario.nomeResponsavel || req.usuario.nomeFantasia || "Administrador",
-      usuarioTipo: "admin",
+      usuarioTipo: req.usuario.tipo,
     };
     const pedido = await Pedido.findOneAndUpdate(
       {

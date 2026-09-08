@@ -30,6 +30,7 @@ const adminLinks = [
 ];
 
 const comercialLinks = [
+  { to: "/pedidos", label: "Pedidos", group: "Comercial" },
   { to: "/precos", label: "Preços", group: "Comercial" },
   { to: "/tabelas", label: "Tabelas de Preços", group: "Comercial" },
 ];

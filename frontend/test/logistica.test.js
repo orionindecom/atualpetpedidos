@@ -472,8 +472,8 @@ test("pedido entregue vira detalhe terminal sem formulario operacional", () => {
   assert.match(operations, /Pedido entregue — estado final/);
   assert.match(modal, /operationFormVisible/);
   assert.match(modal, /!terminal && conferenceStatus === "em_andamento"/);
-  assert.match(modal, /isAdmin && !terminal && \["aguardando_aprovacao"/);
-  assert.match(modal, /isAdmin && !terminal/);
+  assert.match(modal, /canEdit && !terminal && \["aguardando_aprovacao"/);
+  assert.match(modal, /canDelete && !terminal/);
 });
 
 test("detalhe exibe apenas os controles pertinentes a etapa atual", () => {

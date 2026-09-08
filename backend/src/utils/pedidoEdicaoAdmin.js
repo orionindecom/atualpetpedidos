@@ -106,11 +106,11 @@ export const buildAdminOrderItemChanges = (currentItems = [], nextItems = []) =>
   return changes;
 };
 
-const buildAdminUser = (usuario = {}) => ({
+const buildOrderEditor = (usuario = {}) => ({
   usuarioId: usuario._id,
   usuarioNome:
     usuario.nomeResponsavel || usuario.nomeFantasia || "Administrador",
-  usuarioTipo: "admin",
+  usuarioTipo: usuario.tipo,
 });
 
 const preserveOperationalWork = ({ currentItems, nextItems, resetConference }) => {
@@ -187,8 +187,8 @@ export const applyAdminOrderEdit = ({
     pedido.historicoConferencias.push({
       conferencia: asPlainObject(pedido.conferencia),
       invalidadaEm: now,
-      invalidadaPor: buildAdminUser(usuario),
-      motivo: "Pedido alterado pelo Admin; a versão atual precisa de nova conferência.",
+      invalidadaPor: buildOrderEditor(usuario),
+      motivo: "Pedido alterado; a versão atual precisa de nova conferência.",
     });
   }
 
@@ -241,7 +241,7 @@ export const applyAdminOrderEdit = ({
     pedido.historicoAlteracoes ||= [];
     pedido.historicoAlteracoes.push({
       alteradoEm: now,
-      ...buildAdminUser(usuario),
+      ...buildOrderEditor(usuario),
       versaoOperacionalAnterior: previousOperationalVersion,
       versaoOperacionalNova: nextOperationalVersion,
       totalAnterior: previousTotal,
@@ -251,7 +251,7 @@ export const applyAdminOrderEdit = ({
 
     pedido.ocorrencias ||= [];
     pedido.ocorrencias.push(buildOccurrenceEntry({
-      conteudo: `Pedido alterado pelo Admin: ${changes.length} alteração(ões) de item; total de R$ ${previousTotal.toFixed(2)} para R$ ${Number(valorTotal).toFixed(2)}.${physicalOrderChanged ? " Separação e conferência foram reconciliadas com a versão atual." : ""}`,
+      conteudo: `Pedido alterado: ${changes.length} alteração(ões) de item; total de R$ ${previousTotal.toFixed(2)} para R$ ${Number(valorTotal).toFixed(2)}.${physicalOrderChanged ? " Separação e conferência foram reconciliadas com a versão atual." : ""}`,
       tipo: "informacao_operacional",
       usuario,
       now,

@@ -153,7 +153,7 @@ test("Comercial continua bloqueado de Admin, Marketing e Logística", () => {
   }
 });
 
-test("clientes, pedidos, métricas e operadores mantêm autorização exclusiva", () => {
+test("clientes, mutações administrativas, métricas e operadores mantêm autorização exclusiva", () => {
   for (const router of [clienteRouter, metricasRouter, operadoresRouter]) {
     assert.deepEqual(router.stack.slice(0, 2).map((layer) => layer.name), [
       "proteger",
@@ -170,9 +170,7 @@ test("clientes, pedidos, métricas e operadores mantêm autorização exclusiva"
   ]);
 
   for (const [path, method] of [
-    ["/", "get"],
-    ["/:id/aprovar", "patch"],
-    ["/:id", "put"],
+    ["/:id/relatorio", "get"],
     ["/:id/status", "put"],
   ]) {
     const route = findRoute(pedidoRouter, path, method);
@@ -198,4 +196,17 @@ test("criação do usuário Comercial segue o fluxo interno protegido por confir
   assert.match(script, /tipo: "comercial"/);
   assert.match(script, /statusCadastro: "aprovado"/);
   assert.equal(packageJson.scripts["user:create-comercial"], "node src/scripts/criarComercial.js");
+});
+
+test("consulta, aprovação, edição e exclusão de pedidos reutilizam autorização comercial", () => {
+  for (const [path, method] of [["/", "get"], ["/:id/aprovacao", "get"], ["/:id/aprovar", "patch"], ["/:id", "put"], ["/:id", "delete"]]) {
+    const route = findRoute(pedidoRouter, path, method);
+    assert.deepEqual(middlewareNames(route).slice(0, 2), ["proteger", "somenteGestorComercial"]);
+    for (const tipo of Usuario.schema.path("tipo").enumValues) {
+      const response = createResponse();
+      let allowed = false;
+      route.route.stack[1].handle({ usuario: { tipo } }, response, () => { allowed = true; });
+      assert.equal(allowed, ["admin", "comercial"].includes(tipo), tipo);
+    }
+  }
 });

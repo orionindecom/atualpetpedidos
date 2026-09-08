@@ -35,6 +35,10 @@ function OrderDetailModal({
   form,
   transitions = [],
   isAdmin = false,
+  canApprove = isAdmin,
+  canEdit = isAdmin,
+  canDelete = isAdmin,
+  canOperate = true,
   saving = false,
   approving = false,
   conferenceBusy = false,
@@ -81,7 +85,7 @@ function OrderDetailModal({
     ? getSeparationCompletionIssues(detail, form)
     : [];
   const conferenceVisible = flowStage.showConference || Boolean(conference);
-  const operationFormVisible = !pendingApproval &&
+  const operationFormVisible = canOperate && !pendingApproval &&
     !terminal &&
     (!flowStage.conferenceFocused || flowStage.showSeparationEditor) &&
     (
@@ -121,7 +125,7 @@ function OrderDetailModal({
             )}
           </div>
           <div className={styles.modalHeaderActions}>
-            {isAdmin && !terminal && ["aguardando_aprovacao", "aprovado", "novo", "em_analise", "separando", "separado"].includes(detail.status) && (
+            {canEdit && !terminal && ["aguardando_aprovacao", "aprovado", "novo", "em_analise", "separando", "separado"].includes(detail.status) && (
               <button type="button" onClick={onEditOrder}>Editar pedido</button>
             )}
             {isAdmin && (
@@ -133,7 +137,7 @@ function OrderDetailModal({
                 {downloadingCommercialPdf ? "Preparando..." : "PDF comercial"}
               </button>
             )}
-            {!pendingApproval && (
+            {canOperate && !pendingApproval && (
               <button
                 type="button"
                 disabled={downloadingPdf}
@@ -151,7 +155,7 @@ function OrderDetailModal({
                 {downloadingReportPdf ? "Preparando..." : "Relatório operacional"}
               </button>
             )}
-            {isAdmin && !terminal && (
+            {canDelete && !terminal && (
               <button
                 type="button"
                 className={styles.dangerButton}
@@ -192,7 +196,7 @@ function OrderDetailModal({
                 <strong>Aguardando aprovação administrativa</strong>
                 <p>A Logística ainda não pode acessar ou separar este pedido.</p>
               </div>
-              {isAdmin && (
+              {canApprove && (
                 <button type="button" disabled={approving} onClick={onApprove}>
                   {approving ? "Aprovando..." : "APROVAR PEDIDO"}
                 </button>
@@ -246,10 +250,10 @@ function OrderDetailModal({
             )}
             <OrderItems
               items={detail.itens}
-              editable={flowStage.showSeparationEditor && !separationLocked && form.status !== "cancelado"}
+              editable={canOperate && flowStage.showSeparationEditor && !separationLocked && form.status !== "cancelado"}
               separation={form.separacao}
               onSeparationChange={onSeparationChange}
-              deriveEditableStatus={flowStage.showSeparationEditor}
+              deriveEditableStatus={canOperate && flowStage.showSeparationEditor}
             />
             {finishingSeparation && separationIssues.length > 0 && (
               <div className={styles.divergenceNotice} role="alert">
@@ -291,7 +295,7 @@ function OrderDetailModal({
                   </p>
                 )}
 
-                {!terminal && (conferenceStatus === "pendente" || conferenceNeedsRestart || (
+                {canOperate && !terminal && (conferenceStatus === "pendente" || conferenceNeedsRestart || (
                   !conferenceStatus && detail.status === "separado"
                 )) && (
                   <div className={styles.conferenceCallout}>
@@ -309,7 +313,7 @@ function OrderDetailModal({
                   </div>
                 )}
 
-                {!terminal && conferenceStatus === "em_andamento" && (
+                {canOperate && !terminal && conferenceStatus === "em_andamento" && (
                   <div className={styles.conferenceWorkspace}>
                     <p className={styles.conferenceMeta}>
                       Iniciada em {formatOrderDateTime(conference.iniciadaEm)} por {conference.iniciadoPor?.operadorNome || conference.iniciadoPor?.usuarioNome || "Usuário interno"}.
@@ -416,7 +420,7 @@ function OrderDetailModal({
                 </div>
               )}
 
-              {flowStage.showLogisticsClosing && !isAdmin && (
+              {canOperate && flowStage.showLogisticsClosing && !isAdmin && (
                 <div className={styles.conferenceWorkspace}>
                   <p className={styles.stageHint}>Etapa obrigatória e sem novo status. Os dados ficarão disponíveis ao Admin para o faturamento.</p>
                   <div className={styles.formGrid}>

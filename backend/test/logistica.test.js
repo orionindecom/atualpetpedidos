@@ -322,7 +322,7 @@ test("rotas logisticas e criacao de pedido aplicam middlewares corretos", () => 
   assert.ok(approvalRoute);
   assert.deepEqual(approvalRoute.route.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somenteAdmin",
+    "somenteGestorComercial",
   ]);
 });
 
@@ -358,7 +358,8 @@ test("pedido pendente nao aceita alteracao operacional nem pela superficie compa
   assert.equal(pedido.itens[0].quantidadeSeparada, undefined);
 });
 
-test("aprovacao atomica registra admin e rejeita a segunda requisicao", async () => {
+for (const tipo of ["admin", "comercial"]) {
+test(`aprovacao atomica registra ${tipo} e rejeita a segunda requisicao`, async () => {
   const originalFindOneAndUpdate = Pedido.findOneAndUpdate;
   const originalFindById = Pedido.findById;
   let statusAtual = "aguardando_aprovacao";
@@ -386,7 +387,7 @@ test("aprovacao atomica registra admin e rejeita a segunda requisicao", async ()
   });
   const usuario = {
     _id: new mongoose.Types.ObjectId(),
-    tipo: "admin",
+    tipo,
     nomeResponsavel: "Ana Admin",
   };
   const first = createResponse();
@@ -405,9 +406,14 @@ test("aprovacao atomica registra admin e rejeita a segunda requisicao", async ()
   assert.deepEqual([first.statusCode, second.statusCode].sort(), [200, 409]);
   assert.deepEqual(capturedFilter, { _id: objectId, status: "aguardando_aprovacao" });
   assert.equal(capturedUpdate.$set.status, "aprovado");
+  assert.equal(capturedUpdate.$set.aprovacao.usuarioTipo, tipo);
+  const document = new Pedido({ aprovacao: capturedUpdate.$set.aprovacao, historicoStatus: [capturedUpdate.$push.historicoStatus] });
+  assert.equal(document.aprovacao.validateSync(), undefined);
+  assert.equal(document.historicoStatus[0].validateSync(), undefined);
   assert.equal(capturedUpdate.$set.aprovacao.usuarioNome, "Ana Admin");
-  assert.equal(capturedUpdate.$push.historicoStatus.usuarioTipo, "admin");
+  assert.equal(capturedUpdate.$push.historicoStatus.usuarioTipo, tipo);
 });
+}
 
 test("inicio da separacao registra historico imutavel e autoria sem aceitar expedicao antecipada", () => {
   const pedido = { status: "novo" };

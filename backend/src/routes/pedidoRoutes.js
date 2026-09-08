@@ -15,7 +15,7 @@ import {
 } from "../controllers/pedidoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { somenteAdmin, somenteGestorComercial } from "../middlewares/adminMiddleware.js";
 import {
   somenteCliente,
   somenteClienteOuAdmin,
@@ -46,7 +46,7 @@ router.get(
 router.get(
   "/",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   listarTodosPedidos
 );
@@ -63,10 +63,18 @@ router.patch(
 router.patch(
   "/:id/aprovar",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   validateObjectIdParam(),
   aprovarPedidoAdmin
+);
+
+router.get(
+  "/:id/aprovacao",
+  proteger,
+  somenteGestorComercial,
+  validateObjectIdParam(),
+  buscarPedidoPorId
 );
 
 router.get(
@@ -89,7 +97,7 @@ router.get(
 router.put(
   "/:id",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   validateObjectIdParam(),
   atualizarPedidoAdmin
@@ -98,7 +106,7 @@ router.put(
 router.delete(
   "/:id",
   proteger,
-  somenteAdmin,
+  somenteGestorComercial,
   adminLimiter,
   validateObjectIdParam(),
   excluirPedidoAdmin

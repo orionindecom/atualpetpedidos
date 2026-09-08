@@ -34,7 +34,6 @@ test("URLs administrativas não comerciais continuam exclusivas do Admin", () =>
   for (const [path, component] of [
     ["/clientes", "AdminClientes"],
     ["/produtos", "AdminProdutos"],
-    ["/pedidos", "AdminPedidos"],
     ["/admin/metricas-operacionais", "AdminMetricasPedidos"],
     ["/admin/operadores-logistica", "AdminOperadoresLogistica"],
     ["/admin/materiais-marketing", "AdminMateriaisMarketing"],
@@ -50,15 +49,16 @@ test("URLs administrativas não comerciais continuam exclusivas do Admin", () =>
   assert.match(app, /path="\/logistica"[\s\S]*?<RoleRoute role="logistica">/);
 });
 
-test("menu Comercial mostra somente Preços e Tabelas de Preços", () => {
+test("menu Comercial mostra Preços, Tabelas e Pedidos", () => {
   const navbar = readSource("../src/components/Navbar/Navbar.jsx");
   const block = navbar.match(/const comercialLinks = \[([\s\S]*?)\];/)?.[1] || "";
 
   assert.match(block, /to: "\/precos"/);
   assert.match(block, /to: "\/tabelas"/);
+  assert.match(block, /to: "\/pedidos"/);
   assert.doesNotMatch(
     block,
-    /\/produtos|\/clientes|\/pedidos|\/marketing|\/logistica|metricas|operadores|banners|treinamentos/i
+    /\/produtos|\/clientes|\/marketing|\/logistica|metricas|operadores|banners|treinamentos/i
   );
   assert.match(navbar, /const isCommercial = usuario\?\.tipo === "comercial"/);
   assert.match(navbar, /Equipe Comercial/);
@@ -89,4 +89,19 @@ test("sessão continua validando correspondência entre role armazenada e token"
   const authSession = readSource("../src/utils/authSession.js");
   assert.match(authSession, /payload\.tipo && payload\.tipo !== usuario\.tipo/);
   assert.match(authSession, /return \{[\s\S]*?token,[\s\S]*?usuario,[\s\S]*?payload/);
+});
+
+test("Pedidos aceita gestão Comercial sem liberar as ações logísticas", () => {
+ const app = readSource("../src/App.jsx");
+ const page = readSource("../src/pages/AdminPedidos/AdminPedidos.jsx");
+ assert.match(app, /path="\/pedidos"[\s\S]*?<RoleRoute roles=\{\["admin", "comercial"\]\}>/);
+ assert.match(page, /canOperate=\{isAdmin\}/);
+ assert.match(page, /isAdmin=\{isAdmin\}/);
+ assert.match(page, /canApprove/);
+ assert.match(page, /canEdit/);
+ assert.match(page, /canDelete/);
+ const modal = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
+ assert.match(modal, /canEdit && !terminal/);
+ assert.match(modal, /canDelete && !terminal/);
+ assert.match(modal, /canOperate && !pendingApproval/);
 });

@@ -133,7 +133,7 @@ function App() {
         <Route
           path="/pedidos"
           element={(
-            <RoleRoute role="admin">
+            <RoleRoute roles={["admin", "comercial"]}>
               <AdminPedidos />
             </RoleRoute>
           )}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { getAuthSession } from "../../utils/authSession";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
@@ -19,6 +20,7 @@ import {
 } from "../../utils/orderOperations";
 
 function AdminPedidos() {
+  const isAdmin = getAuthSession()?.usuario.tipo === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
   const openedFromMetrics = useRef("");
   const [pedidos, setPedidos] = useState([]);
@@ -105,16 +107,19 @@ function AdminPedidos() {
     setDetailLoading(true);
     setDetailFeedback(null);
     try {
-      const response = await api.get(`/logistica/pedidos/${pedidoId}`);
-      setDetail(response.data.pedido);
-      setTransitions(response.data.transicoesPermitidas || []);
-      setOperationsForm(buildOrderOperationsForm(response.data.pedido));
+      const response = await api.get(isAdmin
+        ? `/logistica/pedidos/${pedidoId}`
+        : `/pedidos/${pedidoId}/aprovacao`);
+      const pedido = isAdmin ? response.data.pedido : response.data;
+      setDetail(pedido);
+      setTransitions(isAdmin ? response.data.transicoesPermitidas || [] : []);
+      setOperationsForm(buildOrderOperationsForm(pedido));
     } catch (error) {
       alert(error.response?.data?.message || "Não foi possível abrir o pedido");
     } finally {
       setDetailLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     const pedidoId = searchParams.get("pedido") || "";
@@ -222,7 +227,7 @@ function AdminPedidos() {
     try {
       const response = await api.patch(`/pedidos/${detail._id}/aprovar`);
       setDetail(response.data.pedido);
-      setTransitions(["separando"]);
+      setTransitions(isAdmin ? ["separando"] : []);
       setOperationsForm(buildOrderOperationsForm(response.data.pedido));
       atualizarPedidoNaLista(response.data.pedido);
       setDetailFeedback({ type: "success", message: response.data.message });
@@ -457,7 +462,11 @@ function AdminPedidos() {
             detail={detail}
             form={operationsForm}
             transitions={transitions}
-            isAdmin
+            isAdmin={isAdmin}
+            canApprove
+            canEdit
+            canDelete
+            canOperate={isAdmin}
             saving={savingOperations}
             conferenceBusy={conferenceBusy}
             approving={approving}

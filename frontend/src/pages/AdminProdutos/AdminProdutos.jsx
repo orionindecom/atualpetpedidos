@@ -168,66 +168,84 @@ function AdminProdutos() {
           <form className={styles.form} onSubmit={salvarProduto}>
             <h2>{produtoEditando ? "Editar Produto" : "Novo Produto"}</h2>
 
-            <input
-              name="nome"
-              placeholder="Nome do produto"
-              value={form.nome}
-              onChange={alterar}
-              required
-            />
+            <label className={styles.field}>
+              Nome do produto
+              <input
+                name="nome"
+                placeholder="Nome do produto"
+                value={form.nome}
+                onChange={alterar}
+                required
+              />
+            </label>
 
-            <textarea
-              name="descricao"
-              placeholder="Descrição"
-              value={form.descricao}
-              onChange={alterar}
-              maxLength={DESCRICAO_PRODUTO_MAX_LENGTH}
-            />
+            <label className={styles.field}>
+              Descrição
+              <textarea
+                name="descricao"
+                placeholder="Descrição"
+                value={form.descricao}
+                onChange={alterar}
+                maxLength={DESCRICAO_PRODUTO_MAX_LENGTH}
+              />
+            </label>
             <span className={styles.contadorDescricao}>
               {form.descricao.length} / {DESCRICAO_PRODUTO_MAX_LENGTH}
             </span>
 
-            <input
-              name="linha"
-              placeholder="Linha. Ex: Dream Color"
-              value={form.linha}
-              onChange={alterar}
-              required
-            />
+            <label className={`${styles.field} ${styles.halfField}`}>
+              Linha
+              <input
+                name="linha"
+                placeholder="Linha. Ex: Dream Color"
+                value={form.linha}
+                onChange={alterar}
+                required
+              />
+            </label>
 
-            <input
-              name="categoria"
-              placeholder="Categoria. Ex: Shampoo"
-              value={form.categoria}
-              onChange={alterar}
-              required
-            />
+            <label className={`${styles.field} ${styles.halfField}`}>
+              Categoria
+              <input
+                name="categoria"
+                placeholder="Categoria. Ex: Shampoo"
+                value={form.categoria}
+                onChange={alterar}
+                required
+              />
+            </label>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFoto(e.target.files[0])}
-            />
+            <label className={styles.field}>
+              Imagem do produto
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFoto(e.target.files[0])}
+              />
+            </label>
 
-            <button type="submit">
-              {produtoEditando ? "Salvar Alterações" : "Cadastrar Produto"}
-            </button>
-
-            {produtoEditando && (
-              <button
-                type="button"
-                className={styles.cancelar}
-                onClick={limparFormulario}
-              >
-                Cancelar edição
+            <div className={styles.formActions}>
+              <button type="submit">
+                {produtoEditando ? "Salvar Alterações" : "Cadastrar Produto"}
               </button>
-            )}
+
+              {produtoEditando && (
+                <button
+                  type="button"
+                  className={styles.cancelar}
+                  onClick={limparFormulario}
+                >
+                  Cancelar edição
+                </button>
+              )}
+            </div>
           </form>
 
           <div className={styles.lista}>
             <h2>Produtos Cadastrados</h2>
 
             <FilterToolbar
+              layout="stacked"
               activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}
               searchLabel="Buscar produtos cadastrados"
               searchPlaceholder="Buscar por produto, linha ou categoria..."
