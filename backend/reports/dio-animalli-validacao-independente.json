@@ -1,0 +1,1220 @@
+{
+  "resultado": "APROVADO",
+  "consultadoEm": "2026-09-09T16:51:33.489Z",
+  "tabelaId": "6aa18e7309e5a582e3f79384",
+  "novoProdutoId": "6aa18d6dbfe61130929f9fb1",
+  "precosConferidosNoXml": 151,
+  "divergencias": 0,
+  "produtosExistentesIntactos": true,
+  "outrasTabelasEPrecosIntactos": true,
+  "verificacao": [
+    {
+      "linha": 11,
+      "celula": "H11",
+      "produtoId": "6a5aab4897e2675dd0e46ee0",
+      "produto": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:5 5L",
+      "excel": "137.50",
+      "banco": "137.5"
+    },
+    {
+      "linha": 12,
+      "celula": "H12",
+      "produtoId": "6a5aab4897e2675dd0e46ee1",
+      "produto": "SHAMPOO DREAM COLOR BRANQUEADOR 1:5 5L",
+      "excel": "117.70",
+      "banco": "117.7"
+    },
+    {
+      "linha": 13,
+      "celula": "H13",
+      "produtoId": "6a5aab4897e2675dd0e46ee2",
+      "produto": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+      "excel": "95.69",
+      "banco": "95.69"
+    },
+    {
+      "linha": 14,
+      "celula": "H14",
+      "produtoId": "6a5aab4897e2675dd0e46ee3",
+      "produto": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 5L",
+      "excel": "95.69",
+      "banco": "95.69"
+    },
+    {
+      "linha": 15,
+      "celula": "H15",
+      "produtoId": "6a5aab4897e2675dd0e46ee4",
+      "produto": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+      "excel": "95.69",
+      "banco": "95.69"
+    },
+    {
+      "linha": 16,
+      "celula": "H16",
+      "produtoId": "6a5aab4897e2675dd0e46ee5",
+      "produto": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+      "excel": "95.69",
+      "banco": "95.69"
+    },
+    {
+      "linha": 17,
+      "celula": "H17",
+      "produtoId": "6a5aab4897e2675dd0e46ee6",
+      "produto": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+      "excel": "28.60",
+      "banco": "28.6"
+    },
+    {
+      "linha": 18,
+      "celula": "H18",
+      "produtoId": "6a5aab4897e2675dd0e46ee7",
+      "produto": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 1L",
+      "excel": "28.60",
+      "banco": "28.6"
+    },
+    {
+      "linha": 19,
+      "celula": "H19",
+      "produtoId": "6a5aab4897e2675dd0e46ee8",
+      "produto": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+      "excel": "28.60",
+      "banco": "28.6"
+    },
+    {
+      "linha": 20,
+      "celula": "H20",
+      "produtoId": "6a5e64e835f58a6bbb61d100",
+      "produto": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+      "excel": "28.60",
+      "banco": "28.6"
+    },
+    {
+      "linha": 21,
+      "celula": "H21",
+      "produtoId": "6a5aab4897e2675dd0e46ee9",
+      "produto": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+      "excel": "42.90",
+      "banco": "42.9"
+    },
+    {
+      "linha": 22,
+      "celula": "H22",
+      "produtoId": "6a5aab4897e2675dd0e46eea",
+      "produto": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 1L",
+      "excel": "42.90",
+      "banco": "42.9"
+    },
+    {
+      "linha": 23,
+      "celula": "H23",
+      "produtoId": "6a5aab4897e2675dd0e46eeb",
+      "produto": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+      "excel": "42.90",
+      "banco": "42.9"
+    },
+    {
+      "linha": 24,
+      "celula": "H24",
+      "produtoId": "6a5aab4897e2675dd0e46eec",
+      "produto": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+      "excel": "42.90",
+      "banco": "42.9"
+    },
+    {
+      "linha": 25,
+      "celula": "H25",
+      "produtoId": "6a5aab4897e2675dd0e46eed",
+      "produto": "CONDICIONADOR DREAM COLOR VANILLA 1:5 1L",
+      "excel": "47.02",
+      "banco": "47.02"
+    },
+    {
+      "linha": 26,
+      "celula": "H26",
+      "produtoId": "6a5e4a86011c103e77abdda2",
+      "produto": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS1:5 1L",
+      "excel": "47.02",
+      "banco": "47.02"
+    },
+    {
+      "linha": 27,
+      "celula": "H27",
+      "produtoId": "6a5aab4897e2675dd0e46eef",
+      "produto": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+      "excel": "143.55",
+      "banco": "143.55"
+    },
+    {
+      "linha": 28,
+      "celula": "H28",
+      "produtoId": "6a5aab4897e2675dd0e46ef0",
+      "produto": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 5L",
+      "excel": "143.55",
+      "banco": "143.55"
+    },
+    {
+      "linha": 29,
+      "celula": "H29",
+      "produtoId": "6a5aab4897e2675dd0e46ef1",
+      "produto": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+      "excel": "143.55",
+      "banco": "143.55"
+    },
+    {
+      "linha": 30,
+      "celula": "H30",
+      "produtoId": "6a5aab4897e2675dd0e46ef2",
+      "produto": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+      "excel": "143.55",
+      "banco": "143.55"
+    },
+    {
+      "linha": 31,
+      "celula": "H31",
+      "produtoId": "6a5aab4897e2675dd0e46ef3",
+      "produto": "CONDICIONADOR DREAM COLOR VANILLA 1:5 5L",
+      "excel": "157.33",
+      "banco": "157.33"
+    },
+    {
+      "linha": 32,
+      "celula": "H32",
+      "produtoId": "6a5e4a60011c103e77abdda1",
+      "produto": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS 1:5 5L",
+      "excel": "157.33",
+      "banco": "157.33"
+    },
+    {
+      "linha": 33,
+      "celula": "H33",
+      "produtoId": "6a5aab4897e2675dd0e46ef5",
+      "produto": "COLÔNIA DREAM COLOR FRAMBOESA C/ CHANTILLY 300ML",
+      "excel": "48.05",
+      "banco": "48.05"
+    },
+    {
+      "linha": 34,
+      "celula": "H34",
+      "produtoId": "6a5aab4897e2675dd0e46ef6",
+      "produto": "COLÔNIA DREAM COLOR TANGERINA CITRUS 300ML",
+      "excel": "48.05",
+      "banco": "48.05"
+    },
+    {
+      "linha": 35,
+      "celula": "H35",
+      "produtoId": "6a5aab4897e2675dd0e46ef7",
+      "produto": "COLÔNIA DREAM COLOR ALECRIM DO CAMPO 300ML",
+      "excel": "48.05",
+      "banco": "48.05"
+    },
+    {
+      "linha": 36,
+      "celula": "H36",
+      "produtoId": "6a5aab4897e2675dd0e46ef8",
+      "produto": "COLÔNIA DREAM COLOR TUTTI-FRUTTI 300ML",
+      "excel": "48.05",
+      "banco": "48.05"
+    },
+    {
+      "linha": 37,
+      "celula": "H37",
+      "produtoId": "6a5aab4897e2675dd0e46ef9",
+      "produto": "COLÔNIA DREAM COLOR VANILLA 300ML",
+      "excel": "52.66",
+      "banco": "52.66"
+    },
+    {
+      "linha": 38,
+      "celula": "H38",
+      "produtoId": "6a5aab4897e2675dd0e46efa",
+      "produto": "COLÔNIA DREAM COLOR JASMIM C/ AMENDOAS 300ML",
+      "excel": "52.66",
+      "banco": "52.66"
+    },
+    {
+      "linha": 39,
+      "celula": "H39",
+      "produtoId": "6a5aab4897e2675dd0e46efb",
+      "produto": "MÁSCARA HIDRATAÇÃO DREAM COLOR BAMBU 500G",
+      "excel": "49.90",
+      "banco": "49.9"
+    },
+    {
+      "linha": 40,
+      "celula": "H40",
+      "produtoId": "6a5aab4997e2675dd0e46efc",
+      "produto": "AROMATIZADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 250ML",
+      "excel": "45.00",
+      "banco": "45"
+    },
+    {
+      "linha": 41,
+      "celula": "H41",
+      "produtoId": "6a5aab4997e2675dd0e46efd",
+      "produto": "AROMATIZADOR DREAM COLOR TANGERINA CITRUS 250ML",
+      "excel": "45.00",
+      "banco": "45"
+    },
+    {
+      "linha": 42,
+      "celula": "H42",
+      "produtoId": "6a5aab4997e2675dd0e46efe",
+      "produto": "AROMATIZADOR DREAM COLOR ALECRIM DO CAMPO 250ML",
+      "excel": "45.00",
+      "banco": "45"
+    },
+    {
+      "linha": 43,
+      "celula": "H43",
+      "produtoId": "6a5aab4997e2675dd0e46eff",
+      "produto": "AROMATIZADOR DREAM COLOR TUTTI-FRUTTI 250ML",
+      "excel": "45.00",
+      "banco": "45"
+    },
+    {
+      "linha": 45,
+      "celula": "H45",
+      "produtoId": "6a34b31d8466d5fa94f135d8",
+      "produto": "Shampoo Dream Color Pré-Lavagem 1:12 5L",
+      "excel": "220.00",
+      "banco": "220"
+    },
+    {
+      "linha": 46,
+      "celula": "H46",
+      "produtoId": "6a511fd9328c36f3a611f343",
+      "produto": "Shampoo Dream Color Branqueador 1:12 5L",
+      "excel": "200.00",
+      "banco": "200"
+    },
+    {
+      "linha": 47,
+      "celula": "H47",
+      "produtoId": "6a5aab4997e2675dd0e46f00",
+      "produto": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 48,
+      "celula": "H48",
+      "produtoId": "6a5aab4997e2675dd0e46f01",
+      "produto": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 49,
+      "celula": "H49",
+      "produtoId": "6a5aab4997e2675dd0e46f02",
+      "produto": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 50,
+      "celula": "H50",
+      "produtoId": "6a5aab4997e2675dd0e46f03",
+      "produto": "SHAMPOO DREAM COLOR VANILLA 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 51,
+      "celula": "H51",
+      "produtoId": "6a5aab4997e2675dd0e46f04",
+      "produto": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 52,
+      "celula": "H52",
+      "produtoId": "6a5aab4997e2675dd0e46f05",
+      "produto": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 5L",
+      "excel": "155.00",
+      "banco": "155"
+    },
+    {
+      "linha": 53,
+      "celula": "H53",
+      "produtoId": "6a5aab4997e2675dd0e46f06",
+      "produto": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:12 1L",
+      "excel": "73.25",
+      "banco": "73.25"
+    },
+    {
+      "linha": 54,
+      "celula": "H54",
+      "produtoId": "6a5aab4997e2675dd0e46f07",
+      "produto": "SHAMPOO DREAM COLOR BRANQUEADOR 1:12 1L",
+      "excel": "70.57",
+      "banco": "70.57"
+    },
+    {
+      "linha": 55,
+      "celula": "H55",
+      "produtoId": "6a5aab4997e2675dd0e46f08",
+      "produto": "SHAMPOO DREAM COLOR VANILLA 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 56,
+      "celula": "H56",
+      "produtoId": "6a5aab4997e2675dd0e46f09",
+      "produto": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 57,
+      "celula": "H57",
+      "produtoId": "6a5aab4997e2675dd0e46f0a",
+      "produto": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 58,
+      "celula": "H58",
+      "produtoId": "6a5aab4997e2675dd0e46f0b",
+      "produto": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 59,
+      "celula": "H59",
+      "produtoId": "6a5aab4997e2675dd0e46f0c",
+      "produto": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 60,
+      "celula": "H60",
+      "produtoId": "6a5aab4997e2675dd0e46f0d",
+      "produto": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 1L",
+      "excel": "50.64",
+      "banco": "50.64"
+    },
+    {
+      "linha": 62,
+      "celula": "H62",
+      "produtoId": "6a5aab4997e2675dd0e46f0e",
+      "produto": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 1L",
+      "excel": "87.00",
+      "banco": "87"
+    },
+    {
+      "linha": 63,
+      "celula": "H63",
+      "produtoId": "6a5aab4997e2675dd0e46f0f",
+      "produto": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 500ML",
+      "excel": "58.00",
+      "banco": "58"
+    },
+    {
+      "linha": 64,
+      "celula": "H64",
+      "produtoId": "6a5aab4997e2675dd0e46f10",
+      "produto": "SHAMPOO EXTRA VOLUME DREAM COLOR LINE CARE 1L",
+      "excel": "66.12",
+      "banco": "66.12"
+    },
+    {
+      "linha": 65,
+      "celula": "H65",
+      "produtoId": "6a5aab4a97e2675dd0e46f11",
+      "produto": "SPRAY DE VOLUME DREAM COLOR LINE CARE POWER PUFF 300ML",
+      "excel": "51.00",
+      "banco": "51"
+    },
+    {
+      "linha": 68,
+      "celula": "H68",
+      "produtoId": "6a512609328c36f3a611f348",
+      "produto": "Shampoo The Luxe Limpeza Profunda (Coco) 5L",
+      "excel": "74.38",
+      "banco": "74.38"
+    },
+    {
+      "linha": 69,
+      "celula": "H69",
+      "produtoId": "6a512551328c36f3a611f347",
+      "produto": "Shampoo The Luxe Limpeza Profunda 5L",
+      "excel": "74.38",
+      "banco": "74.38"
+    },
+    {
+      "linha": 70,
+      "celula": "H70",
+      "produtoId": "6a51266c328c36f3a611f349",
+      "produto": "Shampoo The Luxe Branqueador 5L",
+      "excel": "65.00",
+      "banco": "65"
+    },
+    {
+      "linha": 71,
+      "celula": "H71",
+      "produtoId": "6a512102328c36f3a611f344",
+      "produto": "Shampoo The Luxe Cereja & Avelã 5L",
+      "excel": "61.78",
+      "banco": "61.78"
+    },
+    {
+      "linha": 72,
+      "celula": "H72",
+      "produtoId": "6a5124b3328c36f3a611f346",
+      "produto": "Shampoo The Luxe Melancia 5L",
+      "excel": "61.78",
+      "banco": "61.78"
+    },
+    {
+      "linha": 73,
+      "celula": "H73",
+      "produtoId": "6a34b3e48466d5fa94f135da",
+      "produto": "Shampoo The Luxe Lichia & Romã 5L",
+      "excel": "61.78",
+      "banco": "61.78"
+    },
+    {
+      "linha": 74,
+      "celula": "H74",
+      "produtoId": "6a51228a328c36f3a611f345",
+      "produto": "Shampoo The Luxe Neutro 5L",
+      "excel": "61.78",
+      "banco": "61.78"
+    },
+    {
+      "linha": 75,
+      "celula": "H75",
+      "produtoId": "6a5126f0328c36f3a611f34a",
+      "produto": "Shampoo The Luxe Peles Sensíveis e Face (Filhotes) 1L",
+      "excel": "45.00",
+      "banco": "45"
+    },
+    {
+      "linha": 76,
+      "celula": "H76",
+      "produtoId": "6a5127c7328c36f3a611f34b",
+      "produto": "Condicionador The Luxe - Pronto Uso 5L",
+      "excel": "66.63",
+      "banco": "66.63"
+    },
+    {
+      "linha": 77,
+      "celula": "H77",
+      "produtoId": "6a5129d8328c36f3a611f34c",
+      "produto": "Condicionador The Luxe - Cereja & Avelã 5L",
+      "excel": "135.00",
+      "banco": "135"
+    },
+    {
+      "linha": 78,
+      "celula": "H78",
+      "produtoId": "6a34b4b88466d5fa94f135dd",
+      "produto": "Condicionador The Luxe - Lichia & Romã 5L",
+      "excel": "135.00",
+      "banco": "135"
+    },
+    {
+      "linha": 79,
+      "celula": "H79",
+      "produtoId": "6a512da7328c36f3a611f34d",
+      "produto": "Condicionador The Luxe - Melancia 5L",
+      "excel": "135.00",
+      "banco": "135"
+    },
+    {
+      "linha": 80,
+      "celula": "H80",
+      "produtoId": "6a512e07328c36f3a611f34e",
+      "produto": "Condicionador The Luxe - Neutro 5L",
+      "excel": "135.00",
+      "banco": "135"
+    },
+    {
+      "linha": 81,
+      "celula": "H81",
+      "produtoId": "6aa18d6dbfe61130929f9fb1",
+      "produto": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+      "excel": "63.10",
+      "banco": "63.1"
+    },
+    {
+      "linha": 82,
+      "celula": "H82",
+      "produtoId": "6a513299328c36f3a611f35c",
+      "produto": "Máscara de Hidratação The Luxe - Cereja & Avelã 500g",
+      "excel": "64.00",
+      "banco": "64"
+    },
+    {
+      "linha": 83,
+      "celula": "H83",
+      "produtoId": "6a34b4128466d5fa94f135db",
+      "produto": "Máscara de Hidratação The Luxe - Lichia & Romã 500g",
+      "excel": "64.00",
+      "banco": "64"
+    },
+    {
+      "linha": 84,
+      "celula": "H84",
+      "produtoId": "6a513191328c36f3a611f35b",
+      "produto": "Máscara de Hidratação The Luxe - Melancia 500g",
+      "excel": "64.00",
+      "banco": "64"
+    },
+    {
+      "linha": 85,
+      "celula": "H85",
+      "produtoId": "6a5133a1328c36f3a611f35d",
+      "produto": "Máscara de Hidratação The Luxe - Neutro 500g",
+      "excel": "64.00",
+      "banco": "64"
+    },
+    {
+      "linha": 86,
+      "celula": "H86",
+      "produtoId": "6a513440328c36f3a611f35e",
+      "produto": "Máscara de Hidratação The Luxe 60 Seg - Cereja & Avelã 1kg",
+      "excel": "85.00",
+      "banco": "85"
+    },
+    {
+      "linha": 87,
+      "celula": "H87",
+      "produtoId": "6a513576328c36f3a611f35f",
+      "produto": "Máscara de Hidratação The Luxe 60 Seg - Lichia & Romã 1kg",
+      "excel": "85.00",
+      "banco": "85"
+    },
+    {
+      "linha": 88,
+      "celula": "H88",
+      "produtoId": "6a513622328c36f3a611f361",
+      "produto": "Máscara de Hidratação The Luxe 60 Seg - Melancia 1kg",
+      "excel": "85.00",
+      "banco": "85"
+    },
+    {
+      "linha": 89,
+      "celula": "H89",
+      "produtoId": "6a5135db328c36f3a611f360",
+      "produto": "Máscara de Hidratação The Luxe 60 Seg - Neutro 1kg",
+      "excel": "85.00",
+      "banco": "85"
+    },
+    {
+      "linha": 90,
+      "celula": "H90",
+      "produtoId": "6a513a83328c36f3a611f36a",
+      "produto": "Banho a Seco The Luxe 500ml",
+      "excel": "11.00",
+      "banco": "11"
+    },
+    {
+      "linha": 91,
+      "celula": "H91",
+      "produtoId": "6a51395c328c36f3a611f368",
+      "produto": "Tira Nós The Luxe 500ml",
+      "excel": "24.75",
+      "banco": "24.75"
+    },
+    {
+      "linha": 92,
+      "celula": "H92",
+      "produtoId": "6a5138fd328c36f3a611f367",
+      "produto": "Leave-in The Luxe 500ml",
+      "excel": "31.62",
+      "banco": "31.62"
+    },
+    {
+      "linha": 93,
+      "celula": "H93",
+      "produtoId": "6a5139aa328c36f3a611f369",
+      "produto": "Limpa Orelhas The Luxe 500ml",
+      "excel": "25.98",
+      "banco": "25.98"
+    },
+    {
+      "linha": 94,
+      "celula": "H94",
+      "produtoId": "6a513b5c328c36f3a611f36c",
+      "produto": "Hidratante de Patinhas The Luxe 120ml",
+      "excel": "11.00",
+      "banco": "11"
+    },
+    {
+      "linha": 95,
+      "celula": "H95",
+      "produtoId": "6a5137fd328c36f3a611f366",
+      "produto": "Fluido Finalizador The Luxe Argan 120ml",
+      "excel": "62.00",
+      "banco": "62"
+    },
+    {
+      "linha": 97,
+      "celula": "H97",
+      "produtoId": "6a513695328c36f3a611f362",
+      "produto": "Colônia The Luxe Cereja & Avelã 500ml",
+      "excel": "63.00",
+      "banco": "63"
+    },
+    {
+      "linha": 98,
+      "celula": "H98",
+      "produtoId": "6a34b4488466d5fa94f135dc",
+      "produto": "Colônia The Luxe Lichia e Romã 500ml",
+      "excel": "63.00",
+      "banco": "63"
+    },
+    {
+      "linha": 99,
+      "celula": "H99",
+      "produtoId": "6a5136bf328c36f3a611f363",
+      "produto": "Colônia The Luxe Melancia 500ml",
+      "excel": "63.00",
+      "banco": "63"
+    },
+    {
+      "linha": 100,
+      "celula": "H100",
+      "produtoId": "6a513710328c36f3a611f364",
+      "produto": "Colônia The Luxe Neutro 500ml",
+      "excel": "63.00",
+      "banco": "63"
+    },
+    {
+      "linha": 101,
+      "celula": "H101",
+      "produtoId": "6a513756328c36f3a611f365",
+      "produto": "Colônia The Luxe Morango 500ml",
+      "excel": "63.00",
+      "banco": "63"
+    },
+    {
+      "linha": 102,
+      "celula": "H102",
+      "produtoId": "6a513cba328c36f3a611f36d",
+      "produto": "Colônia The Luxe One 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 103,
+      "celula": "H103",
+      "produtoId": "6a513cf8328c36f3a611f36e",
+      "produto": "Colônia The Luxe Two 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 104,
+      "celula": "H104",
+      "produtoId": "6a513d38328c36f3a611f36f",
+      "produto": "Colônia The Luxe Three 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 105,
+      "celula": "H105",
+      "produtoId": "6a513d7a328c36f3a611f370",
+      "produto": "Colônia The Luxe Four 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 106,
+      "celula": "H106",
+      "produtoId": "6a513db1328c36f3a611f371",
+      "produto": "Colônia The Luxe Five 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 107,
+      "celula": "H107",
+      "produtoId": "6a513e5e328c36f3a611f372",
+      "produto": "Colônia The Luxe Six 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 108,
+      "celula": "H108",
+      "produtoId": "6a513e90328c36f3a611f373",
+      "produto": "Colônia The Luxe Seven 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 109,
+      "celula": "H109",
+      "produtoId": "6a513ed8328c36f3a611f374",
+      "produto": "Colônia The Luxe Eight 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 110,
+      "celula": "H110",
+      "produtoId": "6a513efb328c36f3a611f375",
+      "produto": "Colônia The Luxe Nine 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 111,
+      "celula": "H111",
+      "produtoId": "6a513f24328c36f3a611f376",
+      "produto": "Colônia The Luxe Ten 500ml",
+      "excel": "49.50",
+      "banco": "49.5"
+    },
+    {
+      "linha": 114,
+      "celula": "H114",
+      "produtoId": "6a5aab4a97e2675dd0e46f12",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BABY 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 115,
+      "celula": "H115",
+      "produtoId": "6a5aab4a97e2675dd0e46f13",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 116,
+      "celula": "H116",
+      "produtoId": "6a5aab4a97e2675dd0e46f14",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 117,
+      "celula": "H117",
+      "produtoId": "6a5aab4a97e2675dd0e46f15",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BROWN 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 118,
+      "celula": "H118",
+      "produtoId": "6a5aab4a97e2675dd0e46f16",
+      "produto": "PERFUME VANITY ULTRA PREMIUM CHOC 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 119,
+      "celula": "H119",
+      "produtoId": "6a5aab4a97e2675dd0e46f17",
+      "produto": "PERFUME VANITY ULTRA PREMIUM CITRIC 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 120,
+      "celula": "H120",
+      "produtoId": "6a5aab4a97e2675dd0e46f18",
+      "produto": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 121,
+      "celula": "H121",
+      "produtoId": "6a5aab4a97e2675dd0e46f19",
+      "produto": "PERFUME VANITY ULTRA PREMIUM FLOWERS 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 122,
+      "celula": "H122",
+      "produtoId": "6a5aab4a97e2675dd0e46f1a",
+      "produto": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 123,
+      "celula": "H123",
+      "produtoId": "6a5aab4a97e2675dd0e46f1b",
+      "produto": "PERFUME VANITY ULTRA PREMIUM GOLD 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 124,
+      "celula": "H124",
+      "produtoId": "6a5aab4a97e2675dd0e46f1c",
+      "produto": "PERFUME VANITY ULTRA PREMIUM ILLUSION 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 125,
+      "celula": "H125",
+      "produtoId": "6a5aab4a97e2675dd0e46f1d",
+      "produto": "PERFUME VANITY ULTRA PREMIUM JASMIN 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 126,
+      "celula": "H126",
+      "produtoId": "6a5aab4a97e2675dd0e46f1e",
+      "produto": "PERFUME VANITY ULTRA PREMIUM MANGO 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 127,
+      "celula": "H127",
+      "produtoId": "6a5aab4a97e2675dd0e46f1f",
+      "produto": "PERFUME VANITY ULTRA PREMIUM NIGHT 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 128,
+      "celula": "H128",
+      "produtoId": "6a5aab4a97e2675dd0e46f20",
+      "produto": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 129,
+      "celula": "H129",
+      "produtoId": "6a5aab4a97e2675dd0e46f21",
+      "produto": "PERFUME VANITY ULTRA PREMIUM STYLE-G 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 130,
+      "celula": "H130",
+      "produtoId": "6a5aab4a97e2675dd0e46f22",
+      "produto": "PERFUME VANITY ULTRA PREMIUM SWEET 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 131,
+      "celula": "H131",
+      "produtoId": "6a5aab4a97e2675dd0e46f23",
+      "produto": "PERFUME VANITY ULTRA PREMIUM WATERMELON 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 132,
+      "celula": "H132",
+      "produtoId": "6a5aab4a97e2675dd0e46f24",
+      "produto": "PERFUME VANITY ULTRA PREMIUM YOU 50ML",
+      "excel": "24.52",
+      "banco": "24.52"
+    },
+    {
+      "linha": 133,
+      "celula": "H133",
+      "produtoId": "6a5aab4a97e2675dd0e46f25",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BABY 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 134,
+      "celula": "H134",
+      "produtoId": "6a5aab4a97e2675dd0e46f26",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 135,
+      "celula": "H135",
+      "produtoId": "6a5aab4a97e2675dd0e46f27",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 136,
+      "celula": "H136",
+      "produtoId": "6a5aab4a97e2675dd0e46f28",
+      "produto": "PERFUME VANITY ULTRA PREMIUM BROWN 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 137,
+      "celula": "H137",
+      "produtoId": "6a5aab4a97e2675dd0e46f29",
+      "produto": "PERFUME VANITY ULTRA PREMIUM CHOC 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 138,
+      "celula": "H138",
+      "produtoId": "6a5aab4a97e2675dd0e46f2a",
+      "produto": "PERFUME VANITY ULTRA PREMIUM CITRIC 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 139,
+      "celula": "H139",
+      "produtoId": "6a5aab4a97e2675dd0e46f2b",
+      "produto": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 140,
+      "celula": "H140",
+      "produtoId": "6a5aab4a97e2675dd0e46f2c",
+      "produto": "PERFUME VANITY ULTRA PREMIUM FLOWERS 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 141,
+      "celula": "H141",
+      "produtoId": "6a5aab4b97e2675dd0e46f2d",
+      "produto": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 142,
+      "celula": "H142",
+      "produtoId": "6a5aab4b97e2675dd0e46f2e",
+      "produto": "PERFUME VANITY ULTRA PREMIUM GOLD 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 143,
+      "celula": "H143",
+      "produtoId": "6a5aab4b97e2675dd0e46f2f",
+      "produto": "PERFUME VANITY ULTRA PREMIUM ILLUSION 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 144,
+      "celula": "H144",
+      "produtoId": "6a5aab4b97e2675dd0e46f30",
+      "produto": "PERFUME VANITY ULTRA PREMIUM JASMIN 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 145,
+      "celula": "H145",
+      "produtoId": "6a5aab4b97e2675dd0e46f31",
+      "produto": "PERFUME VANITY ULTRA PREMIUM MANGO 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 146,
+      "celula": "H146",
+      "produtoId": "6a5aab4b97e2675dd0e46f32",
+      "produto": "PERFUME VANITY ULTRA PREMIUM NIGHT 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 147,
+      "celula": "H147",
+      "produtoId": "6a5aab4b97e2675dd0e46f33",
+      "produto": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 148,
+      "celula": "H148",
+      "produtoId": "6a5aab4b97e2675dd0e46f34",
+      "produto": "PERFUME VANITY ULTRA PREMIUM STYLE-G 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 149,
+      "celula": "H149",
+      "produtoId": "6a5aab4b97e2675dd0e46f35",
+      "produto": "PERFUME VANITY ULTRA PREMIUM SWEET 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 150,
+      "celula": "H150",
+      "produtoId": "6a5aab4b97e2675dd0e46f36",
+      "produto": "PERFUME VANITY ULTRA PREMIUM WATERMELON 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 151,
+      "celula": "H151",
+      "produtoId": "6a5aab4b97e2675dd0e46f37",
+      "produto": "PERFUME VANITY ULTRA PREMIUM YOU 500ML",
+      "excel": "94.00",
+      "banco": "94"
+    },
+    {
+      "linha": 152,
+      "celula": "H152",
+      "produtoId": "6a5aab4b97e2675dd0e46f38",
+      "produto": "DISPLAY PERFUME VANITY ULTRA PREMIUM 50ML",
+      "excel": "400.00",
+      "banco": "400"
+    },
+    {
+      "linha": 156,
+      "celula": "H156",
+      "produtoId": "6a34b5088466d5fa94f135de",
+      "produto": "Shampoo Zoom Pré Lavagem 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 157,
+      "celula": "H157",
+      "produtoId": "6a5aab4b97e2675dd0e46f39",
+      "produto": "SHAMPOO ZOOM NEUTRO 1:4 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 158,
+      "celula": "H158",
+      "produtoId": "6a5aab4b97e2675dd0e46f3a",
+      "produto": "SHAMPOO ZOOM PELOS CLAROS 1:4 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 159,
+      "celula": "H159",
+      "produtoId": "6a5aab4b97e2675dd0e46f3b",
+      "produto": "SHAMPOO ZOOM PELOS ESCUROS 1:4 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 160,
+      "celula": "H160",
+      "produtoId": "6a5aab4b97e2675dd0e46f3c",
+      "produto": "SHAMPOO ZOOM FILHOTES 1:4 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 161,
+      "celula": "H161",
+      "produtoId": "6a5aab4b97e2675dd0e46f3d",
+      "produto": "SHAMPOO ZOOM MORANGO 1:4 5L",
+      "excel": "31.68",
+      "banco": "31.68"
+    },
+    {
+      "linha": 162,
+      "celula": "H162",
+      "produtoId": "6a5aab4b97e2675dd0e46f3e",
+      "produto": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 1:4 5L",
+      "excel": "32.00",
+      "banco": "32"
+    },
+    {
+      "linha": 163,
+      "celula": "H163",
+      "produtoId": "6a5aab4b97e2675dd0e46f3f",
+      "produto": "CONDICIONADOR ZOOM 5L",
+      "excel": "33.00",
+      "banco": "33"
+    },
+    {
+      "linha": 164,
+      "celula": "H164",
+      "produtoId": "6a5aab4b97e2675dd0e46f40",
+      "produto": "SHAMPOO ZOOM NEUTRO 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 165,
+      "celula": "H165",
+      "produtoId": "6a5aab4b97e2675dd0e46f41",
+      "produto": "SHAMPOO ZOOM PELOS CLAROS 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 166,
+      "celula": "H166",
+      "produtoId": "6a5aab4b97e2675dd0e46f42",
+      "produto": "SHAMPOO ZOOM PELOS ESCUROS 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 167,
+      "celula": "H167",
+      "produtoId": "6a5aab4b97e2675dd0e46f43",
+      "produto": "SHAMPOO ZOOM FILHOTES 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 168,
+      "celula": "H168",
+      "produtoId": "6a5aab4b97e2675dd0e46f44",
+      "produto": "SHAMPOO ZOOM MORANGO 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 169,
+      "celula": "H169",
+      "produtoId": "6a5aab4b97e2675dd0e46f45",
+      "produto": "SHAMPOO ZOOM BRANQUEADOR 750ML",
+      "excel": "4.84",
+      "banco": "4.84"
+    },
+    {
+      "linha": 170,
+      "celula": "H170",
+      "produtoId": "6a5aab4c97e2675dd0e46f46",
+      "produto": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 750ML",
+      "excel": "5.70",
+      "banco": "5.7"
+    },
+    {
+      "linha": 171,
+      "celula": "H171",
+      "produtoId": "6a5aab4c97e2675dd0e46f47",
+      "produto": "CONDICIONADOR ZOOM 750ML",
+      "excel": "5.04",
+      "banco": "5.04"
+    }
+  ]
+}

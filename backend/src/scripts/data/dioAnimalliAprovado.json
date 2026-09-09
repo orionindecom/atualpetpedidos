@@ -1,0 +1,3001 @@
+{
+  "versao": "decisoes-finais-2026-09-09",
+  "sha256Excel": "3e674aefafa56452e081f27f845181de04c76f373033f257ec1e0470b6bae053",
+  "aba": "especializado nova ",
+  "coluna": "H",
+  "novoProduto": {
+    "_id": "6aa18d6dbfe61130929f9fb1",
+    "nome": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+    "linha": "The Luxe",
+    "categoria": "Shampoo",
+    "ativo": true
+  },
+  "registros": [
+    {
+      "fonte": {
+        "linha": 11,
+        "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019618",
+        "celula": "H11"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee0",
+        "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 12,
+        "nome": "SHAMPOO DREAM COLOR BRANQUEADOR",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019601",
+        "celula": "H12"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee1",
+        "nome": "SHAMPOO DREAM COLOR BRANQUEADOR 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 13,
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019625",
+        "celula": "H13"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee2",
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 14,
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019649",
+        "celula": "H14"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee3",
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 15,
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019656",
+        "celula": "H15"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee4",
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 16,
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019632",
+        "celula": "H16"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee5",
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 17,
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019472",
+        "celula": "H17"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee6",
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 18,
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019496",
+        "celula": "H18"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee7",
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 19,
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019502",
+        "celula": "H19"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee8",
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 20,
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019489",
+        "celula": "H20"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5e64e835f58a6bbb61d100",
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 21,
+        "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019519",
+        "celula": "H21"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ee9",
+        "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 22,
+        "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019533",
+        "celula": "H22"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46eea",
+        "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 23,
+        "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019540",
+        "celula": "H23"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46eeb",
+        "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 24,
+        "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898360019526",
+        "celula": "H24"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46eec",
+        "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 25,
+        "nome": "CONDICIONADOR  DREAM COLOR VANILLA",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898782620751",
+        "celula": "H25"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46eed",
+        "nome": "CONDICIONADOR DREAM COLOR VANILLA 1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 26,
+        "nome": "CONDICIONADOR  DREAM COLOR JASMIM C/ AMENDOAS",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898782620775",
+        "celula": "H26"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5e4a86011c103e77abdda2",
+        "nome": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS1:5 1L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 27,
+        "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019762",
+        "celula": "H27"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46eef",
+        "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 28,
+        "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019755",
+        "celula": "H28"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef0",
+        "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 29,
+        "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019779",
+        "celula": "H29"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef1",
+        "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 30,
+        "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360019786",
+        "celula": "H30"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef2",
+        "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 31,
+        "nome": "CONDICIONADOR  DREAM COLOR VANILLA",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620805",
+        "celula": "H31"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef3",
+        "nome": "CONDICIONADOR DREAM COLOR VANILLA 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 32,
+        "nome": "CONDICIONADOR  DREAM COLOR JASMIM C/ AMENDOAS",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620799",
+        "celula": "H32"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5e4a60011c103e77abdda1",
+        "nome": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS 1:5 5L",
+        "linha": "Dream Color",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 33,
+        "nome": "COLÔNIA DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898360019557",
+        "celula": "H33"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef5",
+        "nome": "COLÔNIA DREAM COLOR FRAMBOESA C/ CHANTILLY 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 34,
+        "nome": "COLÔNIA DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898360019571",
+        "celula": "H34"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef6",
+        "nome": "COLÔNIA DREAM COLOR TANGERINA CITRUS 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 35,
+        "nome": "COLÔNIA DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898360019588",
+        "celula": "H35"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef7",
+        "nome": "COLÔNIA DREAM COLOR ALECRIM DO CAMPO 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 36,
+        "nome": "COLÔNIA DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898360019564",
+        "celula": "H36"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef8",
+        "nome": "COLÔNIA DREAM COLOR TUTTI-FRUTTI 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 37,
+        "nome": "COLÔNIA DREAM COLOR VANILLA",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898782620836",
+        "celula": "H37"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46ef9",
+        "nome": "COLÔNIA DREAM COLOR VANILLA 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 38,
+        "nome": "COLÔNIA DREAM COLOR JASMIM C/ AMENDOAS",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898782620843",
+        "celula": "H38"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46efa",
+        "nome": "COLÔNIA DREAM COLOR JASMIM C/ AMENDOAS 300ML",
+        "linha": "Dream Color",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 39,
+        "nome": "MÁSCARA HIDRATAÇÃO DREAM COLOR BAMBU",
+        "embalagem": "500G",
+        "diluicao": "-",
+        "ean": "7898360019595",
+        "celula": "H39"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4897e2675dd0e46efb",
+        "nome": "MÁSCARA HIDRATAÇÃO DREAM COLOR BAMBU 500G",
+        "linha": "Dream Color",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 40,
+        "nome": "AROMATIZADOR DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "250ML",
+        "diluicao": "-",
+        "ean": "7898360019885",
+        "celula": "H40"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46efc",
+        "nome": "AROMATIZADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 250ML",
+        "linha": "Dream Color",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 41,
+        "nome": "AROMATIZADOR DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "250ML",
+        "diluicao": "-",
+        "ean": "7898360019854",
+        "celula": "H41"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46efd",
+        "nome": "AROMATIZADOR DREAM COLOR TANGERINA CITRUS 250ML",
+        "linha": "Dream Color",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 42,
+        "nome": "AROMATIZADOR DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "250ML",
+        "diluicao": "-",
+        "ean": "7898360019878",
+        "celula": "H42"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46efe",
+        "nome": "AROMATIZADOR DREAM COLOR ALECRIM DO CAMPO 250ML",
+        "linha": "Dream Color",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 43,
+        "nome": "AROMATIZADOR DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "250ML",
+        "diluicao": "-",
+        "ean": "7898360019861",
+        "celula": "H43"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46eff",
+        "nome": "AROMATIZADOR DREAM COLOR TUTTI-FRUTTI 250ML",
+        "linha": "Dream Color",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 45,
+        "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898360117116",
+        "celula": "H45"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b31d8466d5fa94f135d8",
+        "nome": "Shampoo Dream Color Pré-Lavagem 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 46,
+        "nome": "SHAMPOO DREAM COLOR BRANQUEADOR",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898782620430",
+        "celula": "H46"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a511fd9328c36f3a611f343",
+        "nome": "Shampoo Dream Color Branqueador 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 47,
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898360117079",
+        "celula": "H47"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f00",
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 48,
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898360117086",
+        "celula": "H48"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f01",
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 49,
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898360117093",
+        "celula": "H49"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f02",
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 50,
+        "nome": "SHAMPOO DREAM COLOR VANILLA",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898782620812",
+        "celula": "H50"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f03",
+        "nome": "SHAMPOO DREAM COLOR VANILLA 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 51,
+        "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898782620829",
+        "celula": "H51"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f04",
+        "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 52,
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "5L",
+        "diluicao": "1:12",
+        "ean": "7898360117109",
+        "celula": "H52"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f05",
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 5L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 53,
+        "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620270",
+        "celula": "H53"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f06",
+        "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 54,
+        "nome": "SHAMPOO DREAM COLOR BRANQUEADOR",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620287",
+        "celula": "H54"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f07",
+        "nome": "SHAMPOO DREAM COLOR BRANQUEADOR 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 55,
+        "nome": "SHAMPOO DREAM COLOR VANILLA",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620768",
+        "celula": "H55"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f08",
+        "nome": "SHAMPOO DREAM COLOR VANILLA 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 56,
+        "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620782",
+        "celula": "H56"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f09",
+        "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 57,
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620324",
+        "celula": "H57"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0a",
+        "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 58,
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620300",
+        "celula": "H58"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0b",
+        "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 59,
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620317",
+        "celula": "H59"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0c",
+        "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 60,
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI",
+        "embalagem": "1L",
+        "diluicao": "1:12",
+        "ean": "7898782620294",
+        "celula": "H60"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0d",
+        "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 1L",
+        "linha": "Dream Color",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 62,
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS",
+        "embalagem": "1L",
+        "diluicao": "-",
+        "ean": "7898360019014",
+        "celula": "H62"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0e",
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 1L",
+        "linha": "Dream Color Care",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 63,
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360019021",
+        "celula": "H63"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f0f",
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 500ML",
+        "linha": "Dream Color Care",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 64,
+        "nome": "SHAMPOO EXTRA VOLUME DREAM COLOR LINE CARE",
+        "embalagem": "1L",
+        "diluicao": "-",
+        "ean": "1234567891111",
+        "celula": "H64"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4997e2675dd0e46f10",
+        "nome": "SHAMPOO EXTRA VOLUME DREAM COLOR LINE CARE 1L",
+        "linha": "Dream Color Care",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 65,
+        "nome": "SPRAY DE VOLUME DREAM COLOR LINE CARE POWER PUFF",
+        "embalagem": "300ML",
+        "diluicao": "-",
+        "ean": "7898360117178",
+        "celula": "H65"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f11",
+        "nome": "SPRAY DE VOLUME DREAM COLOR LINE CARE POWER PUFF 300ML",
+        "linha": "Dream Color Care",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 68,
+        "nome": "SHAMPOO THE LUXE LIMPEZA PROFUNDA (COCO) - ELIMINADOR DE ODORES",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620737",
+        "celula": "H68"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a512609328c36f3a611f348",
+        "nome": "Shampoo The Luxe Limpeza Profunda (Coco) 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 69,
+        "nome": "SHAMPOO THE LUXE LIMPEZA PROFUNDA (TALCO) - ELIMINADOR DE ODORES",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620423",
+        "celula": "H69"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a512551328c36f3a611f347",
+        "nome": "Shampoo The Luxe Limpeza Profunda 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 70,
+        "nome": "SHAMPOO THE LUXE BRANQUEADOR",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620416",
+        "celula": "H70"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a51266c328c36f3a611f349",
+        "nome": "Shampoo The Luxe Branqueador 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 71,
+        "nome": "SHAMPOO THE LUXE CEREJA & AVELÃ",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360015122",
+        "celula": "H71"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a512102328c36f3a611f344",
+        "nome": "Shampoo The Luxe Cereja & Avelã 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 72,
+        "nome": "SHAMPOO THE LUXE MELANCIA",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360015146",
+        "celula": "H72"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5124b3328c36f3a611f346",
+        "nome": "Shampoo The Luxe Melancia 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 73,
+        "nome": "SHAMPOO THE LUXE LICHIA & ROMÃ",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360015139",
+        "celula": "H73"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b3e48466d5fa94f135da",
+        "nome": "Shampoo The Luxe Lichia & Romã 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 74,
+        "nome": "SHAMPOO THE LUXE NEUTRO",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360016044",
+        "celula": "H74"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a51228a328c36f3a611f345",
+        "nome": "Shampoo The Luxe Neutro 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 75,
+        "nome": "SHAMPOO THE LUXE PELES SENSÍVEIS E FACE (FILHOTES)",
+        "embalagem": "1L",
+        "diluicao": "1:5",
+        "ean": "7898782620218",
+        "celula": "H75"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5126f0328c36f3a611f34a",
+        "nome": "Shampoo The Luxe Peles Sensíveis e Face (Filhotes) 1L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 76,
+        "nome": "CONDICIONADOR THE LUXE NEUTRO - PRONTO USO",
+        "embalagem": "5L",
+        "diluicao": "-",
+        "ean": "7898782620744",
+        "celula": "H76"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5127c7328c36f3a611f34b",
+        "nome": "Condicionador The Luxe - Pronto Uso 5L",
+        "linha": "The Luxe",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 77,
+        "nome": "CONDICIONADOR CEREJA & AVELÃ",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620386",
+        "celula": "H77"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5129d8328c36f3a611f34c",
+        "nome": "Condicionador The Luxe - Cereja & Avelã 5L",
+        "linha": "The Luxe",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 78,
+        "nome": "CONDICIONADOR LICHIA & ROMÃ",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620409",
+        "celula": "H78"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b4b88466d5fa94f135dd",
+        "nome": "Condicionador The Luxe - Lichia & Romã 5L",
+        "linha": "The Luxe",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 79,
+        "nome": "CONDICIONADOR MELANCIA",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620379",
+        "celula": "H79"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a512da7328c36f3a611f34d",
+        "nome": "Condicionador The Luxe - Melancia 5L",
+        "linha": "The Luxe",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 80,
+        "nome": "CONDICIONADOR NEUTRO",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898782620393",
+        "celula": "H80"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a512e07328c36f3a611f34e",
+        "nome": "Condicionador The Luxe - Neutro 5L",
+        "linha": "The Luxe",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 81,
+        "nome": "SHAMPOO THE LUXE PRÉ-LAVAGEM",
+        "embalagem": "5L",
+        "diluicao": "1:5",
+        "ean": "7898360015160",
+        "celula": "H81"
+      },
+      "decisao": "criar-unico-autorizado",
+      "produto": {
+        "_id": "6aa18d6dbfe61130929f9fb1",
+        "nome": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+        "linha": "The Luxe",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "criação excepcional autorizada; distinto de Talco"
+    },
+    {
+      "fonte": {
+        "linha": 82,
+        "nome": "MÁSCARA HIDRATAÇÃO CEREJA & AVELÃ",
+        "embalagem": "500G",
+        "diluicao": "-",
+        "ean": "7898360018987",
+        "celula": "H82"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513299328c36f3a611f35c",
+        "nome": "Máscara de Hidratação The Luxe - Cereja & Avelã 500g",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 83,
+        "nome": "MÁSCARA HIDRATAÇÃO LICHIA & ROMÃ",
+        "embalagem": "500G",
+        "diluicao": "-",
+        "ean": "7898360018994",
+        "celula": "H83"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b4128466d5fa94f135db",
+        "nome": "Máscara de Hidratação The Luxe - Lichia & Romã 500g",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 84,
+        "nome": "MÁSCARA HIDRATAÇÃO MELANCIA",
+        "embalagem": "500G",
+        "diluicao": "-",
+        "ean": "7898360018970",
+        "celula": "H84"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513191328c36f3a611f35b",
+        "nome": "Máscara de Hidratação The Luxe - Melancia 500g",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 85,
+        "nome": "MÁSCARA HIDRATAÇÃO NEUTRO",
+        "embalagem": "500G",
+        "diluicao": "-",
+        "ean": "7898360015429",
+        "celula": "H85"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5133a1328c36f3a611f35d",
+        "nome": "Máscara de Hidratação The Luxe - Neutro 500g",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 86,
+        "nome": "MÁSCARA HIDRATAÇÃO CEREJA & AVELÃ",
+        "embalagem": "1KG",
+        "diluicao": "-",
+        "ean": "7898782620867",
+        "celula": "H86"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513440328c36f3a611f35e",
+        "nome": "Máscara de Hidratação The Luxe 60 Seg - Cereja & Avelã 1kg",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 87,
+        "nome": "MÁSCARA HIDRATAÇÃO LICHIA & ROMÃ",
+        "embalagem": "1KG",
+        "diluicao": "-",
+        "ean": "7898782620874",
+        "celula": "H87"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513576328c36f3a611f35f",
+        "nome": "Máscara de Hidratação The Luxe 60 Seg - Lichia & Romã 1kg",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 88,
+        "nome": "MÁSCARA HIDRATAÇÃO MELANCIA",
+        "embalagem": "1KG",
+        "diluicao": "-",
+        "ean": "7898782620881",
+        "celula": "H88"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513622328c36f3a611f361",
+        "nome": "Máscara de Hidratação The Luxe 60 Seg - Melancia 1kg",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 89,
+        "nome": "MÁSCARA HIDRATAÇÃO NEUTRO",
+        "embalagem": "1KG",
+        "diluicao": "-",
+        "ean": "7898782620850",
+        "celula": "H89"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5135db328c36f3a611f360",
+        "nome": "Máscara de Hidratação The Luxe 60 Seg - Neutro 1kg",
+        "linha": "The Luxe",
+        "categoria": "Máscara",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 90,
+        "nome": "BANHO A SECO THE LUXE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015450",
+        "celula": "H90"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513a83328c36f3a611f36a",
+        "nome": "Banho a Seco The Luxe 500ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 91,
+        "nome": "TIRA NÓS THE LUXE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360117147",
+        "celula": "H91"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a51395c328c36f3a611f368",
+        "nome": "Tira Nós The Luxe 500ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 92,
+        "nome": "LEAVE IN THE LUXE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015030",
+        "celula": "H92"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5138fd328c36f3a611f367",
+        "nome": "Leave-in The Luxe 500ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 93,
+        "nome": "LIMPA ORELHA THE LUXE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015443",
+        "celula": "H93"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5139aa328c36f3a611f369",
+        "nome": "Limpa Orelhas The Luxe 500ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 94,
+        "nome": "HIDRATANTE PATINHAS THE LUXE",
+        "embalagem": "120ML",
+        "diluicao": "-",
+        "ean": "7898360015467",
+        "celula": "H94"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513b5c328c36f3a611f36c",
+        "nome": "Hidratante de Patinhas The Luxe 120ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 95,
+        "nome": "FLUÍDO FINALIZADOR ARGAN",
+        "embalagem": "120ML",
+        "diluicao": "-",
+        "ean": "7898360117000",
+        "celula": "H95"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5137fd328c36f3a611f366",
+        "nome": "Fluido Finalizador The Luxe Argan 120ml",
+        "linha": "The Luxe",
+        "categoria": "Cuidados Especiais",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 97,
+        "nome": "COLÔNIA CEREJA & AVELÃ",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360018956",
+        "celula": "H97"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513695328c36f3a611f362",
+        "nome": "Colônia The Luxe Cereja & Avelã 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 98,
+        "nome": "COLÔNIA LICHIA & ROMÃ",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360018963",
+        "celula": "H98"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b4488466d5fa94f135dc",
+        "nome": "Colônia The Luxe Lichia e Romã 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 99,
+        "nome": "COLÔNIA MELANCIA",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360018949",
+        "celula": "H99"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5136bf328c36f3a611f363",
+        "nome": "Colônia The Luxe Melancia 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 100,
+        "nome": "COLÔNIA NEUTRO",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360018925",
+        "celula": "H100"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513710328c36f3a611f364",
+        "nome": "Colônia The Luxe Neutro 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 101,
+        "nome": "COLÔNIA MORANGO",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360018932",
+        "celula": "H101"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513756328c36f3a611f365",
+        "nome": "Colônia The Luxe Morango 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 102,
+        "nome": "COLONIA THE LUXE ONE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015313",
+        "celula": "H102"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513cba328c36f3a611f36d",
+        "nome": "Colônia The Luxe One 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 103,
+        "nome": "COLONIA THE LUXE TWO",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015320",
+        "celula": "H103"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513cf8328c36f3a611f36e",
+        "nome": "Colônia The Luxe Two 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 104,
+        "nome": "COLONIA THE LUXE THREE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015337",
+        "celula": "H104"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513d38328c36f3a611f36f",
+        "nome": "Colônia The Luxe Three 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 105,
+        "nome": "COLONIA THE LUXE FOUR",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015334",
+        "celula": "H105"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513d7a328c36f3a611f370",
+        "nome": "Colônia The Luxe Four 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 106,
+        "nome": "COLONIA THE LUXE FIVE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015351",
+        "celula": "H106"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513db1328c36f3a611f371",
+        "nome": "Colônia The Luxe Five 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 107,
+        "nome": "COLONIA THE LUXE SIX",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015368",
+        "celula": "H107"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513e5e328c36f3a611f372",
+        "nome": "Colônia The Luxe Six 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 108,
+        "nome": "COLONIA THE LUXE SEVEN",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015375",
+        "celula": "H108"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513e90328c36f3a611f373",
+        "nome": "Colônia The Luxe Seven 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 109,
+        "nome": "COLONIA THE LUXE EIGHT",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015382",
+        "celula": "H109"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513ed8328c36f3a611f374",
+        "nome": "Colônia The Luxe Eight 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 110,
+        "nome": "COLONIA THE LUXE NINE",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015399",
+        "celula": "H110"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513efb328c36f3a611f375",
+        "nome": "Colônia The Luxe Nine 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 111,
+        "nome": "COLONIA THE LUXE TEN",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015405",
+        "celula": "H111"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a513f24328c36f3a611f376",
+        "nome": "Colônia The Luxe Ten 500ml",
+        "linha": "The Luxe",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 114,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620010",
+        "celula": "H114"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f12",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 115,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620027",
+        "celula": "H115"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f13",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 116,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620034",
+        "celula": "H116"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f14",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 117,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BROWN",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620041",
+        "celula": "H117"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f15",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BROWN 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 118,
+        "nome": "PERFUME VANITY ULTRA PREMIUM CHOC",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620058",
+        "celula": "H118"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f16",
+        "nome": "PERFUME VANITY ULTRA PREMIUM CHOC 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 119,
+        "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620065",
+        "celula": "H119"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f17",
+        "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 120,
+        "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620072",
+        "celula": "H120"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f18",
+        "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 121,
+        "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620089",
+        "celula": "H121"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f19",
+        "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 122,
+        "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620096",
+        "celula": "H122"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1a",
+        "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 123,
+        "nome": "PERFUME VANITY ULTRA PREMIUM GOLD",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620102",
+        "celula": "H123"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1b",
+        "nome": "PERFUME VANITY ULTRA PREMIUM GOLD 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 124,
+        "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620119",
+        "celula": "H124"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1c",
+        "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 125,
+        "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620003",
+        "celula": "H125"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1d",
+        "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 126,
+        "nome": "PERFUME VANITY ULTRA PREMIUM MANGO",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620126",
+        "celula": "H126"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1e",
+        "nome": "PERFUME VANITY ULTRA PREMIUM MANGO 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 127,
+        "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620133",
+        "celula": "H127"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f1f",
+        "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 128,
+        "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "898782620140",
+        "celula": "H128"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f20",
+        "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 129,
+        "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620157",
+        "celula": "H129"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f21",
+        "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 130,
+        "nome": "PERFUME VANITY ULTRA PREMIUM SWEET",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620164",
+        "celula": "H130"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f22",
+        "nome": "PERFUME VANITY ULTRA PREMIUM SWEET 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 131,
+        "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620171",
+        "celula": "H131"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f23",
+        "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 132,
+        "nome": "PERFUME VANITY ULTRA PREMIUM YOU",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "7898782620188",
+        "celula": "H132"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f24",
+        "nome": "PERFUME VANITY ULTRA PREMIUM YOU 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 133,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898782620225",
+        "celula": "H133"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f25",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 134,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015511",
+        "celula": "H134"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f26",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 135,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360115528",
+        "celula": "H135"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f27",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 136,
+        "nome": "PERFUME VANITY ULTRA PREMIUM BROWN",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015801",
+        "celula": "H136"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f28",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BROWN 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 137,
+        "nome": "PERFUME VANITY ULTRA PREMIUM CHOC",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7895098853002",
+        "celula": "H137"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f29",
+        "nome": "PERFUME VANITY ULTRA PREMIUM CHOC 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 138,
+        "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015825",
+        "celula": "H138"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f2a",
+        "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 139,
+        "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015832",
+        "celula": "H139"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f2b",
+        "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 140,
+        "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898782620249",
+        "celula": "H140"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4a97e2675dd0e46f2c",
+        "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 141,
+        "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015856",
+        "celula": "H141"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f2d",
+        "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 142,
+        "nome": "PERFUME VANITY ULTRA PREMIUM GOLD",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898782620232",
+        "celula": "H142"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f2e",
+        "nome": "PERFUME VANITY ULTRA PREMIUM GOLD 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 143,
+        "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015696",
+        "celula": "H143"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f2f",
+        "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 144,
+        "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7895098855006",
+        "celula": "H144"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f30",
+        "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 145,
+        "nome": "PERFUME VANITY ULTRA PREMIUM MANGO",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898104095731",
+        "celula": "H145"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f31",
+        "nome": "PERFUME VANITY ULTRA PREMIUM MANGO 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 146,
+        "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7895098853200",
+        "celula": "H146"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f32",
+        "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 147,
+        "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015733",
+        "celula": "H147"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f33",
+        "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 148,
+        "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015740",
+        "celula": "H148"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f34",
+        "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 149,
+        "nome": "PERFUME VANITY ULTRA PREMIUM SWEET",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898360015757",
+        "celula": "H149"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f35",
+        "nome": "PERFUME VANITY ULTRA PREMIUM SWEET 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 150,
+        "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898782620263",
+        "celula": "H150"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f36",
+        "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 151,
+        "nome": "PERFUME VANITY ULTRA PREMIUM YOU",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "7898782620256",
+        "celula": "H151"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f37",
+        "nome": "PERFUME VANITY ULTRA PREMIUM YOU 500ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 152,
+        "nome": "DISPLAY PERFUME VANITY ULTRA PREMIUM",
+        "embalagem": "50ML",
+        "diluicao": "-",
+        "ean": "78981040211174",
+        "celula": "H152"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f38",
+        "nome": "DISPLAY PERFUME VANITY ULTRA PREMIUM 50ML",
+        "linha": "Vanity Pet",
+        "categoria": "Colônia",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 156,
+        "nome": "SHAMPOO ZOOM PRÉ-LAVAGEM",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015009",
+        "celula": "H156"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a34b5088466d5fa94f135de",
+        "nome": "Shampoo Zoom Pré Lavagem 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 157,
+        "nome": "SHAMPOO ZOOM NEUTRO",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015016",
+        "celula": "H157"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f39",
+        "nome": "SHAMPOO ZOOM NEUTRO 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 158,
+        "nome": "SHAMPOO ZOOM PELOS CLAROS",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015023",
+        "celula": "H158"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3a",
+        "nome": "SHAMPOO ZOOM PELOS CLAROS 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 159,
+        "nome": "SHAMPOO ZOOM PELOS ESCUROS",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015108",
+        "celula": "H159"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3b",
+        "nome": "SHAMPOO ZOOM PELOS ESCUROS 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 160,
+        "nome": "SHAMPOO ZOOM FILHOTES",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015115",
+        "celula": "H160"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3c",
+        "nome": "SHAMPOO ZOOM FILHOTES 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 161,
+        "nome": "SHAMPOO ZOOM MORANGO",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360015535",
+        "celula": "H161"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3d",
+        "nome": "SHAMPOO ZOOM MORANGO 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 162,
+        "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA)",
+        "embalagem": "5 L",
+        "diluicao": "1:4",
+        "ean": "7898360019892",
+        "celula": "H162"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3e",
+        "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 1:4 5L",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 163,
+        "nome": "CONDICIONADOR ZOOM",
+        "embalagem": "5 L",
+        "diluicao": "-",
+        "ean": "7898360015498",
+        "celula": "H163"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f3f",
+        "nome": "CONDICIONADOR ZOOM 5L",
+        "linha": "Zoom",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 164,
+        "nome": "SHAMPOO ZOOM NEUTRO",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015542",
+        "celula": "H164"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f40",
+        "nome": "SHAMPOO ZOOM NEUTRO 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 165,
+        "nome": "SHAMPOO ZOOM PELOS CLAROS",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015559",
+        "celula": "H165"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f41",
+        "nome": "SHAMPOO ZOOM PELOS CLAROS 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 166,
+        "nome": "SHAMPOO ZOOM PELOS ESCUROS",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015566",
+        "celula": "H166"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f42",
+        "nome": "SHAMPOO ZOOM PELOS ESCUROS 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 167,
+        "nome": "SHAMPOO ZOOM FILHOTES",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015573",
+        "celula": "H167"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f43",
+        "nome": "SHAMPOO ZOOM FILHOTES 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 168,
+        "nome": "SHAMPOO ZOOM MORANGO",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015566",
+        "celula": "H168"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f44",
+        "nome": "SHAMPOO ZOOM MORANGO 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 169,
+        "nome": "SHAMPOO ZOOM BRANQUEADOR",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360016037",
+        "celula": "H169"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4b97e2675dd0e46f45",
+        "nome": "SHAMPOO ZOOM BRANQUEADOR 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 170,
+        "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA)",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360016051",
+        "celula": "H170"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4c97e2675dd0e46f46",
+        "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 750ML",
+        "linha": "Zoom",
+        "categoria": "Shampoo",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 171,
+        "nome": "CONDICIONADOR ZOOM",
+        "embalagem": "750 ML",
+        "diluicao": "-",
+        "ean": "7898360015580",
+        "celula": "H171"
+      },
+      "decisao": "existente-aprovado",
+      "produto": {
+        "_id": "6a5aab4c97e2675dd0e46f47",
+        "nome": "CONDICIONADOR ZOOM 750ML",
+        "linha": "Zoom",
+        "categoria": "Condicionador",
+        "ativo": true
+      },
+      "motivo": "ID aprovado pelo usuário nas decisões finais; registro ativo"
+    },
+    {
+      "fonte": {
+        "linha": 176,
+        "nome": "ALMOTOLIA",
+        "embalagem": "1L",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H176"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 177,
+        "nome": "ALMOTOLIA",
+        "embalagem": "500ML",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H177"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 178,
+        "nome": "AMOSTRA",
+        "embalagem": "30ML",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H178"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 179,
+        "nome": "AVENTAL",
+        "embalagem": "U",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H179"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 180,
+        "nome": "JALECO",
+        "embalagem": "P",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H180"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 181,
+        "nome": "JALECO",
+        "embalagem": "M",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H181"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 182,
+        "nome": "JALECO",
+        "embalagem": "G",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H182"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 183,
+        "nome": "JALECO",
+        "embalagem": "GG",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H183"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    },
+    {
+      "fonte": {
+        "linha": 184,
+        "nome": "VÁLVULA PUMP PARA GALÃO 5L",
+        "embalagem": "U",
+        "diluicao": "-",
+        "ean": "",
+        "celula": "H184"
+      },
+      "decisao": "excluir",
+      "produto": null,
+      "motivo": "não importado — produto não cadastrado / exclusão deliberadamente aprovada"
+    }
+  ]
+}

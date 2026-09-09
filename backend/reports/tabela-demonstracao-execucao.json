@@ -1,0 +1,1220 @@
+{
+  "modo": "APLICADO",
+  "comando": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Users\\Administrador\\Desktop\\atualpet\\backend\\src\\scripts\\sincronizarTabelaDemonstracao.js",
+    "--report",
+    "reports/tabela-demonstracao-execucao.json",
+    "--apply"
+  ],
+  "tabela": {
+    "nome": "Tabela Demonstração",
+    "descricao": "Demonstrações/testes: todos os produtos ativos a R$ 1,00.",
+    "tipo": "distribuidor",
+    "ativa": true,
+    "_id": "6aa190aa8d8e3d5f6c88961f",
+    "createdAt": "2026-09-09T17:00:26.417Z",
+    "updatedAt": "2026-09-09T17:00:26.417Z",
+    "__v": 0
+  },
+  "totalProdutos": 162,
+  "produtosAtivos": 152,
+  "produtosInativos": 10,
+  "itensPlanejados": 152,
+  "precoAplicado": 1,
+  "produtosNovosPlanejados": 0,
+  "outrasTabelasPlanejadas": 0,
+  "ativosForaDoPlano": 0,
+  "previstos": {
+    "criar": 152,
+    "atualizar": 0,
+    "inalterado": 0,
+    "remover": 0
+  },
+  "plano": [
+    {
+      "produtoId": "6a34b31d8466d5fa94f135d8",
+      "nome": "Shampoo Dream Color Pré-Lavagem 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a34b3e48466d5fa94f135da",
+      "nome": "Shampoo The Luxe Lichia & Romã 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a34b4128466d5fa94f135db",
+      "nome": "Máscara de Hidratação The Luxe - Lichia & Romã 500g",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a34b4488466d5fa94f135dc",
+      "nome": "Colônia The Luxe Lichia e Romã 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a34b4b88466d5fa94f135dd",
+      "nome": "Condicionador The Luxe - Lichia & Romã 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a34b5088466d5fa94f135de",
+      "nome": "Shampoo Zoom Pré Lavagem 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a511fd9328c36f3a611f343",
+      "nome": "Shampoo Dream Color Branqueador 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a512102328c36f3a611f344",
+      "nome": "Shampoo The Luxe Cereja & Avelã 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a51228a328c36f3a611f345",
+      "nome": "Shampoo The Luxe Neutro 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5124b3328c36f3a611f346",
+      "nome": "Shampoo The Luxe Melancia 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a512551328c36f3a611f347",
+      "nome": "Shampoo The Luxe Limpeza Profunda 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a512609328c36f3a611f348",
+      "nome": "Shampoo The Luxe Limpeza Profunda (Coco) 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a51266c328c36f3a611f349",
+      "nome": "Shampoo The Luxe Branqueador 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5126f0328c36f3a611f34a",
+      "nome": "Shampoo The Luxe Peles Sensíveis e Face (Filhotes) 1L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5127c7328c36f3a611f34b",
+      "nome": "Condicionador The Luxe - Pronto Uso 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5129d8328c36f3a611f34c",
+      "nome": "Condicionador The Luxe - Cereja & Avelã 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a512da7328c36f3a611f34d",
+      "nome": "Condicionador The Luxe - Melancia 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a512e07328c36f3a611f34e",
+      "nome": "Condicionador The Luxe - Neutro 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513191328c36f3a611f35b",
+      "nome": "Máscara de Hidratação The Luxe - Melancia 500g",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513299328c36f3a611f35c",
+      "nome": "Máscara de Hidratação The Luxe - Cereja & Avelã 500g",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5133a1328c36f3a611f35d",
+      "nome": "Máscara de Hidratação The Luxe - Neutro 500g",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513440328c36f3a611f35e",
+      "nome": "Máscara de Hidratação The Luxe 60 Seg - Cereja & Avelã 1kg",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513576328c36f3a611f35f",
+      "nome": "Máscara de Hidratação The Luxe 60 Seg - Lichia & Romã 1kg",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5135db328c36f3a611f360",
+      "nome": "Máscara de Hidratação The Luxe 60 Seg - Neutro 1kg",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513622328c36f3a611f361",
+      "nome": "Máscara de Hidratação The Luxe 60 Seg - Melancia 1kg",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513695328c36f3a611f362",
+      "nome": "Colônia The Luxe Cereja & Avelã 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5136bf328c36f3a611f363",
+      "nome": "Colônia The Luxe Melancia 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513710328c36f3a611f364",
+      "nome": "Colônia The Luxe Neutro 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513756328c36f3a611f365",
+      "nome": "Colônia The Luxe Morango 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5137fd328c36f3a611f366",
+      "nome": "Fluido Finalizador The Luxe Argan 120ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5138fd328c36f3a611f367",
+      "nome": "Leave-in The Luxe 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a51395c328c36f3a611f368",
+      "nome": "Tira Nós The Luxe 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5139aa328c36f3a611f369",
+      "nome": "Limpa Orelhas The Luxe 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513a83328c36f3a611f36a",
+      "nome": "Banho a Seco The Luxe 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513b21328c36f3a611f36b",
+      "nome": "Máscara de Hidratação The Luxe 500g",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513b5c328c36f3a611f36c",
+      "nome": "Hidratante de Patinhas The Luxe 120ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513cba328c36f3a611f36d",
+      "nome": "Colônia The Luxe One 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513cf8328c36f3a611f36e",
+      "nome": "Colônia The Luxe Two 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513d38328c36f3a611f36f",
+      "nome": "Colônia The Luxe Three 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513d7a328c36f3a611f370",
+      "nome": "Colônia The Luxe Four 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513db1328c36f3a611f371",
+      "nome": "Colônia The Luxe Five 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513e5e328c36f3a611f372",
+      "nome": "Colônia The Luxe Six 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513e90328c36f3a611f373",
+      "nome": "Colônia The Luxe Seven 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513ed8328c36f3a611f374",
+      "nome": "Colônia The Luxe Eight 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513efb328c36f3a611f375",
+      "nome": "Colônia The Luxe Nine 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a513f24328c36f3a611f376",
+      "nome": "Colônia The Luxe Ten 500ml",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee1",
+      "nome": "SHAMPOO DREAM COLOR BRANQUEADOR 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee2",
+      "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee9",
+      "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46eea",
+      "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46eef",
+      "nome": "CONDICIONADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef0",
+      "nome": "CONDICIONADOR DREAM COLOR TANGERINA CITRUS 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef2",
+      "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef5",
+      "nome": "COLÔNIA DREAM COLOR FRAMBOESA C/ CHANTILLY 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef8",
+      "nome": "COLÔNIA DREAM COLOR TUTTI-FRUTTI 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46efa",
+      "nome": "COLÔNIA DREAM COLOR JASMIM C/ AMENDOAS 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f05",
+      "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f06",
+      "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f12",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BABY 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f13",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f14",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f15",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BROWN 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f22",
+      "nome": "PERFUME VANITY ULTRA PREMIUM SWEET 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f23",
+      "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f2b",
+      "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f2f",
+      "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f36",
+      "nome": "PERFUME VANITY ULTRA PREMIUM WATERMELON 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f37",
+      "nome": "PERFUME VANITY ULTRA PREMIUM YOU 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3b",
+      "nome": "SHAMPOO ZOOM PELOS ESCUROS 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f42",
+      "nome": "SHAMPOO ZOOM PELOS ESCUROS 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f45",
+      "nome": "SHAMPOO ZOOM BRANQUEADOR 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee0",
+      "nome": "SHAMPOO DREAM COLOR PRÉ-LAVAGEM 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee3",
+      "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee5",
+      "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee7",
+      "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46eed",
+      "nome": "CONDICIONADOR DREAM COLOR VANILLA 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef1",
+      "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef3",
+      "nome": "CONDICIONADOR DREAM COLOR VANILLA 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef6",
+      "nome": "COLÔNIA DREAM COLOR TANGERINA CITRUS 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef7",
+      "nome": "COLÔNIA DREAM COLOR ALECRIM DO CAMPO 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ef9",
+      "nome": "COLÔNIA DREAM COLOR VANILLA 300ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46efc",
+      "nome": "AROMATIZADOR DREAM COLOR FRAMBOESA C/ CHANTILLY 250ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f04",
+      "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f07",
+      "nome": "SHAMPOO DREAM COLOR BRANQUEADOR 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f09",
+      "nome": "SHAMPOO DREAM COLOR JASMIM C/ AMENDOAS 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0a",
+      "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0f",
+      "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 500ML",
+      "linha": "Dream Color Care",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f10",
+      "nome": "SHAMPOO EXTRA VOLUME DREAM COLOR LINE CARE 1L",
+      "linha": "Dream Color Care",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f17",
+      "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1a",
+      "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1b",
+      "nome": "PERFUME VANITY ULTRA PREMIUM GOLD 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1d",
+      "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1e",
+      "nome": "PERFUME VANITY ULTRA PREMIUM MANGO 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f28",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BROWN 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f2e",
+      "nome": "PERFUME VANITY ULTRA PREMIUM GOLD 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f33",
+      "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f34",
+      "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3a",
+      "nome": "SHAMPOO ZOOM PELOS CLAROS 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3d",
+      "nome": "SHAMPOO ZOOM MORANGO 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3e",
+      "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3f",
+      "nome": "CONDICIONADOR ZOOM 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f40",
+      "nome": "SHAMPOO ZOOM NEUTRO 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f43",
+      "nome": "SHAMPOO ZOOM FILHOTES 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4c97e2675dd0e46f47",
+      "nome": "CONDICIONADOR ZOOM 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee6",
+      "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46eec",
+      "nome": "CONDICIONADOR DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46eff",
+      "nome": "AROMATIZADOR DREAM COLOR TUTTI-FRUTTI 250ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f01",
+      "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f02",
+      "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f03",
+      "nome": "SHAMPOO DREAM COLOR VANILLA 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0e",
+      "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 1L",
+      "linha": "Dream Color Care",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f11",
+      "nome": "SPRAY DE VOLUME DREAM COLOR LINE CARE POWER PUFF 300ML",
+      "linha": "Dream Color Care",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f16",
+      "nome": "PERFUME VANITY ULTRA PREMIUM CHOC 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f18",
+      "nome": "PERFUME VANITY ULTRA PREMIUM EXPLOSION 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f19",
+      "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1c",
+      "nome": "PERFUME VANITY ULTRA PREMIUM ILLUSION 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f25",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BABY 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f26",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BLACK CHERRY 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f27",
+      "nome": "PERFUME VANITY ULTRA PREMIUM BLACK VANITY 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f2d",
+      "nome": "PERFUME VANITY ULTRA PREMIUM GLAMOUR 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f30",
+      "nome": "PERFUME VANITY ULTRA PREMIUM JASMIN 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f31",
+      "nome": "PERFUME VANITY ULTRA PREMIUM MANGO 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f39",
+      "nome": "SHAMPOO ZOOM NEUTRO 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f41",
+      "nome": "SHAMPOO ZOOM PELOS CLAROS 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4c97e2675dd0e46f46",
+      "nome": "SHAMPOO ZOOM NEEM (ANTI-PULGA) 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee4",
+      "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46ee8",
+      "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46eeb",
+      "nome": "CONDICIONADOR DREAM COLOR ALECRIM DO CAMPO 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4897e2675dd0e46efb",
+      "nome": "MÁSCARA HIDRATAÇÃO DREAM COLOR BAMBU 500G",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46efd",
+      "nome": "AROMATIZADOR DREAM COLOR TANGERINA CITRUS 250ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46efe",
+      "nome": "AROMATIZADOR DREAM COLOR ALECRIM DO CAMPO 250ML",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f00",
+      "nome": "SHAMPOO DREAM COLOR FRAMBOESA C/ CHANTILLY 1:12 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f08",
+      "nome": "SHAMPOO DREAM COLOR VANILLA 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0b",
+      "nome": "SHAMPOO DREAM COLOR TANGERINA CITRUS 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0c",
+      "nome": "SHAMPOO DREAM COLOR ALECRIM DO CAMPO 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4997e2675dd0e46f0d",
+      "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:12 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f1f",
+      "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f20",
+      "nome": "PERFUME VANITY ULTRA PREMIUM STRAWBERRY 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f21",
+      "nome": "PERFUME VANITY ULTRA PREMIUM STYLE-G 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f24",
+      "nome": "PERFUME VANITY ULTRA PREMIUM YOU 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f29",
+      "nome": "PERFUME VANITY ULTRA PREMIUM CHOC 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f2a",
+      "nome": "PERFUME VANITY ULTRA PREMIUM CITRIC 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4a97e2675dd0e46f2c",
+      "nome": "PERFUME VANITY ULTRA PREMIUM FLOWERS 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f32",
+      "nome": "PERFUME VANITY ULTRA PREMIUM NIGHT 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f35",
+      "nome": "PERFUME VANITY ULTRA PREMIUM SWEET 500ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f38",
+      "nome": "DISPLAY PERFUME VANITY ULTRA PREMIUM 50ML",
+      "linha": "Vanity Pet",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f3c",
+      "nome": "SHAMPOO ZOOM FILHOTES 1:4 5L",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5aab4b97e2675dd0e46f44",
+      "nome": "SHAMPOO ZOOM MORANGO 750ML",
+      "linha": "Zoom",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5e4a60011c103e77abdda1",
+      "nome": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS 1:5 5L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5e4a86011c103e77abdda2",
+      "nome": "CONDICIONADOR DREAM COLOR JASMIM C/ AMENDOAS1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6a5e64e835f58a6bbb61d100",
+      "nome": "SHAMPOO DREAM COLOR TUTTI-FRUTTI 1:5 1L",
+      "linha": "Dream Color",
+      "valor": 1,
+      "acao": "criar"
+    },
+    {
+      "produtoId": "6aa18d6dbfe61130929f9fb1",
+      "nome": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+      "linha": "The Luxe",
+      "valor": 1,
+      "acao": "criar"
+    }
+  ],
+  "remover": [],
+  "bloqueios": [],
+  "consultadoEm": "2026-09-09T17:00:26.307Z",
+  "auditoriaTransacao": {
+    "ok": true,
+    "checks": {
+      "tabelasDemonstracao": 1,
+      "produtosAtivos": 152,
+      "itensReais": 152,
+      "ativosAusentes": 0,
+      "inativosOuOrfaosIncluidos": 0,
+      "precosDiferentesDeUm": 0,
+      "duplicidades": 0,
+      "produtosNovosCriados": 0,
+      "produtosIntactos": true,
+      "outrasTabelasIntactas": true,
+      "outrosPrecosIntactos": true,
+      "dioAnimalliIntacta": true
+    },
+    "amostras": [
+      {
+        "produtoId": "6a34b31d8466d5fa94f135d8",
+        "nome": "Shampoo Dream Color Pré-Lavagem 1:12 5L",
+        "linha": "Dream Color",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a34b3e48466d5fa94f135da",
+        "nome": "Shampoo The Luxe Lichia & Romã 5L",
+        "linha": "The Luxe",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a34b5088466d5fa94f135de",
+        "nome": "Shampoo Zoom Pré Lavagem 5L",
+        "linha": "Zoom",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a5aab4a97e2675dd0e46f12",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY 50ML",
+        "linha": "Vanity Pet",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a5aab4997e2675dd0e46f0f",
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 500ML",
+        "linha": "Dream Color Care",
+        "valor": 1
+      },
+      {
+        "produtoId": "6aa18d6dbfe61130929f9fb1",
+        "nome": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+        "linha": "The Luxe",
+        "valor": 1
+      }
+    ]
+  },
+  "commitEm": "2026-09-09T17:00:27.605Z",
+  "auditoriaAposCommit": {
+    "ok": true,
+    "checks": {
+      "tabelasDemonstracao": 1,
+      "produtosAtivos": 152,
+      "itensReais": 152,
+      "ativosAusentes": 0,
+      "inativosOuOrfaosIncluidos": 0,
+      "precosDiferentesDeUm": 0,
+      "duplicidades": 0,
+      "produtosNovosCriados": 0,
+      "produtosIntactos": true,
+      "outrasTabelasIntactas": true,
+      "outrosPrecosIntactos": true,
+      "dioAnimalliIntacta": true
+    },
+    "amostras": [
+      {
+        "produtoId": "6a34b31d8466d5fa94f135d8",
+        "nome": "Shampoo Dream Color Pré-Lavagem 1:12 5L",
+        "linha": "Dream Color",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a34b3e48466d5fa94f135da",
+        "nome": "Shampoo The Luxe Lichia & Romã 5L",
+        "linha": "The Luxe",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a34b5088466d5fa94f135de",
+        "nome": "Shampoo Zoom Pré Lavagem 5L",
+        "linha": "Zoom",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a5aab4a97e2675dd0e46f12",
+        "nome": "PERFUME VANITY ULTRA PREMIUM BABY 50ML",
+        "linha": "Vanity Pet",
+        "valor": 1
+      },
+      {
+        "produtoId": "6a5aab4997e2675dd0e46f0f",
+        "nome": "SHAMPOO DREAM COLOR LINE CARE PRÓPOLIS 500ML",
+        "linha": "Dream Color Care",
+        "valor": 1
+      },
+      {
+        "produtoId": "6aa18d6dbfe61130929f9fb1",
+        "nome": "Shampoo The Luxe Pré-Lavagem 1:5 5L",
+        "linha": "The Luxe",
+        "valor": 1
+      }
+    ]
+  },
+  "reexecucaoPrevista": {
+    "criar": 0,
+    "atualizar": 0,
+    "inalterado": 152,
+    "remover": 0
+  }
+}
