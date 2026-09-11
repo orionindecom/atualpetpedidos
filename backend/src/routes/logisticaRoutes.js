@@ -1,4 +1,5 @@
 import express from "express";
+import { obterNecessidadeProducao } from "../controllers/necessidadeProducaoController.js";
 import {
   atualizarPedidoLogistica,
   buscarPedidoLogistica,
@@ -27,6 +28,7 @@ const router = express.Router();
 router.use(proteger, somenteOperacaoLogistica, adminLimiter);
 
 router.get("/dashboard", obterDashboardLogistica);
+router.get("/necessidade-producao", obterNecessidadeProducao);
 router.get("/pedidos", listarPedidosLogistica);
 router.get("/operadores", somenteLogistica, listarOperadoresAtivos);
 router.post(

@@ -88,7 +88,7 @@ const tiposClienteFinalPermitidos = new Set([
 
 export const listarCatalogoCliente = async (req, res) => {
   try {
-    const usuario = req.usuario;
+    const usuario = req.clientePedido || req.usuario;
     const consulta = parseCatalogQuery(req.query);
     const legacy = isLegacyCatalogRequest(req.query);
 

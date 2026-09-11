@@ -10,6 +10,7 @@ const adminLinks = [
   { to: "/precos", label: "Preços", group: "Comercial" },
   { to: "/clientes", label: "Clientes", group: "Relacionamento" },
   { to: "/pedidos", label: "Pedidos", group: "Operação" },
+  { to: "/necessidade-producao", label: "Necessidade de Produção", group: "Operação" },
   {
     to: "/admin/metricas-operacionais",
     label: "Métricas Operacionais",
@@ -31,6 +32,7 @@ const adminLinks = [
 
 const comercialLinks = [
   { to: "/pedidos", label: "Pedidos", group: "Comercial" },
+  { to: "/pedidos/novo", label: "Novo pedido", group: "Comercial" },
   { to: "/precos", label: "Preços", group: "Comercial" },
   { to: "/tabelas", label: "Tabelas de Preços", group: "Comercial" },
 ];
@@ -45,6 +47,7 @@ const marketingLinks = [
 const logisticaLinks = [
   { to: "/logistica", label: "Dashboard", group: "Visão geral" },
   { to: "/logistica/pedidos", label: "Pedidos", group: "Operação" },
+  { to: "/necessidade-producao", label: "Necessidade de Produção", group: "Operação" },
 ];
 
 const clienteLinks = [
@@ -187,7 +190,7 @@ function Navbar() {
               {(index === 0 || links[index - 1].group !== link.group) && (
                 <span>{link.group}</span>
               )}
-              <NavLink to={link.to} className={linkClass}>
+              <NavLink to={link.to} end={link.to === "/pedidos"} className={linkClass}>
                 {link.label}
               </NavLink>
             </div>
@@ -234,7 +237,7 @@ function Navbar() {
                   {(index === 0 || links[index - 1].group !== link.group) && (
                     <span className={styles.mobileGroupLabel}>{link.group}</span>
                   )}
-                  <NavLink to={link.to} className={linkClass} onClick={fecharMenu}>
+                  <NavLink to={link.to} end={link.to === "/pedidos"} className={linkClass} onClick={fecharMenu}>
                     {link.label}
                   </NavLink>
                 </div>

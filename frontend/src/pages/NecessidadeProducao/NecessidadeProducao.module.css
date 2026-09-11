@@ -1,0 +1,41 @@
+.button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button:disabled { opacity: .6; cursor: wait; }
+.button[aria-pressed="true"] { background: var(--brand-primary-soft); border-color: var(--brand-primary-strong); color: var(--brand-primary-ink); }
+.note { margin: 0 0 22px; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.views { display: flex; gap: 8px; margin-bottom: 18px; }
+.products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.product { padding: 20px; border: 1px solid var(--border-default); border-radius: var(--radius-large); background: var(--surface-primary); min-width: 0; }
+.product[data-priority="true"] { border-top: 3px solid var(--brand-accent); }
+.productHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.productHeading > span, .product > span, .product p { color: var(--text-muted); font-size: 12px; }
+.product h2 { margin: 18px 0; font-size: 18px; overflow-wrap: anywhere; }
+.productHeading .priority { padding: 4px 8px; border-radius: 999px; background: var(--brand-accent-soft); color: var(--brand-accent-ink); font-weight: 700; }
+.total { display: block; margin-top: 6px; color: var(--text-primary); font-size: 28px; }
+.total small { font-size: 12px; font-weight: 400; }
+.product p { margin-bottom: 0; }
+.orderList { display: grid; gap: 16px; }
+.orderList > article { min-width: 0; }
+.orderList > article > div > div > span { overflow-wrap: anywhere; }
+.itemRow {
+  composes: itemRow from "../../components/OrderDetails/OrderDetails.module.css";
+  grid-template-columns: minmax(0, 1fr) repeat(3, 110px);
+}
+@media (max-width: 1100px) { .products { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .products { grid-template-columns: minmax(0, 1fr); }
+  .views > button { flex: 1; }
+  .itemRow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 14px 0; }
+  .itemRow > div:first-child { grid-column: 1 / -1; }
+  .itemRow > div:not(:first-child) { text-align: left; }
+}

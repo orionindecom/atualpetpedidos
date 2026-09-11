@@ -24,6 +24,8 @@ import LogisticaDashboard from "./pages/LogisticaDashboard/LogisticaDashboard";
 import LogisticaPedidos from "./pages/LogisticaPedidos/LogisticaPedidos";
 import AdminOperadoresLogistica from "./pages/AdminOperadoresLogistica/AdminOperadoresLogistica";
 import AdminMetricasPedidos from "./pages/AdminMetricasPedidos/AdminMetricasPedidos";
+import NecessidadeProducao from "./pages/NecessidadeProducao/NecessidadeProducao";
+import NovoPedidoComercial from "./pages/NovoPedidoComercial/NovoPedidoComercial";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -237,6 +239,22 @@ function App() {
           element={(
             <RoleRoute role="logistica">
               <LogisticaPedidos />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/necessidade-producao"
+          element={(
+            <RoleRoute roles={["admin", "logistica"]}>
+              <NecessidadeProducao />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/pedidos/novo"
+          element={(
+            <RoleRoute role="comercial">
+              <NovoPedidoComercial />
             </RoleRoute>
           )}
         />

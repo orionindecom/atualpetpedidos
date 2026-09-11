@@ -488,6 +488,24 @@ const pedidoSchema = new mongoose.Schema(
       trim: true,
     },
 
+    origem: {
+      type: String,
+      enum: ["cliente", "comercial"],
+      default: "cliente",
+      immutable: true,
+    },
+
+    criadoPor: {
+      type: new mongoose.Schema({
+        usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
+        usuarioNome: { type: String, required: true, trim: true, maxlength: 120 },
+        usuarioTipo: { type: String, enum: ["comercial"], required: true },
+      }, { _id: false }),
+      default: undefined,
+      immutable: true,
+      required: function () { return this.origem === "comercial"; },
+    },
+
     nomeFantasiaCliente: {
       type: String,
       trim: true,

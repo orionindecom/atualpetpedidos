@@ -101,10 +101,12 @@ export const buildOrderAuditTimeline = (pedido) => {
     tipo: "pedido_criado",
     data: source.createdAt || source.dataPedido,
     titulo: "Pedido criado",
-    responsavelId: source.clienteId || undefined,
-    responsavelNome: source.nomeResponsavel || source.nomeFantasiaCliente || "Cliente",
-    responsavelPerfil: "cliente",
-    detalhes: source.numeroPedido ? `Pedido ${source.numeroPedido}.` : undefined,
+    ...(source.origem === "comercial" ? userData(source.criadoPor) : {
+      responsavelId: source.clienteId || undefined,
+      responsavelNome: source.nomeResponsavel || source.nomeFantasiaCliente || "Cliente",
+      responsavelPerfil: "cliente",
+    }),
+    detalhes: `${source.numeroPedido ? `Pedido ${source.numeroPedido}. ` : ""}Origem: ${source.origem === "comercial" ? "Comercial" : "Cliente"}.`,
   });
 
   const statusHistory = Array.isArray(source.historicoStatus)

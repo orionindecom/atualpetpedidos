@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getAuthSession } from "../../utils/authSession";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
@@ -393,6 +393,7 @@ function AdminPedidos() {
 
       <div className={styles.container}>
         <h1>Pedidos</h1>
+        {getAuthSession()?.usuario.tipo === "comercial" && <Link className={styles.novoPedido} to="/pedidos/novo">Novo pedido</Link>}
 
         {pedidos.length === 0 && <p>Nenhum pedido encontrado.</p>}
 

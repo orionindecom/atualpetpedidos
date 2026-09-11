@@ -367,8 +367,10 @@ test("catálogo futuro usa a tabela atual e pedido grava preços em snapshot imu
   const pdf = readFileSync(new URL("../src/services/pdfService.js", import.meta.url), "utf8");
 
   assert.match(catalog, /tabelaPrecoId: usuario\.tabelaPrecoId/);
-  assert.match(order, /Usuario\.findById\(req\.usuario\._id\)/);
-  assert.match(order, /TabelaPreco\.findById\(cliente\.tabelaPrecoId\)/);
+  const buyerService = readFileSync(new URL("../src/services/clientePedidoService.js", import.meta.url), "utf8");
+  assert.match(order, /comercial \? req\.body\.clienteId : req\.usuario\._id/);
+  assert.match(buyerService, /Usuario\.findById\(clienteId\)/);
+  assert.match(buyerService, /TabelaPreco\.findById\(cliente\.tabelaPrecoId\)/);
   assert.match(order, /tabelaPrecoId: cliente\.tabelaPrecoId/);
   assert.match(order, /valorUnitario/);
   assert.match(order, /valorTotal/);

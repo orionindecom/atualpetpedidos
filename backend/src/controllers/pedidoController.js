@@ -1,9 +1,8 @@
 import { temPapel } from "../middlewares/adminMiddleware.js";
 import Pedido from "../models/Pedido.js";
-import Usuario from "../models/Usuario.js";
 import PrecoProduto from "../models/PrecoProduto.js";
 import Produto from "../models/Produto.js";
-import TabelaPreco from "../models/TabelaPreco.js";
+import { ClientePedidoError, obterClientePedido } from "../services/clientePedidoService.js";
 import { gerarNumeroPedido } from "../utils/gerarNumeroPedido.js";
 import { gerarPdfPedido } from "../services/pdfService.js";
 import { gerarPdfRelatorioPedido } from "../services/pdfAuditoriaPedidoService.js";
@@ -138,27 +137,26 @@ const montarItensPedido = async (itens, tabelaPrecoId) => {
 export const criarPedido = async (req, res) => {
   try {
     const { itens, observacao } = req.body;
+    const comercial = req.usuario.tipo === "comercial";
 
-    if (!validarItens(itens) || !isOptionalString(observacao, 1000)) {
+    if (!temPapel(req.usuario, ["cliente", "comercial"])) {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
+
+    if (!validarItens(itens) || !isOptionalString(observacao, 1000) ||
+      itens.some((item) => !isValidObjectId(item?.produtoId) ||
+        !toPositiveNumber(item?.quantidade) || Number(item.quantidade) < 1 || Number(item.quantidade) > 999999) ||
+      new Set(itens.map((item) => String(item.produtoId))).size !== itens.length) {
       return res.status(400).json({
         message: "Dados do pedido inválidos",
       });
     }
 
-    const cliente = await Usuario.findById(req.usuario._id);
-
-    if (!cliente?.tabelaPrecoId) {
-      return res.status(400).json({
-        message: "Cliente sem tabela de preço vinculada",
-      });
-    }
-
-    const tabela = await TabelaPreco.findById(cliente.tabelaPrecoId);
-
-    if (!tabela || !tabela.ativa) {
-      return res.status(400).json({
-        message: "Tabela de preço indisponível",
-      });
+    const { cliente, tabela } = await obterClientePedido(
+      comercial ? req.body.clienteId : req.usuario._id
+    );
+    if (comercial && req.body.tabelaPrecoId && String(req.body.tabelaPrecoId) !== String(cliente.tabelaPrecoId)) {
+      return res.status(409).json({ message: "A tabela do distribuidor mudou. Selecione-o novamente para revisar os preços." });
     }
 
     const { itensPedido, valorTotal } = await montarItensPedido(
@@ -166,10 +164,10 @@ export const criarPedido = async (req, res) => {
       cliente.tabelaPrecoId
     );
 
-    if (itensPedido.length === 0) {
+    if (itensPedido.length !== itens.length) {
       return res.status(400).json({
         message:
-          "Nenhum item válido encontrado. Verifique se os produtos possuem preço na tabela do cliente.",
+          "Há produtos indisponíveis ou sem preço na tabela do cliente. Atualize o catálogo e revise o pedido.",
       });
     }
 
@@ -177,6 +175,12 @@ export const criarPedido = async (req, res) => {
 
     const pedido = await criarPedidoComNumeroUnico({
       clienteId: cliente._id,
+      origem: comercial ? "comercial" : "cliente",
+      ...(comercial ? { criadoPor: {
+        usuarioId: req.usuario._id,
+        usuarioNome: req.usuario.nomeResponsavel || req.usuario.nomeFantasia || "Comercial",
+        usuarioTipo: req.usuario.tipo,
+      } } : {}),
       nomeResponsavel: cliente.nomeResponsavel,
       nomeFantasiaCliente: cliente.nomeFantasia,
       razaoSocialCliente: cliente.razaoSocial,
@@ -205,6 +209,9 @@ export const criarPedido = async (req, res) => {
       pedido: sanitizeClientOrder(pedido),
     });
   } catch (error) {
+    if (error instanceof ClientePedidoError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     return sendServerError(res);
   }
 };

@@ -21,6 +21,30 @@ const readSource = (relativePath) => (
   readFileSync(new URL(relativePath, import.meta.url), "utf8")
 );
 
+test("separação não converte item ainda não preenchido em zero ao salvar outro item", () => {
+  const pedido = { status: "separando", itens: [
+    { produtoId: "A", quantidade: 10 },
+    { produtoId: "B", quantidade: 20 },
+    { produtoId: "C", quantidade: 5 },
+  ] };
+  const form = buildOrderOperationsForm(pedido);
+  form.separacao.A = "4";
+  form.separacao.C = "0";
+  assert.deepEqual(buildOrderOperationsPayload(pedido, form).separacaoItens, [
+    { produtoId: "A", quantidadeSeparada: 4 },
+    { produtoId: "C", quantidadeSeparada: 0 },
+  ]);
+});
+
+test("atualização sem quantidades informadas preserva itens não processados", () => {
+  const pedido = { status: "separando", itens: [{ produtoId: "A", quantidade: 10 }] };
+  const form = buildOrderOperationsForm(pedido);
+  for (const valor of ["", null, undefined]) {
+    form.separacao.A = valor;
+    assert.equal(buildOrderOperationsPayload(pedido, form).separacaoItens, undefined);
+  }
+});
+
 test("rotas, guard e login direcionam logistica ao painel proprio", () => {
   const app = readSource("../src/App.jsx");
   const guards = readSource("../src/components/RouteGuards/RouteGuards.jsx");

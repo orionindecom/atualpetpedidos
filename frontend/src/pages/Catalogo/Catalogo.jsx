@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 import styles from "./Catalogo.module.css";
 import {
@@ -6,6 +7,9 @@ import {
     LoadMoreButton,
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import PageHeader from "../../components/PageHeader/PageHeader";
+import { useModalDialog } from "../../hooks/useModalDialog";
+import modalStyles from "../../components/OrderDetails/OrderDetails.module.css";
 import DistributorBanners from "../../components/DistributorBanners/DistributorBanners";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import { normalizeCatalogResponse } from "../../utils/catalogResponse";
@@ -18,11 +22,19 @@ import {
 
 const LIMITE_CATALOGO = 12;
 
-function Catalogo() {
+function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
+    const catalogoUrl = distribuidor ? `/pedidos/comercial/distribuidores/${distribuidor._id}/catalogo` : "/catalogo";
+    const tabelaPrecoId = distribuidor?.tabelaPrecoId?._id;
     const [produtos, setProdutos] = useState([]);
     const [produtosConhecidos, setProdutosConhecidos] = useState({});
     const [quantidades, setQuantidades] = useState({});
     const [pedidoCriado, setPedidoCriado] = useState(null);
+    const [revisando, setRevisando] = useState(false);
+    const [gerandoPedido, setGerandoPedido] = useState(false);
+    const [erroPedido, setErroPedido] = useState("");
+    const [observacao, setObservacao] = useState("");
+    const envioEmCurso = useRef(false);
+    const dialogRef = useModalDialog({ open: revisando, onClose: () => setRevisando(false), closeDisabled: gerandoPedido });
 
     const [busca, setBusca] = useState("");
     const [buscaAplicada, setBuscaAplicada] = useState("");
@@ -85,8 +97,9 @@ function Catalogo() {
             setProdutos([]);
 
             try {
-                const response = await api.get("/catalogo", {
+                const response = await api.get(catalogoUrl, {
                     params: {
+                        tabelaPrecoId,
                         pagina: 1,
                         limite: LIMITE_CATALOGO,
                         busca: buscaAplicada || undefined,
@@ -140,7 +153,7 @@ function Catalogo() {
 
         carregarCatalogo();
         return () => controller.abort();
-    }, [buscaAplicada, linhaFiltro, categoriaFiltro]);
+    }, [buscaAplicada, linhaFiltro, categoriaFiltro, catalogoUrl, tabelaPrecoId]);
 
     const mostrarMais = async () => {
         if (carregandoMaisRef.current || !paginacao.temMais) {
@@ -155,8 +168,9 @@ function Catalogo() {
         const versaoAtual = consultaVersao.current;
 
         try {
-            const response = await api.get("/catalogo", {
+            const response = await api.get(catalogoUrl, {
                 params: {
+                    tabelaPrecoId,
                     pagina: paginacao.pagina + 1,
                     limite: LIMITE_CATALOGO,
                     busca: buscaAplicada || undefined,
@@ -256,6 +270,7 @@ function Catalogo() {
         });
 
     const alterarQuantidade = (produtoId, quantidade) => {
+        setErroPedido("");
         setQuantidades({
             ...quantidades,
             [produtoId]: quantidade,
@@ -293,6 +308,7 @@ function Catalogo() {
     );
 
     const gerarPedido = async () => {
+        if (envioEmCurso.current) return;
         const itens = Object.entries(quantidades)
             .filter(([, quantidade]) => Number(quantidade) > 0)
             .map(([produtoId, quantidade]) => ({
@@ -300,19 +316,41 @@ function Catalogo() {
                 quantidade: Number(quantidade),
             }));
 
-        if (itens.length === 0) {
-            alert("Informe pelo menos um produto");
+        if (itens.length === 0 || itens.some((item) => !Number.isFinite(item.quantidade) || item.quantidade < 1 || item.quantidade > 999999)) {
+            setErroPedido("Informe ao menos um produto com quantidade entre 1 e 999999.");
             return;
         }
 
-        const response = await api.post("/pedidos", {
-            itens,
-            observacao: "",
-        });
+        envioEmCurso.current = true;
+        setGerandoPedido(true);
+        setErroPedido("");
+        try {
+            const response = await api.post(distribuidor ? "/pedidos/comercial" : "/pedidos", {
+                itens,
+                observacao,
+                ...(distribuidor ? { clienteId: distribuidor._id, tabelaPrecoId } : {}),
+            });
+            setPedidoCriado(response.data.pedido);
+            setQuantidades({});
+            setObservacao("");
+            setRevisando(false);
+        } catch (error) {
+            setErroPedido(error.response?.data?.message || "Não foi possível criar o pedido. Tente novamente.");
+        } finally {
+            envioEmCurso.current = false;
+            setGerandoPedido(false);
+        }
+    };
 
-        setPedidoCriado(response.data.pedido);
-        setQuantidades({});
-        alert(`Pedido criado: ${response.data.pedido.numeroPedido}`);
+    const iniciarFinalizacao = () => {
+        setErroPedido("");
+        if (distribuidor) setRevisando(true);
+        else gerarPedido();
+    };
+
+    const trocarDistribuidor = () => {
+        if (itensSelecionados.length > 0 && !window.confirm("Trocar o distribuidor e limpar os itens deste pedido?")) return;
+        onTrocarDistribuidor();
     };
 
     const baixarPdf = async (pedido) => {
@@ -332,12 +370,15 @@ function Catalogo() {
             <Navbar />
 
             <div className={styles.container}>
-                <div className={styles.header}>
+                {distribuidor ? <PageHeader eyebrow="Comercial" title="Novo pedido"
+                    description={`${distribuidor.nomeFantasia || distribuidor.razaoSocial || distribuidor.nomeResponsavel} · Tabela: ${distribuidor.tabelaPrecoId.nome}`}
+                    action={<button className={styles.botao} disabled={gerandoPedido} onClick={trocarDistribuidor}>Trocar distribuidor</button>}
+                /> : <div className={styles.header}>
                     <h1>Catálogo AtualPet</h1>
                     <p>Informe as quantidades desejadas e gere seu pedido.</p>
-                </div>
+                </div>}
 
-                <DistributorBanners />
+                {!distribuidor && <DistributorBanners />}
 
                 <FilterToolbar
                     activeFilterCount={[linhaFiltro, categoriaFiltro].filter(Boolean).length}
@@ -423,12 +464,16 @@ function Catalogo() {
                                                 <p className={styles.preco}>{moeda(produto.preco)}</p>
 
                                                 <div className={styles.quantidadeBox}>
-                                                    <label>Quantidade</label>
+                                                    <label htmlFor={`quantidade-${produto.id}`}>Quantidade</label>
 
                                                     <input
                                                         className={styles.input}
                                                         type="number"
+                                                        id={`quantidade-${produto.id}`}
+                                                        aria-label={`Quantidade de ${produto.nome}`}
                                                         min="0"
+                                                        max="999999"
+                                                        disabled={gerandoPedido}
                                                         placeholder="0"
                                                         value={quantidades[produto.id] || ""}
                                                         onChange={(e) =>
@@ -492,25 +537,27 @@ function Catalogo() {
 
                                 <button
                                     className={styles.botao}
-                                    onClick={gerarPedido}
-                                    disabled={itensSelecionados.length === 0}
+                                    onClick={iniciarFinalizacao}
+                                    disabled={itensSelecionados.length === 0 || gerandoPedido}
                                 >
-                                    Gerar Pedido
+                                    {gerandoPedido ? "Enviando..." : distribuidor ? "Revisar pedido" : "Gerar Pedido"}
                                 </button>
                             </>
                         )}
 
+                        {erroPedido && !revisando && <p className={styles.erroCatalogo} role="alert">{erroPedido}</p>}
                         {pedidoCriado && (
-                            <div className={styles.sucesso}>
+                            <div className={styles.sucesso} role="status">
                                 <h3>Pedido criado!</h3>
                                 <p>{pedidoCriado.numeroPedido}</p>
+                                <p>Aguardando aprovação.</p>
 
-                                <button
+                                {distribuidor ? <Link to={`/pedidos?pedido=${pedidoCriado._id}`}>Consultar pedido</Link> : <button
                                     className={styles.botao}
                                     onClick={() => baixarPdf(pedidoCriado)}
                                 >
                                     Baixar PDF
-                                </button>
+                                </button>}
                             </div>
                         )}
                     </aside>
@@ -526,12 +573,44 @@ function Catalogo() {
                 </div>
 
                 <button
-                    onClick={gerarPedido}
-                    disabled={itensSelecionados.length === 0}
+                    onClick={iniciarFinalizacao}
+                    disabled={itensSelecionados.length === 0 || gerandoPedido}
                 >
-                    Gerar pedido
+                    {gerandoPedido ? "Enviando..." : distribuidor ? "Revisar pedido" : "Gerar pedido"}
                 </button>
             </div>
+            {revisando && (
+                <div className={modalStyles.modalOverlay}>
+                    <section ref={dialogRef} className={modalStyles.modal} role="dialog" aria-modal="true" aria-labelledby="revisao-pedido-title" tabIndex="-1">
+                        <header className={modalStyles.modalHeader}>
+                            <div className={modalStyles.modalTitle}><span>Comercial</span><h2 id="revisao-pedido-title">Revisar pedido</h2>
+                                <p>{distribuidor.nomeFantasia || distribuidor.razaoSocial || distribuidor.nomeResponsavel}</p>
+                            </div>
+                            <button className={modalStyles.closeButton} disabled={gerandoPedido} onClick={() => setRevisando(false)}>Voltar</button>
+                        </header>
+                        <div className={modalStyles.modalContent}>
+                            <p className={styles.vazio}>Tabela: {distribuidor.tabelaPrecoId.nome}. O pedido seguirá para aprovação.</p>
+                            <div className={styles.listaResumo}>
+                                {itensSelecionados.map((produto) => <div className={styles.itemResumo} key={produto.id}>
+                                    <div><span>{produto.nome}</span><small>{quantidades[produto.id]} × {moeda(produto.preco)}</small></div>
+                                    <strong>{moeda(produto.preco * Number(quantidades[produto.id]))}</strong>
+                                </div>)}
+                            </div>
+                            <div className={styles.totalResumo}><span>Total</span><strong>{moeda(totalPedido)}</strong></div>
+                            <label className={modalStyles.conferenceObservation}>Observação (opcional)
+                                <textarea maxLength={1000} value={observacao} disabled={gerandoPedido} onChange={(event) => setObservacao(event.target.value)} />
+                            </label>
+                            <div className={styles.reviewFooter}>
+                                {erroPedido && <p className={styles.erroCatalogo} role="alert">{erroPedido}</p>}
+                                <div className={modalStyles.formActions}>
+                                    <button disabled={gerandoPedido} onClick={() => setRevisando(false)}>Voltar aos produtos</button>
+                                    <button disabled={gerandoPedido || itensSelecionados.length === 0} onClick={gerarPedido}>{gerandoPedido ? "Enviando..." : "Finalizar pedido"}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            )}
         </>
     );
 }

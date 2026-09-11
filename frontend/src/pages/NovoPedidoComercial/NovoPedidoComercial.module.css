@@ -1,0 +1,7 @@
+.button { composes: button from "../NecessidadeProducao/NecessidadeProducao.module.css"; }
+.client { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--border-default); }
+.client:last-child { border-bottom: 0; }
+.client > div { min-width: 0; overflow-wrap: anywhere; }
+.client h2 { margin: 0 0 6px; font-size: 17px; }
+.client p { margin: 4px 0; color: var(--text-muted); font-size: 13px; }
+@media (max-width: 640px) { .client { align-items: stretch; flex-direction: column; gap: 12px; } }

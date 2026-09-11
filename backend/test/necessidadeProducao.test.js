@@ -1,0 +1,157 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { calcularNecessidadeProducao } from "../src/utils/necessidadeProducao.js";
+import { getItemSeparation, PEDIDO_STATUS } from "../src/utils/pedidoLogistica.js";
+
+const item = (produtoId, quantidade, extra = {}) => ({ produtoId, nomeProduto: `Produto ${produtoId}`, quantidade, ...extra });
+const pedido = (_id, itens, extra = {}) => ({ _id, numeroPedido: `AP-${_id}`, nomeFantasiaCliente: "Distribuidor", status: "aprovado", itens, ...extra });
+
+test("regressão: aprovado sem início de separação não gera necessidade", () => {
+  const result = calcularNecessidadeProducao([pedido("1", [item("A", 10)])]);
+  assert.equal(result.resumo.quantidadeFaltante, 0);
+  assert.deepEqual(result.pedidos, []);
+  assert.deepEqual(result.produtos, []);
+});
+
+for (const [quantidadeSeparada, faltante] of [[0, 10], [4, 6], [10, 0]]) {
+  test(`regressão: separação iniciada com ${quantidadeSeparada} de 10 gera falta ${faltante}`, () => {
+    const result = calcularNecessidadeProducao([
+      pedido("1", [item("A", 10, { quantidadeSeparada })], { status: "separando" }),
+    ]);
+    assert.equal(result.resumo.quantidadeFaltante, faltante);
+    assert.equal(result.pedidos.length, faltante ? 1 : 0);
+    assert.equal(result.produtos.length, faltante ? 1 : 0);
+  });
+}
+
+test("regressão: dois pedidos não iniciados não aparecem no consolidado", () => {
+  const result = calcularNecessidadeProducao([
+    pedido("1", [item("A", 10, { quantidadeSeparada: 0 })]),
+    pedido("2", [item("A", 20)], { status: "novo" }),
+  ]);
+  assert.equal(result.resumo.quantidadeFaltante, 0);
+  assert.deepEqual(result.pedidos, []);
+  assert.deepEqual(result.produtos, []);
+});
+
+test("regressão: falta real de 5 não soma solicitação de 20 de pedido não iniciado", () => {
+  const result = calcularNecessidadeProducao([
+    pedido("1", [item("A", 10, { quantidadeSeparada: 5 })], { status: "separando" }),
+    pedido("2", [item("A", 20)]),
+  ]);
+  assert.equal(result.resumo.quantidadeFaltante, 5);
+  assert.equal(result.pedidos.length, 1);
+  assert.equal(result.produtos[0].quantidadePedidos, 1);
+});
+
+test("etapa atual de separação comprova início; aprovação e etapas encerradas não geram falta", () => {
+  for (const status of [...PEDIDO_STATUS, "desconhecido", undefined]) {
+    const result = calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], { status })]);
+    assert.equal(result.resumo.quantidadeFaltante, ["separando", "separado"].includes(status) ? 10 : 0, String(status));
+  }
+});
+
+test("quantidades, aprovação e operador isolados não comprovam início da separação", () => {
+  for (const status of ["aprovado", "novo", "em_analise"]) {
+    for (const quantidadeSeparada of [undefined, null, 0, 4]) {
+      const result = calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada, quantidadeFinal: 0 })], {
+        status,
+        aprovacao: { aprovadoEm: "2026-09-11T09:00:00Z" },
+        historicoStatus: [{ novoStatus: "aprovado", alteradoEm: "2026-09-11T09:00:00Z", operadorId: "operador" }],
+      })]);
+      assert.equal(result.resumo.quantidadeFaltante, 0);
+    }
+  }
+});
+
+test("histórico usa o mesmo marco de início das métricas, com data válida após a aprovação", () => {
+  const base = pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], {
+    aprovacao: { aprovadoEm: "2026-09-11T09:00:00Z" },
+  });
+  for (const [novoStatus, alteradoEm, expected] of [
+    ["separando", "2026-09-11T10:00:00Z", 10],
+    ["aprovado", "2026-09-11T10:00:00Z", 0],
+    ["separando", "data inválida", 0],
+    ["separando", "2026-09-11T08:00:00Z", 0],
+  ]) {
+    const result = calcularNecessidadeProducao([{ ...base, historicoStatus: [{ novoStatus, alteradoEm }] }]);
+    assert.equal(result.resumo.quantidadeFaltante, expected);
+  }
+});
+
+test("início comprovado no histórico não reabre pedidos cancelados ou posteriores ao faturamento", () => {
+  for (const status of ["aguardando_aprovacao", "faturado", "enviado", "entregue", "cancelado", "desconhecido"]) {
+    const result = calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], {
+      status, historicoStatus: [{ novoStatus: "separando", alteradoEm: "2026-09-11T10:00:00Z" }],
+    })]);
+    assert.equal(result.resumo.quantidadeFaltante, 0, status);
+  }
+});
+
+test("consolida produtos por ID em todos os pedidos, conta pedidos distintos e ordena por falta", () => {
+  const result = calcularNecessidadeProducao([
+    pedido("1", [item("A", 10, { quantidadeSeparada: 4 }), item("B", 20, { quantidadeSeparada: 0 }), item("A", 3, { quantidadeSeparada: 0 })], { status: "separando" }),
+    pedido("2", [item("A", 8, { quantidadeSeparada: 2 }), item("B", 5, { quantidadeSeparada: 5 })], { status: "separando" }),
+    pedido("3", [item("A", 2, { quantidadeSeparada: 2 })], { status: "separado" }),
+  ]);
+  assert.deepEqual(result.produtos.map(({ produtoId, quantidadeFaltante, quantidadePedidos }) => ({ produtoId, quantidadeFaltante, quantidadePedidos })), [
+    { produtoId: "B", quantidadeFaltante: 20, quantidadePedidos: 1 },
+    { produtoId: "A", quantidadeFaltante: 15, quantidadePedidos: 2 },
+  ]);
+  assert.deepEqual(result.resumo, { quantidadePedidos: 2, quantidadeProdutos: 2, quantidadeFaltante: 35 });
+  assert.equal(result.pedidos[0].itens.length, 3);
+  assert.equal(result.pedidos[1].itens.length, 1);
+});
+
+test("reutiliza atendimento final/separado somente dos itens processados", () => {
+  for (const extra of [
+    { quantidadeSeparada: 0 }, { quantidadeSeparada: 4 },
+    { quantidadeSeparada: 8, quantidadeFinal: 3 }, { quantidadeSeparada: 8, quantidadeFinal: 0 },
+    { quantidadeSeparada: 4, quantidadeConferida: 9 },
+  ]) {
+    const original = item("A", 10, extra);
+    const source = getItemSeparation(original);
+    const result = calcularNecessidadeProducao([pedido("1", [original], { status: "separando" })]);
+    assert.equal(result.pedidos[0].itens[0].quantidadeAtendida, source.quantidadeAtendida);
+    assert.equal(result.produtos[0].quantidadeFaltante, source.quantidadeFaltante);
+  }
+});
+
+test("pedido iniciado ignora itens não processados, inclusive novos itens em uma separação reaberta", () => {
+  for (const quantidadeSeparada of [undefined, null, "", NaN]) {
+    const result = calcularNecessidadeProducao([pedido("1", [
+      item("A", 10, { quantidadeSeparada: 5 }),
+      item("B", 20, { quantidadeSeparada }),
+      item("C", 30, { quantidadeSeparada, quantidadeFinal: 0 }),
+    ], { status: "separando" })]);
+    assert.equal(result.resumo.quantidadeFaltante, 5);
+    assert.equal(result.pedidos[0].itens.length, 1);
+    assert.equal(result.produtos.length, 1);
+  }
+  assert.deepEqual(calcularNecessidadeProducao([pedido("1", [item("A", 10)], { status: "separando" })]).produtos, []);
+});
+
+test("quantidades completas/excedentes não geram demanda nem compensam faltas de outros pedidos", () => {
+  const result = calcularNecessidadeProducao([
+    pedido("1", [item("A", 10, { quantidadeSeparada: 20 })], { status: "separando" }),
+    pedido("2", [item("A", 10, { quantidadeSeparada: 4 })], { status: "separando" }),
+    pedido("3", [item("B", 10, { quantidadeSeparada: 0, quantidadeFinal: 10 })], { status: "separado" }),
+  ]);
+  assert.equal(result.resumo.quantidadeFaltante, 6);
+  assert.equal(result.resumo.quantidadePedidos, 1);
+});
+
+test("não reabre demanda de pedido entregue com status inconsistente", () => {
+  for (const extra of [{ dataEntrega: new Date() }, { historicoStatus: [{ novoStatus: "entregue" }] }]) {
+    assert.equal(calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], { status: "separando", ...extra })]).resumo.quantidadeFaltante, 0);
+  }
+});
+
+test("consolidação não corta a demanda na primeira página, não une nomes iguais e não altera documentos", () => {
+  const pedidos = Array.from({ length: 60 }, (_, i) => pedido(String(i), [item(i % 2 ? "A" : "B", 2, { nomeProduto: "Mesmo nome", quantidadeSeparada: 0 })], { status: "separando" }));
+  const before = structuredClone(pedidos);
+  const result = calcularNecessidadeProducao(pedidos);
+  assert.deepEqual(result.resumo, { quantidadePedidos: 60, quantidadeProdutos: 2, quantidadeFaltante: 120 });
+  assert.equal(result.produtos[0].quantidadePedidos, 30);
+  assert.deepEqual(pedidos, before);
+});

@@ -971,6 +971,8 @@ export const sanitizeClientOrder = (pedido) => {
   delete source.historicoPedido;
   delete source.observacaoLogistica;
   delete source.aprovacao;
+  delete source.criadoPor;
+  source.origem ||= "cliente";
   delete source.conferencia;
   delete source.conferenciaObrigatoria;
   delete source.fechamentoLogistico;

@@ -11,6 +11,8 @@
   color: #111827;
 }
 
+.novoPedido { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 20px; padding: 10px 16px; border-radius: var(--radius-medium); background: var(--brand-accent); color: var(--text-on-brand); font-weight: 700; text-decoration: none; }
+
 .lista {
   display: flex;
   flex-direction: column;

@@ -234,6 +234,8 @@ function OrderDetailModal({
               <div><span>Razão social</span><strong>{detail.razaoSocialCliente || "—"}</strong></div>
               <div><span>CNPJ</span><strong>{detail.cnpjCliente || "—"}</strong></div>
               <div><span>Data</span><strong>{formatOrderDate(detail.dataPedido || detail.createdAt)}</strong></div>
+              <div><span>Origem</span><strong>{detail.origem === "comercial" ? "Comercial" : "Cliente"}</strong></div>
+              {detail.origem === "comercial" && <div><span>Lançado por</span><strong>{detail.criadoPor?.usuarioNome || "Comercial"}</strong></div>}
             </div>
             {detail.observacao && <p className={styles.orderNote}>{detail.observacao}</p>}
           </section>

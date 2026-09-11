@@ -15,7 +15,8 @@ import {
 } from "../controllers/pedidoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin, somenteGestorComercial } from "../middlewares/adminMiddleware.js";
+import { somenteAdmin, somenteComercial, somenteGestorComercial } from "../middlewares/adminMiddleware.js";
+import { listarCatalogoDistribuidor, listarDistribuidoresPedido } from "../controllers/pedidoComercialController.js";
 import {
   somenteCliente,
   somenteClienteOuAdmin,
@@ -27,6 +28,10 @@ import {
 import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
+
+router.get("/comercial/distribuidores", proteger, somenteComercial, adminLimiter, listarDistribuidoresPedido);
+router.get("/comercial/distribuidores/:id/catalogo", proteger, somenteComercial, adminLimiter, validateObjectIdParam(), listarCatalogoDistribuidor);
+router.post("/comercial", proteger, somenteComercial, pedidoLimiter, criarPedido);
 
 router.post(
   "/",

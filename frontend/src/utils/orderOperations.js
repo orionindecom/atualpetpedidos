@@ -219,10 +219,17 @@ export const buildOrderOperationsPayload = (pedido, form) => {
     ["separando", "separado"].includes(pedido.status) &&
     form.status !== "cancelado"
   ) {
-    payload.separacaoItens = (pedido.itens || []).map((item) => ({
-      produtoId: item.produtoId,
-      quantidadeSeparada: Number(form.separacao[String(item.produtoId)]),
-    }));
+    // Campo ainda vazio não é uma tentativa de separação com zero disponível.
+    const separacaoItens = (pedido.itens || [])
+      .filter((item) => {
+        const value = form.separacao[String(item.produtoId)];
+        return value !== "" && value !== null && value !== undefined;
+      })
+      .map((item) => ({
+        produtoId: item.produtoId,
+        quantidadeSeparada: Number(form.separacao[String(item.produtoId)]),
+      }));
+    if (separacaoItens.length > 0) payload.separacaoItens = separacaoItens;
   }
 
   if (form.ocorrenciaConteudo.trim()) {

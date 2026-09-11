@@ -72,3 +72,10 @@ export const somenteLogistica = (req, res, next) => {
 
   return next();
 };
+
+export const somenteComercial = (req, res, next) => {
+  if (!temPapel(req.usuario, ["comercial"])) {
+    return res.status(403).json({ message: "Acesso exclusivo do Comercial" });
+  }
+  return next();
+};
