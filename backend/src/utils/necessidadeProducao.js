@@ -22,10 +22,12 @@ export const calcularNecessidadeProducao = (pedidos = []) => {
     if (!separacaoIniciada(pedido)) continue;
     const itens = (pedido.itens || []).flatMap((item) => {
       const atendimento = getItemSeparation(item);
-      // Como nos bloqueios da separação, null significa item não processado.
-      // Zero só representa falta real quando foi registrado após o início.
-      if (atendimento.quantidadeSeparada === null) return [];
-      const quantidadeFaltante = atendimento.quantidadeFaltante;
+      // O zero inicial ainda está pendente; demanda exige uma separação registrada.
+      if (atendimento.situacaoSeparacao === "pendente") return [];
+      // A demanda existente considera o atendimento final, quando já conferido.
+      const quantidadeFaltante = Math.max(
+        atendimento.quantidadeSolicitada - atendimento.quantidadeAtendida, 0
+      );
       if (!(quantidadeFaltante > 0)) return [];
       const produtoId = String(item.produtoId);
       let produto = produtosPorId.get(produtoId);

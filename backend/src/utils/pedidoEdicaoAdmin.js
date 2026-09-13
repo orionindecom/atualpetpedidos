@@ -2,6 +2,7 @@ import {
   buildOccurrenceEntry,
   buildStatusHistoryEntry,
   getItemSeparation,
+  initializeOrderItemSeparation,
 } from "./pedidoLogistica.js";
 
 export const STATUS_EDITAVEIS_ADMIN = Object.freeze([
@@ -118,7 +119,7 @@ const preserveOperationalWork = ({ currentItems, nextItems, resetConference }) =
 
   return nextItems.map((nextItem) => {
     const current = currentByProduct.get(String(nextItem.produtoId));
-    if (!current) return { ...nextItem };
+    if (!current) return initializeOrderItemSeparation(nextItem);
 
     const next = { ...nextItem };
     for (const field of CAMPOS_OPERACIONAIS_ITEM) {
@@ -133,6 +134,7 @@ const preserveOperationalWork = ({ currentItems, nextItems, resetConference }) =
       next.situacaoSeparacao = getItemSeparation({
         quantidade: next.quantidade,
         quantidadeSeparada: separated,
+        situacaoSeparacao: current.situacaoSeparacao,
       }).situacaoSeparacao;
     }
 

@@ -78,7 +78,8 @@ const occurrenceDuplicatesAdminEdit = (entry, history) => (
 
 const separationSummary = (items = []) => {
   const separated = items.filter((item) => (
-    item.quantidadeSeparada !== null && item.quantidadeSeparada !== undefined
+    item.quantidadeSeparada !== null && item.quantidadeSeparada !== undefined &&
+    !(Number(item.quantidadeSeparada) === 0 && item.situacaoSeparacao === "pendente")
   ));
   if (separated.length === 0) return undefined;
   const shortages = separated.filter((item) => (
@@ -87,7 +88,7 @@ const separationSummary = (items = []) => {
   return `${separated.length} item(ns) registrado(s); ${shortages} com falta na separação.`;
 };
 
-export const buildOrderAuditTimeline = (pedido) => {
+export const buildOrderAuditTimeline = (pedido, { showPrices = true } = {}) => {
   const source = asPlainObject(pedido || {});
   const events = [];
   let sequence = 0;
@@ -179,6 +180,7 @@ export const buildOrderAuditTimeline = (pedido) => {
   });
 
   for (const entry of source.historicoAlteracoes || []) {
+    if (!showPrices && !entry.itens?.length) continue;
     const itemDetails = (entry.itens || []).slice(0, 10).map((item) => {
       if (item.tipo === "adicionado") {
         return `${item.nomeProduto}: adicionado com ${item.quantidadeNova} unidade(s)`;
@@ -197,12 +199,11 @@ export const buildOrderAuditTimeline = (pedido) => {
       data: entry.alteradoEm,
       titulo: "Pedido alterado pelo Admin",
       ...userData(entry),
-      detalhes: `Total: R$ ${Number(entry.totalAnterior || 0).toFixed(2)} -> R$ ${Number(entry.totalNovo || 0).toFixed(2)}. ${itemDetails.join("; ")}${remaining > 0 ? `; e mais ${remaining} alteração(ões)` : ""}.`,
+      detalhes: `${showPrices ? `Total: R$ ${Number(entry.totalAnterior ?? 0).toFixed(2)} -> R$ ${Number(entry.totalNovo ?? 0).toFixed(2)}. ` : ""}${itemDetails.join("; ")}${remaining > 0 ? `; e mais ${remaining} alteração(ões)` : ""}.`,
       dados: {
         versaoOperacionalAnterior: entry.versaoOperacionalAnterior,
         versaoOperacionalNova: entry.versaoOperacionalNova,
-        totalAnterior: entry.totalAnterior,
-        totalNovo: entry.totalNovo,
+        ...(showPrices ? { totalAnterior: entry.totalAnterior, totalNovo: entry.totalNovo } : {}),
         itens: entry.itens,
       },
     });

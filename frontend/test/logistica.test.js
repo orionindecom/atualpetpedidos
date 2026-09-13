@@ -12,6 +12,7 @@ import {
   getOrderFlowStage,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
+  updateOrderSeparationForm,
   getConferenceCompletionIssues,
   getSeparationCompletionIssues,
   isLogisticsClosingComplete,
@@ -27,9 +28,9 @@ test("separação não converte item ainda não preenchido em zero ao salvar out
     { produtoId: "B", quantidade: 20 },
     { produtoId: "C", quantidade: 5 },
   ] };
-  const form = buildOrderOperationsForm(pedido);
-  form.separacao.A = "4";
-  form.separacao.C = "0";
+  let form = buildOrderOperationsForm(pedido);
+  form = updateOrderSeparationForm(form, "A", "4");
+  form = updateOrderSeparationForm(form, "C", "0");
   assert.deepEqual(buildOrderOperationsPayload(pedido, form).separacaoItens, [
     { produtoId: "A", quantidadeSeparada: 4 },
     { produtoId: "C", quantidadeSeparada: 0 },
@@ -75,12 +76,15 @@ test("pagina de logistica usa endpoints dedicados e paginacao", () => {
   assert.match(dashboard, /Aguardando conferência, fechamento ou faturamento/);
 });
 
-test("tela logistica mantem itens e valores somente leitura", () => {
+test("tela logistica oculta preços e mantém edição restrita à operação", () => {
   const page = readSource("../src/pages/LogisticaPedidos/LogisticaPedidos.jsx");
   const detail = readSource("../src/components/OrderDetails/OrderDetailModal.jsx");
   const items = readSource("../src/components/OrderDetails/OrderItems.jsx");
   assert.match(page, /<OrderDetailModal/);
   assert.match(detail, /<OrderItems/);
+  assert.match(page, /showPrices=\{false\}/);
+  assert.match(detail, /showPrices=\{showPrices\}/);
+  assert.match(detail, /showPrices && <strong>/);
   assert.match(items, /formatCurrency\(item\.valorUnitario\)/);
   assert.doesNotMatch(page, /updateField\("itens"/);
   assert.doesNotMatch(page, /updateField\("valorTotal"/);
@@ -174,7 +178,7 @@ test("payload progressivo nao antecipa separacao ou dados comerciais", () => {
 
   const pedido = { ...aprovado, status: "separando" };
   const form = buildOrderOperationsForm(pedido);
-  assert.equal(form.separacao["507f1f77bcf86cd799439011"], "");
+  assert.equal(form.separacao["507f1f77bcf86cd799439011"], 0);
   form.status = "separado";
   form.separacao["507f1f77bcf86cd799439011"] = 8;
   form.ocorrenciaConteudo = "Falta confirmada";

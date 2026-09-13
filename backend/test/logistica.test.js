@@ -2275,7 +2275,7 @@ test("detalhe interno inclui timeline e mantem dados operacionais", () => {
   const detail = enrichInternalOrderDetail(criarPedidoAuditoria());
   assert.ok(detail.historicoPedido.length > 8);
   assert.equal(detail.ocorrencias.length, 5);
-  assert.equal(detail.itens[0].quantidadeFaltante, 2);
+  assert.equal(detail.itens[0].quantidadeFaltante, 1);
 });
 
 test("DTO do cliente usa whitelist comercial exata para cada item", () => {
@@ -2411,7 +2411,7 @@ test("dados do relatorio incluem quantidades solicitada separada conferida final
     quantidadeSeparada: 9,
     quantidadeConferida: 8,
     quantidadeFinal: 8,
-    quantidadeFaltante: 2,
+    quantidadeFaltante: 1,
     situacaoSeparacao: "parcial",
     situacaoFinal: "parcial",
   });

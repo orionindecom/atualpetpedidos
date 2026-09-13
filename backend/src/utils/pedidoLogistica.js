@@ -400,8 +400,14 @@ export const pedidoDisponivelParaLogistica = (pedidoOuStatus) => (
   !pedidoAguardandoAprovacao(pedidoOuStatus)
 );
 
+export const initializeOrderItemSeparation = (item) => ({
+  ...item,
+  quantidadeSeparada: 0,
+  situacaoSeparacao: "pendente",
+});
+
 export const getItemSeparation = (item = {}) => {
-  const quantidadeSolicitada = Number(item.quantidade || 0);
+  const quantidadeSolicitada = Number(item.quantidade ?? item.quantidadeSolicitada ?? 0);
   const possuiQuantidadeSeparada =
     item.quantidadeSeparada !== undefined &&
     item.quantidadeSeparada !== null &&
@@ -410,9 +416,8 @@ export const getItemSeparation = (item = {}) => {
   const quantidadeSeparada = possuiQuantidadeSeparada
     ? Number(item.quantidadeSeparada)
     : null;
-  const quantidadeFaltanteSeparacao = quantidadeSeparada === null
-    ? null
-    : Math.max(quantidadeSolicitada - quantidadeSeparada, 0);
+  // A ausência de registro mantém o item pendente, mas não interrompe o cálculo.
+  const quantidadeFaltanteSeparacao = quantidadeSolicitada - (quantidadeSeparada ?? 0);
   const possuiQuantidadeFinal =
     item.quantidadeFinal !== undefined &&
     item.quantidadeFinal !== null &&
@@ -422,12 +427,11 @@ export const getItemSeparation = (item = {}) => {
     ? Number(item.quantidadeFinal)
     : null;
   const quantidadeAtendida = quantidadeFinal ?? quantidadeSeparada;
-  const quantidadeFaltante = quantidadeAtendida === null
-    ? null
-    : Math.max(quantidadeSolicitada - quantidadeAtendida, 0);
+  const quantidadeFaltante = quantidadeFaltanteSeparacao;
 
   let situacaoSeparacao = "pendente";
-  if (quantidadeSeparada !== null) {
+  const aguardandoSeparacao = quantidadeSeparada === 0 && item.situacaoSeparacao === "pendente";
+  if (quantidadeSeparada !== null && !aguardandoSeparacao) {
     if (quantidadeSeparada > quantidadeSolicitada) {
       situacaoSeparacao = "excedente";
     } else if (quantidadeSeparada === 0 && quantidadeSolicitada > 0) {
@@ -470,7 +474,9 @@ export const getSeparationCompletionBlockers = (
   return items.flatMap((item) => {
     const produtoId = String(item.produtoId);
     const separation = getItemSeparation({
-      ...item,
+      // Subdocumentos Mongoose não expõem os campos do item via spread.
+      quantidade: item.quantidade ?? item.quantidadeSolicitada,
+      situacaoSeparacao: separationByProduct.has(produtoId) ? undefined : item.situacaoSeparacao,
       quantidadeSeparada: separationByProduct.has(produtoId)
         ? separationByProduct.get(produtoId)
         : item.quantidadeSeparada,
@@ -480,13 +486,13 @@ export const getSeparationCompletionBlockers = (
       return [];
     }
 
-    if (separation.quantidadeSeparada === null) {
+    if (separation.situacaoSeparacao === "pendente" && !separationByProduct.has(produtoId)) {
       return [{
         produtoId: item.produtoId,
         nomeProduto: item.nomeProduto,
         tipo: "nao_processado",
         quantidadePedida: separation.quantidadeSolicitada,
-        quantidadeSeparada: null,
+        quantidadeSeparada: separation.quantidadeSeparada,
         message: `${item.nomeProduto}: separação ainda não processada`,
       }];
     }
@@ -605,10 +611,10 @@ export const enrichOrderSeparation = (pedido) => {
     ...source,
     itens,
     temDivergencia: itens.some((item) => (
-      item.quantidadeSeparada !== null &&
+      item.situacaoSeparacao !== "pendente" &&
       Number(item.quantidadeSeparada) !== Number(item.quantidadeSolicitada)
     )),
-    temItemNaoProcessado: itens.some((item) => item.quantidadeSeparada === null),
+    temItemNaoProcessado: itens.some((item) => item.situacaoSeparacao === "pendente"),
     entregaFinalizada: pedidoPossuiEntregaConfirmada(source),
   };
 };

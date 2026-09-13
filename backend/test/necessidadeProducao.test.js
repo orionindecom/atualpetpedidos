@@ -104,16 +104,16 @@ test("consolida produtos por ID em todos os pedidos, conta pedidos distintos e o
 });
 
 test("reutiliza atendimento final/separado somente dos itens processados", () => {
-  for (const extra of [
-    { quantidadeSeparada: 0 }, { quantidadeSeparada: 4 },
-    { quantidadeSeparada: 8, quantidadeFinal: 3 }, { quantidadeSeparada: 8, quantidadeFinal: 0 },
-    { quantidadeSeparada: 4, quantidadeConferida: 9 },
+  for (const [extra, faltante] of [
+    [{ quantidadeSeparada: 0 }, 10], [{ quantidadeSeparada: 4 }, 6],
+    [{ quantidadeSeparada: 8, quantidadeFinal: 3 }, 7], [{ quantidadeSeparada: 8, quantidadeFinal: 0 }, 10],
+    [{ quantidadeSeparada: 4, quantidadeConferida: 9 }, 6],
   ]) {
     const original = item("A", 10, extra);
     const source = getItemSeparation(original);
     const result = calcularNecessidadeProducao([pedido("1", [original], { status: "separando" })]);
     assert.equal(result.pedidos[0].itens[0].quantidadeAtendida, source.quantidadeAtendida);
-    assert.equal(result.produtos[0].quantidadeFaltante, source.quantidadeFaltante);
+    assert.equal(result.produtos[0].quantidadeFaltante, faltante);
   }
 });
 

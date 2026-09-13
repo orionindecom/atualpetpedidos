@@ -11,6 +11,7 @@ import {
   buildStatusHistoryEntry,
   enrichInternalOrderDetail,
   enrichOrderSeparation,
+  initializeOrderItemSeparation,
   PEDIDO_STATUS,
   pedidoPossuiEntregaConfirmada,
   sanitizeClientOrder,
@@ -119,13 +120,13 @@ const montarItensPedido = async (itens, tabelaPrecoId) => {
 
     valorTotal += subtotal;
 
-    itensPedido.push({
+    itensPedido.push(initializeOrderItemSeparation({
       produtoId: produto._id,
       nomeProduto: produto.nome,
       quantidade: item.quantidade,
       valorUnitario,
       subtotal,
-    });
+    }));
   }
 
   return {

@@ -2,6 +2,7 @@ import PDFDocument from "pdfkit";
 import path from "path";
 import { fileURLToPath } from "url";
 import { buildOrderAuditTimeline } from "../utils/pedidoAuditoria.js";
+import { getItemSeparation } from "../utils/pedidoLogistica.js";
 
 const TIME_ZONE = "America/Sao_Paulo";
 
@@ -46,28 +47,6 @@ const PROFILE_LABELS = Object.freeze({
 
 const statusLabel = (status) => STATUS_LABELS[status] || status || "-";
 
-const asOptionalNumber = (value) => (
-  value === undefined || value === null || value === "" ? null : Number(value)
-);
-
-const getAuditItemQuantities = (item) => {
-  const quantidadeSolicitada = Number(item.quantidade || 0);
-  const quantidadeSeparada = asOptionalNumber(item.quantidadeSeparada);
-  const quantidadeFinal = asOptionalNumber(item.quantidadeFinal);
-  const quantidadeAtendida = quantidadeFinal ?? quantidadeSeparada;
-  return {
-    quantidadeSolicitada,
-    quantidadeSeparada,
-    quantidadeConferida: item.quantidadeConferida ?? null,
-    quantidadeFinal,
-    quantidadeFaltante: quantidadeAtendida === null
-      ? null
-      : Math.max(quantidadeSolicitada - quantidadeAtendida, 0),
-    situacaoSeparacao: item.situacaoSeparacao || "pendente",
-    situacaoFinal: item.situacaoFinal,
-  };
-};
-
 export const buildOrderAuditPdfData = (pedido) => {
   const source = typeof pedido?.toObject === "function" ? pedido.toObject() : { ...pedido };
   const timeline = buildOrderAuditTimeline(source);
@@ -75,7 +54,7 @@ export const buildOrderAuditPdfData = (pedido) => {
     source.historicoStatus || []
   ).some((entry) => entry.novoStatus === "entregue");
   const items = (source.itens || []).map((item) => {
-    const separation = getAuditItemQuantities(item);
+    const separation = getItemSeparation(item);
     return {
       nomeProduto: item.nomeProduto || "Produto sem nome",
       quantidadeSolicitada: separation.quantidadeSolicitada,

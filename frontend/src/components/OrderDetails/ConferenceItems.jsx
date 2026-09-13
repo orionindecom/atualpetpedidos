@@ -1,4 +1,5 @@
 import styles from "./OrderDetails.module.css";
+import { getOrderItemQuantities } from "../../utils/orderQuantities";
 
 const FINAL_STATUS_LABELS = {
   completo: "Completo",
@@ -17,11 +18,8 @@ function ConferenceItems({
     <div className={styles.itemsTable}>
       {items.map((item) => {
         const produtoId = String(item.produtoId);
-        const requested = Number(item.quantidadeSolicitada ?? item.quantidade ?? 0);
-        const separated = Number(item.quantidadeSeparada ?? 0);
-        const missingSeparation = Number(
-          item.quantidadeFaltanteSeparacao ?? Math.max(requested - separated, 0)
-        );
+        const { requested, separated: recorded, missing: missingSeparation, excess } = getOrderItemQuantities(item);
+        const separated = recorded ?? 0;
         const checkedValue = editable
           ? values[produtoId]
           : item.quantidadeConferida;
@@ -53,9 +51,9 @@ function ConferenceItems({
               <span>Separado</span>
               <strong>{separated}</strong>
             </div>
-            <div className={styles.quantityCell} data-shortage={missingSeparation > 0 || undefined}>
-              <span>Faltante</span>
-              <strong>{missingSeparation}</strong>
+            <div className={styles.quantityCell} data-shortage={missingSeparation > 0 || excess > 0 || undefined}>
+              <span>{excess > 0 ? "Excedente" : "Faltante"}</span>
+              <strong>{excess > 0 ? excess : missingSeparation}</strong>
             </div>
             <div className={styles.quantityCell}>
               <span>Conferido</span>

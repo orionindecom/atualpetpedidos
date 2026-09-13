@@ -35,6 +35,7 @@ function OrderDetailModal({
   form,
   transitions = [],
   isAdmin = false,
+  showPrices = isAdmin,
   canApprove = isAdmin,
   canEdit = isAdmin,
   canDelete = isAdmin,
@@ -243,7 +244,7 @@ function OrderDetailModal({
           <section className={styles.section}>
             <div className={styles.sectionTitle}>
               <h3>{flowStage.showSeparationEditor ? "Itens e separação" : "Itens do pedido"}</h3>
-              <strong>{formatCurrency(detail.valorTotal)}</strong>
+              {showPrices && <strong>{formatCurrency(detail.valorTotal)}</strong>}
             </div>
             {detail.temDivergencia && (
               <div className={styles.divergenceNotice}>
@@ -252,8 +253,10 @@ function OrderDetailModal({
             )}
             <OrderItems
               items={detail.itens}
+              showPrices={showPrices}
               editable={canOperate && flowStage.showSeparationEditor && !separationLocked && form.status !== "cancelado"}
               separation={form.separacao}
+              editedSeparation={form.separacaoEditada}
               onSeparationChange={onSeparationChange}
               deriveEditableStatus={canOperate && flowStage.showSeparationEditor}
             />

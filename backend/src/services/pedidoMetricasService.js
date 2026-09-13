@@ -235,7 +235,8 @@ export const calcularMetricasGerais = (pedidos = []) => {
 
     for (const item of items) {
       const requested = Number(item.quantidade);
-      const separated = item.quantidadeSeparada === undefined || item.quantidadeSeparada === null
+      const separated = item.quantidadeSeparada === undefined || item.quantidadeSeparada === null ||
+        (Number(item.quantidadeSeparada) === 0 && item.situacaoSeparacao === "pendente")
         ? null
         : Number(item.quantidadeSeparada);
       if (Number.isFinite(requested) && requested >= 0) totalUnits += requested;
@@ -426,7 +427,8 @@ export const calcularMetricasOperadores = ({
         if (summary) {
           summary.separationDurations.push(marcos.separationMs);
           const processed = (pedido.itens || []).filter((item) => (
-            item.quantidadeSeparada !== undefined && item.quantidadeSeparada !== null
+            item.quantidadeSeparada !== undefined && item.quantidadeSeparada !== null &&
+            !(Number(item.quantidadeSeparada) === 0 && item.situacaoSeparacao === "pendente")
           ));
           summary.itensProcessados += processed.length;
           summary.unidadesProcessadas += processed.reduce(

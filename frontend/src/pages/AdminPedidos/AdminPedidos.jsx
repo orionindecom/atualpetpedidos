@@ -17,6 +17,7 @@ import {
   buildConferencePayload,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
+  updateOrderSeparationForm,
 } from "../../utils/orderOperations";
 
 function AdminPedidos() {
@@ -144,22 +145,11 @@ function AdminPedidos() {
     setOperationsForm((current) => ({
       ...current,
       [field]: value,
-      separacao: field === "status" && value === "separando"
-        ? Object.fromEntries(detail.itens.map((item) => [
-          String(item.produtoId),
-          current.separacao[String(item.produtoId)] === ""
-            ? item.quantidade
-            : current.separacao[String(item.produtoId)],
-        ]))
-        : current.separacao,
     }));
   };
 
   const alterarSeparacao = (produtoId, value) => {
-    setOperationsForm((current) => ({
-      ...current,
-      separacao: { ...current.separacao, [produtoId]: value },
-    }));
+    setOperationsForm((current) => updateOrderSeparationForm(current, produtoId, value));
   };
 
   const alterarConferencia = (produtoId, value) => {
@@ -327,16 +317,16 @@ function AdminPedidos() {
     }
 
     try {
-      await api.put(`/pedidos/${modalPedido._id}`, {
+      const response = await api.put(`/pedidos/${modalPedido._id}`, {
         itens,
         observacao: modalPedido.observacao || "",
         versaoPedido: Number(modalPedido.__v || 0),
       });
+      atualizarPedidoNaLista(response.data.pedido);
 
       alert("Pedido atualizado com sucesso");
 
       fecharModal();
-      carregarDados();
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || "Erro ao atualizar pedido");
@@ -464,6 +454,7 @@ function AdminPedidos() {
             form={operationsForm}
             transitions={transitions}
             isAdmin={isAdmin}
+            showPrices
             canApprove
             canEdit
             canDelete
@@ -542,7 +533,7 @@ function AdminPedidos() {
                       type="number"
                       aria-label={`Quantidade de ${produto.nome}`}
                       min="0"
-                      value={quantidadesModal[produto._id] || ""}
+                      value={quantidadesModal[produto._id] ?? ""}
                       placeholder="0"
                       onChange={(e) =>
                         alterarQuantidadeModal(produto._id, e.target.value)

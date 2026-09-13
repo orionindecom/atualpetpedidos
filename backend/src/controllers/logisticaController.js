@@ -21,6 +21,7 @@ import {
   validateLogisticsOrderPayload,
 } from "../utils/pedidoLogistica.js";
 import { sendServerError } from "../utils/validation.js";
+import { sanitizeLogisticsOrder } from "../utils/pedidoLogisticaView.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -219,7 +220,8 @@ export const applyLogisticsOrderUpdate = ({
         message: `A quantidade separada de ${item.nomeProduto} não pode exceder a solicitada`,
       };
     }
-    if (getItemSeparation(item).quantidadeSeparada !== separacao.quantidadeSeparada) {
+    const atual = getItemSeparation(item);
+    if (atual.quantidadeSeparada !== separacao.quantidadeSeparada || atual.situacaoSeparacao === "pendente") {
       alteracoesSeparacao.push({
         item,
         quantidadeSeparada: separacao.quantidadeSeparada,
@@ -707,7 +709,9 @@ export const buscarPedidoLogistica = async (req, res) => {
     }
 
     return res.status(200).json({
-      pedido: enrichInternalOrderDetail(pedido),
+      pedido: req.usuario.tipo === "logistica"
+        ? sanitizeLogisticsOrder(pedido)
+        : enrichInternalOrderDetail(pedido),
       transicoesPermitidas: transicoesPermitidasParaPedido(pedido, {
         admin: req.usuario.tipo === "admin",
       }),
@@ -745,7 +749,10 @@ export const gerarPdfSeparacao = async (req, res) => {
       });
     }
 
-    return gerarPdfSeparacaoPedido(pedido, res);
+    return gerarPdfSeparacaoPedido(
+      req.usuario.tipo === "logistica" ? sanitizeLogisticsOrder(pedido) : pedido,
+      res
+    );
   } catch (error) {
     return sendServerError(res);
   }
@@ -805,7 +812,9 @@ export const atualizarPedidoLogistica = async (req, res) => {
 
     return res.status(200).json({
       message: "Dados logísticos atualizados",
-      pedido: enrichInternalOrderDetail(pedido),
+      pedido: req.usuario.tipo === "logistica"
+        ? sanitizeLogisticsOrder(pedido)
+        : enrichInternalOrderDetail(pedido),
       transicoesPermitidas: transicoesPermitidasParaPedido(pedido, {
         admin: req.usuario.tipo === "admin",
       }),

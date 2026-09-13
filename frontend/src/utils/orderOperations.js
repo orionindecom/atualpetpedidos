@@ -176,8 +176,9 @@ export const buildOrderOperationsForm = (pedido) => ({
   observacaoHistorico: "",
   separacao: Object.fromEntries((pedido.itens || []).map((item) => [
     String(item.produtoId),
-    item.quantidadeSeparada ?? "",
+    item.quantidadeSeparada ?? 0,
   ])),
+  separacaoEditada: {},
   conferencia: Object.fromEntries((pedido.itens || []).map((item) => [
     String(item.produtoId),
     item.quantidadeConferida ?? item.quantidadeSeparada ?? "",
@@ -188,6 +189,12 @@ export const buildOrderOperationsForm = (pedido) => ({
   observacaoVolumes: pedido.fechamentoLogistico?.observacaoVolumes || "",
   ocorrenciaConteudo: "",
   ocorrenciaTipo: "observacao",
+});
+
+export const updateOrderSeparationForm = (form, produtoId, value) => ({
+  ...form,
+  separacao: { ...form.separacao, [produtoId]: value },
+  separacaoEditada: { ...form.separacaoEditada, [produtoId]: true },
 });
 
 export const buildOrderOperationsPayload = (pedido, form) => {
@@ -219,11 +226,15 @@ export const buildOrderOperationsPayload = (pedido, form) => {
     ["separando", "separado"].includes(pedido.status) &&
     form.status !== "cancelado"
   ) {
-    // Campo ainda vazio não é uma tentativa de separação com zero disponível.
+    // O zero inicial não registra indisponibilidade ao salvar outro item ou o status.
     const separacaoItens = (pedido.itens || [])
       .filter((item) => {
-        const value = form.separacao[String(item.produtoId)];
-        return value !== "" && value !== null && value !== undefined;
+        const produtoId = String(item.produtoId);
+        const value = form.separacao[produtoId];
+        if (value === "" || value === null || value === undefined) return false;
+        const pending = item.quantidadeSeparada === null || item.quantidadeSeparada === undefined ||
+          item.quantidadeSeparada === "" || item.situacaoSeparacao === "pendente";
+        return !pending || Number(value) !== 0 || form.separacaoEditada?.[produtoId] === true;
       })
       .map((item) => ({
         produtoId: item.produtoId,

@@ -8,10 +8,12 @@ import Pedido from "../src/models/Pedido.js";
 import Produto from "../src/models/Produto.js";
 import PrecoProduto from "../src/models/PrecoProduto.js";
 import TabelaPreco from "../src/models/TabelaPreco.js";
+import OperadorLogistica from "../src/models/OperadorLogistica.js";
+import { signOperatorContext } from "../src/utils/operadorLogistica.js";
 import pedidoRouter from "../src/routes/pedidoRoutes.js";
 import logisticaRouter from "../src/routes/logisticaRoutes.js";
 import { buildOrderAuditTimeline } from "../src/utils/pedidoAuditoria.js";
-import { buildOrderOperationsForm, buildOrderOperationsPayload } from "../../frontend/src/utils/orderOperations.js";
+import { buildOrderOperationsForm, buildOrderOperationsPayload, updateOrderSeparationForm } from "../../frontend/src/utils/orderOperations.js";
 import { listarDistribuidoresPedido } from "../src/controllers/pedidoComercialController.js";
 
 const id = (n) => n.toString(16).padStart(24, "0");
@@ -75,11 +77,11 @@ async function fixture(t) {
   app.use("/logistica", logisticaRouter);
   const server = await new Promise((resolve) => { const instance = app.listen(0, "127.0.0.1", () => resolve(instance)); });
   t.after(() => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve())));
-  const request = async (role, path, body, method = body ? "POST" : "GET") => {
+  const request = async (role, path, body, method = body ? "POST" : "GET", headers = {}) => {
     const user = usuarios.get(role);
     const token = user ? jwt.sign({ id: user._id, tipo: user.tipo, tokenVersion: 0 }, secret, { expiresIn: "1h" }) : null;
     const response = await fetch(`http://127.0.0.1:${server.address().port}${path}`, {
-      method, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      method, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     return { status: response.status, body: await response.json() };
@@ -94,6 +96,119 @@ test("HTTP: Admin/Logística consultam necessidade; demais perfis e sessão ause
     assert.equal((await request(role, "/logistica/necessidade-producao")).status, expected, String(role));
   }
 });
+
+test("HTTP: Logística recebe pedido sem valores após edição e separação e não acessa rotas comerciais", async (t) => {
+  const { request, body, pedidos, usuarios } = await fixture(t);
+  await request("comercial", "/pedidos/comercial", body());
+  const pedido = pedidos[0];
+  t.mock.method(pedido, "save", async () => {
+    await pedido.validate(); pedido.__v = Number(pedido.__v ?? 0) + 1; return pedido;
+  });
+  const operador = { _id: id(300), nome: "Operador local", ativo: true };
+  t.mock.method(OperadorLogistica, "findById", () => query(operador));
+  const headers = { "X-Operador-Contexto": signOperatorContext({
+    operadorId: operador._id, pedidoId: pedido._id, usuarioId: usuarios.get("logistica")._id,
+  }) };
+  const path = `/logistica/pedidos/${pedido._id}`;
+  assert.equal((await request("admin", `/pedidos/${pedido._id}/aprovar`, {}, "PATCH")).status, 200);
+  assert.equal((await request("logistica", path, { versaoPedido: Number(pedido.__v ?? 0), status: "separando" }, "PATCH", headers)).status, 200);
+  const edited = await request("admin", `/pedidos/${pedido._id}`, {
+    versaoPedido: pedido.__v, itens: [{ produtoId: id(100), quantidade: 5 }],
+  }, "PUT");
+  assert.equal(edited.status, 200);
+  assert.equal(edited.body.pedido.itens[0].quantidadeFaltante, 5);
+  assert.equal(edited.body.pedido.valorTotal, 50);
+  const read = await request("logistica", path, undefined, "GET", headers);
+  assert.equal(read.status, 200);
+  assert.equal(read.body.pedido.itens[0].quantidadeFaltante, 5);
+  const changed = await request("logistica", path, {
+    versaoPedido: pedido.__v, separacaoItens: [{ produtoId: id(100), quantidadeSeparada: 5 }],
+  }, "PATCH", headers);
+  assert.equal(changed.status, 200);
+  assert.equal(changed.body.pedido.itens[0].quantidadeFaltante, 0);
+  assert.equal(changed.body.pedido.itens[0].quantidadeFaltanteSeparacao, 0);
+  for (const result of [read, changed]) {
+    assert.doesNotMatch(JSON.stringify(result.body), /valorUnitario|subtotal|valorTotal|totalAnterior|totalNovo|tabelaPrecoId|nomeTabela|R\$/);
+    assert.ok(result.body.pedido.historicoPedido.some((entry) => entry.detalhes?.includes("3 -> 5")));
+  }
+  for (const commercialPath of ["/pedidos", "/pedidos/meus", `/pedidos/${pedido._id}`, `/pedidos/${pedido._id}/pdf`, `/pedidos/${pedido._id}/relatorio`, `/pedidos/${pedido._id}/aprovacao`]) {
+    assert.equal((await request("logistica", commercialPath)).status, 403, commercialPath);
+  }
+});
+
+for (const actor of ["admin", "comercial"]) {
+  test(`HTTP: inclusão por ${actor} inicializa 10/0/10 e preserva itens separados e permissões`, async (t) => {
+    const { request, body, pedidos, usuarios } = await fixture(t);
+    const created = await request("comercial", "/pedidos/comercial", body({ itens: [{
+      produtoId: id(100), quantidade: 3, quantidadeSeparada: 3, quantidadeFaltante: 0,
+    }] }));
+    assert.equal(created.status, 201);
+    const pedido = pedidos[0];
+    assert.equal(pedido.itens[0].quantidadeSeparada, 0);
+    assert.equal(pedido.itens[0].situacaoSeparacao, "pendente");
+    t.mock.method(pedido, "save", async () => {
+      await pedido.validate(); pedido.__v = Number(pedido.__v ?? 0) + 1; return pedido;
+    });
+    const operador = { _id: id(300), nome: "Operador local", ativo: true };
+    t.mock.method(OperadorLogistica, "findById", () => query(operador));
+    const headers = { "X-Operador-Contexto": signOperatorContext({
+      operadorId: operador._id, pedidoId: pedido._id, usuarioId: usuarios.get("logistica")._id,
+    }) };
+    const operationPath = `/logistica/pedidos/${pedido._id}`;
+    const patch = (data) => request("logistica", operationPath, { versaoPedido: pedido.__v ?? 0, ...data }, "PATCH", headers);
+    assert.equal((await request("admin", `/pedidos/${pedido._id}/aprovar`, {}, "PATCH")).status, 200);
+    assert.equal((await patch({ status: "separando" })).status, 200);
+    assert.equal((await patch({ separacaoItens: [{ produtoId: id(100), quantidadeSeparada: 3 }] })).status, 200);
+    const separated = await patch({ status: "separado" });
+    assert.equal(separated.status, 200, separated.body.message);
+
+    const produtos = [{ _id: objectId(100), nome: "Shampoo", ativo: true }, { _id: objectId(101), nome: "Condicionador", ativo: true }];
+    t.mock.method(Produto, "find", (filter) => query(produtos.filter((product) => filter._id.$in.includes(String(product._id)))));
+    t.mock.method(PrecoProduto, "find", () => query(produtos.map((product) => ({ produtoId: product._id, valor: 10 }))));
+    const edit = await request(actor, `/pedidos/${pedido._id}`, {
+      versaoPedido: pedido.__v, itens: [
+        { produtoId: id(100), quantidade: 3 },
+        { produtoId: id(101), quantidade: 10, quantidadeSeparada: 10, quantidadeFaltante: 0 },
+      ],
+    }, "PUT");
+    assert.equal(edit.status, 200);
+    assert.equal(edit.body.pedido.status, "separando");
+    assert.equal(edit.body.pedido.valorTotal, 130);
+    assert.equal(edit.body.pedido.itens[0].quantidadeSeparada, 3);
+    assert.equal(edit.body.pedido.itens[0].quantidadeFaltante, 0);
+    const added = edit.body.pedido.itens[1];
+    assert.equal(added.quantidadeSeparada, 0);
+    assert.equal(added.quantidadeFaltante, 10);
+    assert.equal(added.quantidadeFaltanteSeparacao, 10);
+    assert.equal(added.situacaoSeparacao, "pendente");
+    assert.equal(pedido.itens[1].quantidadeSeparada, 0);
+
+    const read = await request("logistica", operationPath, undefined, "GET", headers);
+    assert.equal(read.status, 200);
+    assert.equal(read.body.pedido.itens[1].quantidadeFaltante, 10);
+    assert.doesNotMatch(JSON.stringify(read.body), /valorUnitario|subtotal|valorTotal|totalAnterior|totalNovo|tabelaPrecoId|R\$/);
+    const untouched = buildOrderOperationsForm(read.body.pedido);
+    assert.equal((await patch(buildOrderOperationsPayload(read.body.pedido, untouched))).status, 200);
+    assert.equal(pedido.itens[1].situacaoSeparacao, "pendente");
+    assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 0);
+
+    for (const [separado, faltante] of [["0", 10], ["3", 7], ["10", 0]]) {
+      const current = (await request("logistica", operationPath, undefined, "GET", headers)).body.pedido;
+      const form = updateOrderSeparationForm(buildOrderOperationsForm(current), id(101), separado);
+      const saved = await patch(buildOrderOperationsPayload(current, form));
+      assert.equal(saved.status, 200);
+      assert.equal(saved.body.pedido.itens[1].quantidadeSeparada, Number(separado));
+      assert.equal(saved.body.pedido.itens[1].quantidadeFaltante, faltante);
+      assert.equal(saved.body.pedido.itens[1].quantidadeFaltanteSeparacao, faltante);
+      assert.equal(saved.body.pedido.itens[0].quantidadeSeparada, 3);
+      assert.doesNotMatch(JSON.stringify(saved.body), /valorUnitario|subtotal|valorTotal|totalAnterior|totalNovo|tabelaPrecoId|R\$/);
+      assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, faltante);
+    }
+    const commercial = await request(actor, `/pedidos/${pedido._id}/aprovacao`);
+    assert.equal(commercial.body.valorTotal, 130);
+    assert.equal(commercial.body.itens[1].valorUnitario, 10);
+  });
+}
 
 test("HTTP: endpoints comerciais exigem o Comercial sem ampliar cadastro administrativo ou criação do cliente", async (t) => {
   const { request, body } = await fixture(t);

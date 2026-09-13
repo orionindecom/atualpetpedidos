@@ -19,6 +19,7 @@ import {
   buildLogisticsClosingPayload,
   buildOrderOperationsForm,
   buildOrderOperationsPayload,
+  updateOrderSeparationForm,
 } from "../../utils/orderOperations";
 import styles from "./LogisticaPedidos.module.css";
 
@@ -223,22 +224,11 @@ function LogisticaPedidos() {
     setForm((current) => ({
       ...current,
       [field]: value,
-      separacao: field === "status" && value === "separando"
-        ? Object.fromEntries(detail.itens.map((item) => [
-          String(item.produtoId),
-          current.separacao[String(item.produtoId)] === ""
-            ? item.quantidade
-            : current.separacao[String(item.produtoId)],
-        ]))
-        : current.separacao,
     }));
   };
 
   const updateSeparation = (produtoId, value) => {
-    setForm((current) => ({
-      ...current,
-      separacao: { ...current.separacao, [produtoId]: value },
-    }));
+    setForm((current) => updateOrderSeparationForm(current, produtoId, value));
   };
 
   const updateConference = (produtoId, value) => {
@@ -518,6 +508,7 @@ function LogisticaPedidos() {
 
       {detail && form && (
         <OrderDetailModal
+          showPrices={false}
           detail={detail}
           form={form}
           transitions={transitions}

@@ -1,4 +1,5 @@
 import { formatCurrency } from "../../utils/orderLogistics";
+import { getOrderItemQuantities } from "../../utils/orderQuantities";
 import styles from "./OrderDetails.module.css";
 
 const ITEM_STATUS_LABELS = {
@@ -13,8 +14,9 @@ function OrderItems({
   items = [],
   editable = false,
   separation = {},
+  editedSeparation = {},
   onSeparationChange,
-  showPrices = true,
+  showPrices = false,
   showFulfillment = true,
   deriveEditableStatus = true,
   separatedLabel = "Separado",
@@ -24,21 +26,12 @@ function OrderItems({
       {items.map((item) => {
         const produtoId = String(item.produtoId);
         const separatedValue = editable
-          ? separation[produtoId]
+          ? separation[produtoId] ?? item.quantidadeSeparada
           : item.quantidadeSeparada;
-        const hasSeparation =
-          separatedValue !== null &&
-          separatedValue !== undefined &&
-          separatedValue !== "";
-        const separated = hasSeparation ? Number(separatedValue) : null;
-        const missing = separated === null
-          ? null
-          : Math.max(Number(item.quantidade) - separated, 0);
-        const excess = separated === null
-          ? null
-          : Math.max(separated - Number(item.quantidade), 0);
+        const { requested, separated, missing, excess } = getOrderItemQuantities(item, separatedValue);
         let itemStatus = item.situacaoSeparacao || "pendente";
-        if (editable && deriveEditableStatus && separated !== null) {
+        const initialSeparation = separated === 0 && itemStatus === "pendente" && !editedSeparation[produtoId];
+        if (editable && deriveEditableStatus && separated !== null && !initialSeparation) {
           itemStatus = excess > 0
             ? "excedente"
             : separated === 0 && Number(item.quantidade) > 0
@@ -50,7 +43,7 @@ function OrderItems({
 
         return (
           <div
-            className={`${styles.itemRow} ${!showFulfillment ? styles.customerItemRow : ""}`}
+            className={`${styles.itemRow} ${!showPrices ? styles.operationalItemRow : ""} ${!showFulfillment ? styles.customerItemRow : ""}`}
             key={`${produtoId}-${item.nomeProduto}`}
           >
             <div className={styles.itemIdentity}>
@@ -61,7 +54,7 @@ function OrderItems({
             </div>
             <div className={styles.quantityCell}>
               <span>Solicitado</span>
-              <strong>{item.quantidade}</strong>
+              <strong>{requested}</strong>
             </div>
             {showFulfillment && <div className={styles.quantityCell}>
               <span>{separatedLabel}</span>
@@ -73,7 +66,7 @@ function OrderItems({
                   max={item.quantidade}
                   step="any"
                   required
-                  value={separation[produtoId] ?? ""}
+                  value={separatedValue ?? ""}
                   onChange={(event) => onSeparationChange(produtoId, event.target.value)}
                 />
               ) : (
@@ -82,7 +75,7 @@ function OrderItems({
             </div>}
             {showFulfillment && <div className={styles.quantityCell} data-shortage={(missing > 0 || excess > 0) || undefined}>
               <span>{excess > 0 ? "Excedente" : "Faltante"}</span>
-              <strong>{excess > 0 ? excess : missing ?? "—"}</strong>
+              <strong>{excess > 0 ? excess : missing}</strong>
             </div>}
             {showPrices && (
               <div className={styles.priceCell}>
