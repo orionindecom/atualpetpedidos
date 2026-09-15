@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { calcularNecessidadeProducao } from "../src/utils/necessidadeProducao.js";
-import { getItemSeparation, PEDIDO_STATUS } from "../src/utils/pedidoLogistica.js";
+import { PEDIDO_STATUS } from "../src/utils/pedidoLogistica.js";
 
 const item = (produtoId, quantidade, extra = {}) => ({ produtoId, nomeProduto: `Produto ${produtoId}`, quantidade, ...extra });
 const pedido = (_id, itens, extra = {}) => ({ _id, numeroPedido: `AP-${_id}`, nomeFantasiaCliente: "Distribuidor", status: "aprovado", itens, ...extra });
@@ -47,7 +47,7 @@ test("regressão: falta real de 5 não soma solicitação de 20 de pedido não i
 test("etapa atual de separação comprova início; aprovação e etapas encerradas não geram falta", () => {
   for (const status of [...PEDIDO_STATUS, "desconhecido", undefined]) {
     const result = calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], { status })]);
-    assert.equal(result.resumo.quantidadeFaltante, ["separando", "separado"].includes(status) ? 10 : 0, String(status));
+    assert.equal(result.resumo.quantidadeFaltante, status === "separando" ? 10 : 0, String(status));
   }
 });
 
@@ -64,12 +64,12 @@ test("quantidades, aprovação e operador isolados não comprovam início da sep
   }
 });
 
-test("histórico usa o mesmo marco de início das métricas, com data válida após a aprovação", () => {
+test("histórico de separação não inclui pedido que já saiu da etapa", () => {
   const base = pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], {
     aprovacao: { aprovadoEm: "2026-09-11T09:00:00Z" },
   });
   for (const [novoStatus, alteradoEm, expected] of [
-    ["separando", "2026-09-11T10:00:00Z", 10],
+    ["separando", "2026-09-11T10:00:00Z", 0],
     ["aprovado", "2026-09-11T10:00:00Z", 0],
     ["separando", "data inválida", 0],
     ["separando", "2026-09-11T08:00:00Z", 0],
@@ -103,32 +103,31 @@ test("consolida produtos por ID em todos os pedidos, conta pedidos distintos e o
   assert.equal(result.pedidos[1].itens.length, 1);
 });
 
-test("reutiliza atendimento final/separado somente dos itens processados", () => {
+test("necessidade usa quantidade separada independentemente da conferência", () => {
   for (const [extra, faltante] of [
     [{ quantidadeSeparada: 0 }, 10], [{ quantidadeSeparada: 4 }, 6],
-    [{ quantidadeSeparada: 8, quantidadeFinal: 3 }, 7], [{ quantidadeSeparada: 8, quantidadeFinal: 0 }, 10],
+    [{ quantidadeSeparada: 8, quantidadeFinal: 3 }, 2], [{ quantidadeSeparada: 8, quantidadeFinal: 0 }, 2],
     [{ quantidadeSeparada: 4, quantidadeConferida: 9 }, 6],
   ]) {
     const original = item("A", 10, extra);
-    const source = getItemSeparation(original);
     const result = calcularNecessidadeProducao([pedido("1", [original], { status: "separando" })]);
-    assert.equal(result.pedidos[0].itens[0].quantidadeAtendida, source.quantidadeAtendida);
+    assert.equal(result.pedidos[0].itens[0].quantidadeAtendida, extra.quantidadeSeparada);
     assert.equal(result.produtos[0].quantidadeFaltante, faltante);
   }
 });
 
-test("pedido iniciado ignora itens não processados, inclusive novos itens em uma separação reaberta", () => {
-  for (const quantidadeSeparada of [undefined, null, "", NaN]) {
+test("pedido iniciado inclui itens pendentes e sem registro, inclusive em separação reaberta", () => {
+  for (const quantidadeSeparada of [undefined, null, 0, "", NaN]) {
     const result = calcularNecessidadeProducao([pedido("1", [
       item("A", 10, { quantidadeSeparada: 5 }),
-      item("B", 20, { quantidadeSeparada }),
+      item("B", 20, { quantidadeSeparada, situacaoSeparacao: "pendente" }),
       item("C", 30, { quantidadeSeparada, quantidadeFinal: 0 }),
     ], { status: "separando" })]);
-    assert.equal(result.resumo.quantidadeFaltante, 5);
-    assert.equal(result.pedidos[0].itens.length, 1);
-    assert.equal(result.produtos.length, 1);
+    assert.equal(result.resumo.quantidadeFaltante, 55);
+    assert.equal(result.pedidos[0].itens.length, 3);
+    assert.equal(result.produtos.length, 3);
   }
-  assert.deepEqual(calcularNecessidadeProducao([pedido("1", [item("A", 10)], { status: "separando" })]).produtos, []);
+  assert.equal(calcularNecessidadeProducao([pedido("1", [item("A", 10)], { status: "separando" })]).resumo.quantidadeFaltante, 10);
 });
 
 test("quantidades completas/excedentes não geram demanda nem compensam faltas de outros pedidos", () => {

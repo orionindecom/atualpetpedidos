@@ -190,7 +190,7 @@ for (const actor of ["admin", "comercial"]) {
     const untouched = buildOrderOperationsForm(read.body.pedido);
     assert.equal((await patch(buildOrderOperationsPayload(read.body.pedido, untouched))).status, 200);
     assert.equal(pedido.itens[1].situacaoSeparacao, "pendente");
-    assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 0);
+    assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 10);
 
     for (const [separado, faltante] of [["0", 10], ["3", 7], ["10", 0]]) {
       const current = (await request("logistica", operationPath, undefined, "GET", headers)).body.pedido;
@@ -313,7 +313,7 @@ test("HTTP: valida elegibilidade, tabela vigente, produtos e quantidades antes d
   assert.equal(pedidos.length, 0);
 });
 
-test("HTTP: aprovação e início sem quantidades não geram demanda; só o registro de separação gera falta", async (t) => {
+test("HTTP: entrar em separação gera demanda imediatamente e cada alteração recalcula o faltante", async (t) => {
   const { request, body, pedidos } = await fixture(t);
   await request("comercial", "/pedidos/comercial", body());
   assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 0);
@@ -331,7 +331,7 @@ test("HTTP: aprovação e início sem quantidades não geram demanda; só o regi
   assert.ok(inicio.alteradoEm instanceof Date);
   assert.equal(String(inicio.usuarioId), id(1));
   assert.ok(buildOrderAuditTimeline(pedido).some((evento) => evento.tipo === "separacao_iniciada"));
-  assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 0);
+  assert.equal((await request("logistica", "/logistica/necessidade-producao")).body.resumo.quantidadeFaltante, 3);
   for (const quantidadeSeparada of [0, 1, 3]) {
     assert.equal((await atualizar({ separacaoItens: [{ produtoId: id(100), quantidadeSeparada }] })).status, 200);
     const demand = await request("admin", "/logistica/necessidade-producao");
@@ -344,7 +344,7 @@ test("HTTP: aprovação e início sem quantidades não geram demanda; só o regi
   }
 });
 
-test("formulário → API → necessidade preserva item vazio enquanto outro tem falta registrada", async (t) => {
+test("formulário → API → necessidade inclui item vazio enquanto outro tem falta registrada", async (t) => {
   const { request, pedidos } = await fixture(t);
   const pedido = new Pedido({
     _id: id(200), numeroPedido: "AP-PARCIAL", clienteId: id(4), tabelaPrecoId: id(50),
@@ -363,8 +363,8 @@ test("formulário → API → necessidade preserva item vazio enquanto outro tem
   assert.equal(response.status, 200);
   assert.equal(pedido.itens[1].quantidadeSeparada, undefined);
   const demand = await request("logistica", "/logistica/necessidade-producao");
-  assert.equal(demand.body.resumo.quantidadeFaltante, 6);
-  assert.equal(demand.body.produtos.length, 1);
+  assert.equal(demand.body.resumo.quantidadeFaltante, 26);
+  assert.equal(demand.body.produtos.length, 2);
 });
 
 test("listagem de distribuidores usa projeção mínima e somente clientes elegíveis", async (t) => {

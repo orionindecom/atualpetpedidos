@@ -1,5 +1,6 @@
 import axios from "axios";
 import { clearAuthSession } from "../utils/authSession";
+import { notifyProductionDemandUpdate } from "../utils/productionDemandUpdates";
 
 const normalizeBaseURL = (url) => url.replace(/\/+$/, "");
 const configuredBaseURL = import.meta.env.VITE_API_URL?.trim();
@@ -27,7 +28,10 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    notifyProductionDemandUpdate(response.config);
+    return response;
+  },
   (error) => {
     if ([401, 403].includes(error.response?.status)) {
       clearAuthSession();
