@@ -1,6 +1,17 @@
 import { canOpenRoute, hasGlobalScope } from "../../utils/permissions";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import NavSections from "./NavSections";
+import {
+  buildSections,
+  EXACT_ROUTES,
+  findActiveGroup,
+  readStoredGroups,
+  resolveOpenGroups,
+  sidebarStorageKey,
+  toggleStoredGroup,
+  writeStoredGroups,
+} from "../../utils/sidebarGroups";
 import styles from "./Navbar.module.css";
 import logo from "../../assets/logo-atualpet-oficial.webp";
 
@@ -89,9 +100,6 @@ const groomerLinks = [
   { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
 ];
 
-// Painéis cujas subpáginas têm item próprio no menu.
-const EXACT_ROUTES = new Set(["/pedidos", "/admin", "/marketing", "/logistica"]);
-
 // Mantém os itens de um mesmo grupo juntos, na ordem em que o grupo aparece.
 const groupLinks = (links) => {
   const groups = [...new Set(links.map((link) => link.group))];
@@ -100,6 +108,7 @@ const groupLinks = (links) => {
 
 function Navbar() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const menuButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -126,6 +135,26 @@ function Navbar() {
   const links = groupLinks([...baseLinks, ...extraLinks]
     .filter((link, index, all) => all.findIndex((item) => item.to === link.to) === index && canOpenRoute(usuario, link.to, [usuario?.tipo]))
     .map((link) => (link.globalLabel && hasGlobalScope(usuario) ? { ...link, label: link.globalLabel } : link)));
+  // Grupos recolhíveis atuam sobre os links já filtrados por permissão.
+  const sections = buildSections(links);
+  const activeGroup = findActiveGroup(sections, pathname);
+  const storageKey = sidebarStorageKey(usuario?.tipo);
+  const [storedGroups, setStoredGroups] = useState(() => readStoredGroups(window.localStorage, storageKey));
+  const openGroups = resolveOpenGroups({ sections, stored: storedGroups, activeGroup });
+
+  // Ao entrar em uma página, seu grupo fica salvo como aberto para as próximas navegações.
+  useEffect(() => {
+    if (!activeGroup || storedGroups[activeGroup] === true) return;
+    writeStoredGroups(window.localStorage, storageKey, { ...storedGroups, [activeGroup]: true });
+  }, [activeGroup, storageKey, storedGroups]);
+
+  const toggleGroup = (group) => {
+    const base = activeGroup ? { ...storedGroups, [activeGroup]: true } : storedGroups;
+    const next = toggleStoredGroup(base, group, openGroups[group]);
+    setStoredGroups(next);
+    writeStoredGroups(window.localStorage, storageKey, next);
+  };
+
   const home = isAdmin
     ? "/admin"
     : isCommercial
@@ -217,7 +246,15 @@ function Navbar() {
         </button>
 
         <nav className={styles.links} aria-label="Navegação principal">
-          {links.map((link, index) => (
+          {isBackoffice ? (
+            <NavSections
+              sections={sections}
+              openGroups={openGroups}
+              activeGroup={activeGroup}
+              onToggle={toggleGroup}
+              linkClass={linkClass}
+            />
+          ) : links.map((link, index) => (
             <div className={styles.navGroup} key={link.to}>
               {(index === 0 || links[index - 1].group !== link.group) && (
                 <span>{link.group}</span>
@@ -264,7 +301,18 @@ function Navbar() {
             </div>
 
             <div className={styles.mobileLinks}>
-              {links.map((link, index) => (
+              {isBackoffice ? (
+                <NavSections
+                  variant="mobile"
+                  idPrefix="mobile-"
+                  sections={sections}
+                  openGroups={openGroups}
+                  activeGroup={activeGroup}
+                  onToggle={toggleGroup}
+                  linkClass={linkClass}
+                  onNavigate={fecharMenu}
+                />
+              ) : links.map((link, index) => (
                 <div className={styles.mobileNavItem} key={link.to}>
                   {(index === 0 || links[index - 1].group !== link.group) && (
                     <span className={styles.mobileGroupLabel}>{link.group}</span>

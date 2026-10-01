@@ -143,6 +143,7 @@ const PATHS = {
     </>
   ),
   close: <path d="m6.5 6.5 11 11M17.5 6.5l-11 11" />,
+  chevronRight: <path d="m9.5 6 6 6-6 6" />,
 };
 
 function FeedbackIcon({ name, className }) {
