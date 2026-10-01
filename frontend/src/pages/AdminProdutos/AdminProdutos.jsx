@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 import styles from "./AdminProdutos.module.css";
 
 const DESCRICAO_PRODUTO_MAX_LENGTH = 300;
@@ -10,6 +12,9 @@ function AdminProdutos() {
   const [produtos, setProdutos] = useState([]);
   const [produtoEditando, setProdutoEditando] = useState(null);
   const [foto, setFoto] = useState(null);
+  const [salvando, setSalvando] = useState(false);
+  const [erroDescricao, setErroDescricao] = useState("");
+  const { dialog, toast } = useFeedback();
 
   const [busca, setBusca] = useState("");
   const [linhaFiltro, setLinhaFiltro] = useState("");
@@ -59,11 +64,13 @@ function AdminProdutos() {
     e.preventDefault();
 
     if (form.descricao.length > DESCRICAO_PRODUTO_MAX_LENGTH) {
-      alert(
-        `A descrição deve ter no máximo ${DESCRICAO_PRODUTO_MAX_LENGTH} caracteres.`
-      );
+      setErroDescricao(`A descrição deve ter no máximo ${DESCRICAO_PRODUTO_MAX_LENGTH} caracteres.`);
+      e.currentTarget.elements.namedItem("descricao")?.focus();
       return;
     }
+    if (salvando) return;
+    setErroDescricao("");
+    setSalvando(true);
 
     try {
       const formData = new FormData();
@@ -84,7 +91,7 @@ function AdminProdutos() {
           },
         });
 
-        alert("Produto atualizado com sucesso");
+        toast.success("Produto atualizado", { description: `${form.nome} foi salvo.` });
       } else {
         await api.post("/produtos", formData, {
           headers: {
@@ -92,13 +99,17 @@ function AdminProdutos() {
           },
         });
 
-        alert("Produto cadastrado com sucesso");
+        toast.success("Produto cadastrado", { description: `${form.nome} já está disponível no catálogo administrativo.` });
       }
 
       limparFormulario();
       carregarProdutos();
     } catch (error) {
-      alert(error.response?.data?.message || "Erro ao salvar produto");
+      toast.error("Não foi possível salvar o produto", {
+        description: getApiErrorMessage(error, "Revise os dados e tente novamente."),
+      });
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -115,19 +126,20 @@ function AdminProdutos() {
     setFoto(null);
   };
 
-  const inativarProduto = async (produtoId) => {
-    const confirmar = confirm("Deseja realmente inativar este produto?");
-
-    if (!confirmar) return;
-
-    try {
-      await api.delete(`/produtos/${produtoId}`);
-
-      alert("Produto inativado com sucesso");
-      carregarProdutos();
-    } catch (error) {
-      alert(error.response?.data?.message || "Erro ao inativar produto");
-    }
+  const inativarProduto = async (produto) => {
+    const inativado = await dialog.confirm({
+      variant: "warning",
+      icon: "archive",
+      title: "Inativar produto?",
+      message: "O produto será marcado como inativo. O cadastro não é apagado.",
+      details: [{ label: "Produto", value: produto.nome }],
+      confirmLabel: "Inativar produto",
+      busyLabel: "Inativando...",
+      errorFallback: "Não foi possível inativar o produto.",
+      action: () => api.delete(`/produtos/${produto._id}`),
+      successToast: { title: "Produto inativado", description: `${produto.nome} foi inativado.` },
+    });
+    if (inativado) carregarProdutos();
   };
 
   const linhas = [...new Set(produtos.map((p) => p.linha).filter(Boolean))];
@@ -187,11 +199,14 @@ function AdminProdutos() {
                 value={form.descricao}
                 onChange={alterar}
                 maxLength={DESCRICAO_PRODUTO_MAX_LENGTH}
+                aria-invalid={erroDescricao ? "true" : undefined}
+                aria-describedby={erroDescricao ? "produto-descricao-erro" : undefined}
               />
             </label>
             <span className={styles.contadorDescricao}>
               {form.descricao.length} / {DESCRICAO_PRODUTO_MAX_LENGTH}
             </span>
+            {erroDescricao && <span id="produto-descricao-erro" className={styles.erroCampo} role="alert">{erroDescricao}</span>}
 
             <label className={`${styles.field} ${styles.halfField}`}>
               Linha
@@ -225,8 +240,8 @@ function AdminProdutos() {
             </label>
 
             <div className={styles.formActions}>
-              <button type="submit">
-                {produtoEditando ? "Salvar Alterações" : "Cadastrar Produto"}
+              <button type="submit" disabled={salvando}>
+                {salvando ? "Salvando..." : produtoEditando ? "Salvar Alterações" : "Cadastrar Produto"}
               </button>
 
               {produtoEditando && (
@@ -307,7 +322,7 @@ function AdminProdutos() {
 
                   <button
                     className={styles.inativar}
-                    onClick={() => inativarProduto(produto._id)}
+                    onClick={() => inativarProduto(produto)}
                   >
                     Inativar
                   </button>

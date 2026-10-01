@@ -33,7 +33,7 @@ const createResponse = () => ({
 
 test("schema de usuario aceita o papel marketing", () => {
   const enumValues = Usuario.schema.path("tipo").enumValues;
-  assert.deepEqual(enumValues, ["admin", "comercial", "marketing", "logistica", "cliente", "groomer"]);
+  assert.deepEqual(enumValues, ["admin", "comercial", "vendedor", "marketing", "logistica", "cliente", "groomer"]);
 });
 
 test("marketing acessa somente a gestao de conteudo, nao rotas admin", () => {

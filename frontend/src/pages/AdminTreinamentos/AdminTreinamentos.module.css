@@ -572,7 +572,7 @@ button:disabled {
   padding-bottom: 18px;
   border-bottom: 1px solid var(--border-default);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 16px;
 }
 
@@ -635,7 +635,97 @@ button:disabled {
   white-space: nowrap;
 }
 
+.metrics .metricDate {
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+.progressTabs {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 4px;
+  box-shadow: inset 0 -1px 0 var(--border-default);
+}
+
+.progressTabs button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.progressTabs button[aria-selected="true"] {
+  border-bottom-color: var(--brand-primary-strong);
+  color: var(--text-primary);
+}
+
+.progressTabs button span {
+  min-width: 24px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-align: center;
+}
+
+.progressTabs button[aria-selected="true"] span {
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary-ink);
+}
+
+.progressValue {
+  min-width: 250px;
+  display: grid;
+  grid-template-columns: 90px 38px auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.progressBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  overflow: hidden;
+}
+
+.progressBar > span {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: var(--brand-primary-strong);
+}
+
+.progressValue > span:nth-child(2) {
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+}
+
+.progressValue em {
+  color: var(--text-muted);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.progressValue em[data-done="true"] {
+  color: var(--success);
+}
+
 @media (max-width: 760px) {
+  .progressValue {
+    min-width: 0;
+  }
+
   .container {
     padding: 28px 16px 48px;
   }
@@ -703,5 +793,16 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
+  }
+}
+
+@media (max-width: 460px) {
+  .progressContent .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .progressTabs button {
+    flex: 1;
+    justify-content: center;
   }
 }

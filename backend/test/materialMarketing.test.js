@@ -58,7 +58,7 @@ test("rota do cliente exige autenticacao", async () => {
   assert.equal(nextCalled, false);
   assert.deepEqual(
     clientRouter.stack.slice(0, 2).map((layer) => layer.name),
-    ["proteger", "somentePublicoConteudo"]
+    ["proteger", "verificarPermissao"]
   );
   const clientRoute = clientRouter.stack.find((layer) => layer.route?.path === "/");
   assert.equal(clientRoute.route.stack.at(-1).name, "listarMateriaisCliente");

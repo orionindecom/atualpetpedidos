@@ -191,7 +191,8 @@ test("erro mantém formulário, associa resposta da API e oferece fallback amig�
 test("cadastro válido continua usando o endpoint e fluxo de sucesso existentes", () => {
   const page = readSource("../src/pages/Cadastro/Cadastro.jsx");
   assert.match(page, /await api\.post\("\/auth\/cadastro", form\)/);
-  assert.match(page, /Cadastro enviado com sucesso\. Aguarde aprovação\./);
+  assert.match(page, /await dialog\.alert\(REGISTRATION_SENT_DIALOG\);\s*navigate\("\/login"\)/);
+  assert.doesNotMatch(page, /window\.alert/);
   assert.match(page, /navigate\("\/login"\)/);
   assert.match(page, /name="confirmarSenha"/);
   assert.match(page, /CPF ou CNPJ/);

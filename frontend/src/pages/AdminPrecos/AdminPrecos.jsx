@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 import styles from "./AdminPrecos.module.css";
 
 function AdminPrecos() {
@@ -13,6 +15,9 @@ function AdminPrecos() {
     const [busca, setBusca] = useState("");
     const [linhaFiltro, setLinhaFiltro] = useState("");
     const [categoriaFiltro, setCategoriaFiltro] = useState("");
+    const [errosPreco, setErrosPreco] = useState({});
+    const [salvandoPreco, setSalvandoPreco] = useState("");
+    const { toast } = useFeedback();
 
     useEffect(() => {
         async function carregarDados() {
@@ -36,7 +41,16 @@ function AdminPrecos() {
             return;
         }
 
-        const response = await api.get(`/precos/tabela/${tabelaId}`);
+        let response;
+        try {
+            response = await api.get(`/precos/tabela/${tabelaId}`);
+        } catch (error) {
+            setPrecos({});
+            toast.error("Não foi possível carregar os preços", {
+                description: getApiErrorMessage(error, "Selecione a tabela novamente em instantes."),
+            });
+            return;
+        }
 
         const mapaPrecos = {};
 
@@ -52,28 +66,44 @@ function AdminPrecos() {
             ...precos,
             [produtoId]: valor,
         });
+        setErrosPreco((current) => ({ ...current, [produtoId]: "" }));
     };
 
-    const salvarPreco = async (produtoId) => {
+    const salvarPreco = async (produto) => {
+        const produtoId = produto._id;
         if (!tabelaSelecionada) {
-            alert("Selecione uma tabela");
+            toast.warning("Selecione uma tabela", {
+                description: "Escolha a tabela de preço antes de salvar valores.",
+            });
             return;
         }
 
         const valor = Number(precos[produtoId]);
 
         if (!valor || valor <= 0) {
-            alert("Informe um valor válido");
+            setErrosPreco((current) => ({ ...current, [produtoId]: "Informe um valor maior que zero." }));
+            document.getElementById(`preco-${produtoId}`)?.focus();
             return;
         }
 
-        await api.post("/precos", {
-            produtoId,
-            tabelaPrecoId: tabelaSelecionada,
-            valor,
-        });
-
-        alert("Preço salvo com sucesso");
+        if (salvandoPreco) return;
+        setSalvandoPreco(produtoId);
+        try {
+            await api.post("/precos", {
+                produtoId,
+                tabelaPrecoId: tabelaSelecionada,
+                valor,
+            });
+            toast.success("Preço salvo", {
+                description: `${produto.nome} na tabela ${tabelaAtual?.nome || "selecionada"}.`,
+            });
+        } catch (error) {
+            toast.error("Não foi possível salvar o preço", {
+                description: getApiErrorMessage(error, "Tente novamente em instantes."),
+            });
+        } finally {
+            setSalvandoPreco("");
+        }
     };
 
     const linhas = [...new Set(produtos.map((p) => p.linha).filter(Boolean))];
@@ -234,18 +264,26 @@ function AdminPrecos() {
 
                                 <div className={styles.precoBox}>
                                     <input
+                                        id={`preco-${produto._id}`}
                                         type="number"
                                         step="0.01"
                                         placeholder="Preço"
+                                        aria-label={`Preço de ${produto.nome}`}
+                                        aria-invalid={errosPreco[produto._id] ? "true" : undefined}
+                                        aria-describedby={errosPreco[produto._id] ? `preco-erro-${produto._id}` : undefined}
                                         value={precos[produto._id] || ""}
                                         onChange={(e) =>
                                             alterarPreco(produto._id, e.target.value)
                                         }
                                     />
-
-                                    <button onClick={() => salvarPreco(produto._id)}>
-                                        Salvar
+                                    <button onClick={() => salvarPreco(produto)} disabled={salvandoPreco === produto._id}>
+                                        {salvandoPreco === produto._id ? "Salvando..." : "Salvar"}
                                     </button>
+                                    {errosPreco[produto._id] && (
+                                        <span id={`preco-erro-${produto._id}`} className={styles.erroPreco} role="alert">
+                                            {errosPreco[produto._id]}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}

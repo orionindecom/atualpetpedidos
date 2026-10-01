@@ -1,3 +1,4 @@
+import { hasPermission } from "../utils/permissions.js";
 import { measureStageSync } from "../utils/performance.js";
 
 export const temPapel = (usuario, papeis) =>
@@ -21,7 +22,7 @@ export const somenteGestorConteudo = (req, res, next) => {
   const isContentManager = measureStageSync(
     req,
     "auth.gestor_conteudo",
-    () => temPapel(req.usuario, ["admin", "marketing"])
+    () => hasPermission(req.usuario, "conteudo")
   );
 
   if (!isContentManager) {
@@ -35,7 +36,7 @@ export const somenteGestorComercial = (req, res, next) => {
   const isCommercialManager = measureStageSync(
     req,
     "auth.gestor_comercial",
-    () => temPapel(req.usuario, ["admin", "comercial"])
+    () => hasPermission(req.usuario, "comercial")
   );
 
   if (!isCommercialManager) {
@@ -49,7 +50,7 @@ export const somenteOperacaoLogistica = (req, res, next) => {
   const isLogisticsOperator = measureStageSync(
     req,
     "auth.operacao_logistica",
-    () => temPapel(req.usuario, ["admin", "logistica"])
+    () => hasPermission(req.usuario, "logistica")
   );
 
   if (!isLogisticsOperator) {

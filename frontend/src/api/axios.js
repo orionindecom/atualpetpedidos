@@ -33,7 +33,8 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if ([401, 403].includes(error.response?.status)) {
+    if (error.response?.status === 401 ||
+      (error.response?.status === 403 && error.config?.url === '/auth/me')) {
       clearAuthSession();
 
       if (!window.location.pathname.includes("/login")) {

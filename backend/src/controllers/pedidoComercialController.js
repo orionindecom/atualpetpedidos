@@ -1,3 +1,4 @@
+import { filtroCarteira } from "../services/authorizationService.js";
 import Usuario from "../models/Usuario.js";
 import { listarCatalogoCliente } from "./catalogoController.js";
 import { ClientePedidoError, obterClientePedido } from "../services/clientePedidoService.js";
@@ -6,7 +7,7 @@ import { sendServerError } from "../utils/validation.js";
 export const listarDistribuidoresPedido = async (req, res) => {
   try {
     const clientes = await Usuario.find({
-      tipo: "cliente", ativo: true, statusCadastro: "aprovado",
+      ...filtroCarteira(req.usuario), tipo: "cliente", ativo: true, statusCadastro: "aprovado",
       tabelaPrecoId: { $ne: null },
     })
       .select("_id nomeFantasia razaoSocial nomeResponsavel cnpj tabelaPrecoId")
@@ -21,7 +22,7 @@ export const listarDistribuidoresPedido = async (req, res) => {
 
 export const listarCatalogoDistribuidor = async (req, res) => {
   try {
-    const { cliente } = await obterClientePedido(req.params.id);
+    const { cliente } = await obterClientePedido(req.params.id, req.usuario);
     if (req.query.tabelaPrecoId && String(req.query.tabelaPrecoId) !== String(cliente.tabelaPrecoId)) {
       return res.status(409).json({ message: "A tabela do distribuidor mudou. Selecione-o novamente para revisar os preços." });
     }

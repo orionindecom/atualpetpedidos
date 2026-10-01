@@ -92,7 +92,7 @@ const historicoStatusSchema = new mongoose.Schema(
     },
     usuarioTipo: {
       type: String,
-      enum: ["admin", "comercial", "marketing", "logistica", "cliente"],
+      enum: ["admin", "vendedor", "comercial", "marketing", "logistica", "cliente"],
       required: true,
     },
     operadorId: {
@@ -131,7 +131,7 @@ const aprovacaoSchema = new mongoose.Schema(
     },
     usuarioTipo: {
       type: String,
-      enum: ["admin", "comercial"],
+      enum: ["admin", "vendedor", "comercial"],
       required: true,
     },
   },
@@ -163,7 +163,7 @@ const ocorrenciaSchema = new mongoose.Schema(
     },
     usuarioTipo: {
       type: String,
-      enum: ["admin", "comercial", "logistica"],
+      enum: ["admin", "vendedor", "comercial", "logistica"],
       required: true,
     },
     operadorId: {
@@ -327,7 +327,7 @@ const conferenciaSchema = new mongoose.Schema(
 // A invalidação decorre da edição do pedido, não da execução da conferência.
 const autorInvalidacaoSchema = conferenciaUsuarioSchema.clone();
 autorInvalidacaoSchema.add({
-  usuarioTipo: { type: String, enum: ["admin", "comercial", "logistica"], required: true },
+  usuarioTipo: { type: String, enum: ["admin", "vendedor", "comercial", "logistica"], required: true },
 });
 
 const historicoConferenciaSchema = new mongoose.Schema(
@@ -402,7 +402,7 @@ const historicoAlteracaoPedidoSchema = new mongoose.Schema(
     },
     usuarioTipo: {
       type: String,
-      enum: ["admin", "comercial"],
+      enum: ["admin", "vendedor", "comercial"],
       required: true,
     },
     versaoOperacionalAnterior: {
@@ -483,6 +483,8 @@ const pedidoSchema = new mongoose.Schema(
       required: true,
     },
 
+    vendedorResponsavelId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario" },
+
     nomeResponsavel: {
       type: String,
       trim: true,
@@ -499,7 +501,7 @@ const pedidoSchema = new mongoose.Schema(
       type: new mongoose.Schema({
         usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
         usuarioNome: { type: String, required: true, trim: true, maxlength: 120 },
-        usuarioTipo: { type: String, enum: ["comercial"], required: true },
+        usuarioTipo: { type: String, enum: ["admin", "comercial", "vendedor", "cliente"], required: true },
       }, { _id: false }),
       default: undefined,
       immutable: true,

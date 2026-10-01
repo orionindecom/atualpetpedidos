@@ -1,0 +1,228 @@
+.overlay {
+  padding: 24px;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(23, 33, 31, 0.56);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.dialog {
+  --tone-bg: var(--brand-primary-soft);
+  --tone-ink: var(--brand-primary-ink);
+  width: min(460px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 26px 26px 22px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.26);
+}
+
+.dialog[data-variant="success"] { --tone-bg: #e7f5ee; --tone-ink: var(--success); }
+.dialog[data-variant="error"],
+.dialog[data-variant="danger"] { --tone-bg: #fdecea; --tone-ink: var(--danger); }
+.dialog[data-variant="warning"] { --tone-bg: var(--brand-accent-soft); --tone-ink: var(--brand-accent-ink); }
+.dialog[data-variant="pending"] { --tone-bg: #fff6ea; --tone-ink: var(--warning); }
+
+.icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+  display: grid;
+  place-items: center;
+  animation: iconIn 220ms ease-out;
+}
+
+.icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes iconIn {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.dialog h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.message {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.message p {
+  margin: 0;
+}
+
+.message > * + * {
+  margin-top: 12px;
+}
+
+.message ul {
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Referência destacada, como número do pedido ou nome do registro. */
+.detail {
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.detail span {
+  color: var(--text-muted);
+}
+
+.detail strong {
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.field input:focus {
+  border-color: var(--brand-primary-strong);
+  outline: 3px solid rgba(113, 196, 192, 0.25);
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.error {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--danger);
+  background: #fff7f5;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: var(--brand-primary-soft);
+}
+
+.primaryButton {
+  border-color: var(--brand-accent);
+  background: var(--brand-accent);
+  color: var(--text-on-brand);
+}
+
+.primaryButton:hover:not(:disabled) {
+  border-color: var(--brand-accent-strong);
+  background: var(--brand-accent-strong);
+}
+
+.dangerButton {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #8c2a1c;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .overlay {
+    padding: 12px;
+    place-items: end center;
+  }
+
+  .dialog {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

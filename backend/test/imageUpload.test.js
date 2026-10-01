@@ -213,7 +213,7 @@ test("remoção recusa publicId fora da pasta controlada", async (t) => {
 
 test("rotas administrativas autenticam antes do upload e aplicam rate limit", () => {
   for (const router of [trainingRouter, materialRouter, bannerRouter]) {
-    const expectedAuthorization = "somenteGestorConteudo";
+    const expectedAuthorization = router === trainingRouter ? "<anonymous>" : "somenteGestorConteudo";
     assert.deepEqual(router.stack.slice(0, 2).map((layer) => layer.name), [
       "proteger",
       expectedAuthorization,
@@ -222,7 +222,7 @@ test("rotas administrativas autenticam antes do upload e aplicam rate limit", ()
     const postRoute = router.stack.find(
       (layer) => layer.route?.path === "/" && layer.route.methods.post
     );
-    const handlers = postRoute.route.stack.map((layer) => layer.handle.name);
+    const handlers = postRoute.route.stack.map((layer) => layer.handle.name).filter((name) => name !== "verificarPermissao");
     assert.deepEqual(handlers.slice(1, 3), [
       "multerMiddleware",
       "validarAssinaturaImagem",

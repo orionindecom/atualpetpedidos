@@ -79,7 +79,7 @@ test("rotas de conteúdo exigem autenticação e perfil externo permitido", asyn
   assert.equal(adminResponse.statusCode, 403);
   assert.deepEqual(clientRouter.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somentePublicoConteudo",
+    "verificarPermissao",
   ]);
 });
 
@@ -127,7 +127,7 @@ test("cliente não gerencia treinamentos e Marketing compartilha a gestão", () 
   assert.equal(nextCalled, false);
   assert.deepEqual(adminRouter.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somenteGestorConteudo",
+    "<anonymous>",
   ]);
 });
 
@@ -361,6 +361,8 @@ test("progresso usa upsert, maximos e nao apaga conclusao em regressao", async (
 
   assert.equal(res.statusCode, 200);
   assert.equal(receivedOptions.upsert, true);
+  assert.equal(receivedOptions.returnDocument, 'after');
+  assert.equal(receivedOptions.new, undefined);
   assert.equal(receivedUpdate.$max.percentualAssistido, 20);
   assert.equal(Object.hasOwn(receivedUpdate.$set, "concluido"), false);
   assert.equal(receivedUpdate.$setOnInsert.concluido, false);

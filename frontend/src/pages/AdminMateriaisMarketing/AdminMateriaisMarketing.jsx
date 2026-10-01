@@ -8,6 +8,7 @@ import {
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import {
   normalizeMaterialResponse,
   openMaterialLink,
@@ -462,7 +463,7 @@ function AdminMateriaisMarketing({
   const [refreshKey, setRefreshKey] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [feedback, setFeedback] = useState(null);
+  const { dialog, toast } = useFeedback();
   const [modalMaterial, setModalMaterial] = useState(undefined);
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("");
   const [imagensComErro, setImagensComErro] = useState(new Set());
@@ -510,42 +511,43 @@ function AdminMateriaisMarketing({
 
   const concluirFormulario = (message) => {
     setModalMaterial(undefined);
-    setFeedback({ type: "success", message });
+    toast.success(message);
     setRefreshKey((value) => value + 1);
   };
 
   const alterarStatus = async (material) => {
     setAcaoEmAndamento(material._id);
-    setFeedback(null);
     try {
       const response = await api.patch(`${apiBase}/${material._id}/status`, {
         ativo: !material.ativo,
       });
-      setFeedback({ type: "success", message: response.data.message });
+      toast.success(response.data.message);
       setRefreshKey((value) => value + 1);
     } catch (error) {
-      setFeedback({ type: "error", message: error.response?.data?.message || "Não foi possível alterar o status" });
+      toast.error(error.response?.data?.message || "Não foi possível alterar o status");
     } finally {
       setAcaoEmAndamento("");
     }
   };
 
   const excluir = async (material) => {
-    const confirmed = window.confirm(`Excluir definitivamente o material "${material.titulo}"?`);
-    if (!confirmed) return;
-
     setAcaoEmAndamento(material._id);
-    setFeedback(null);
-    try {
-      const response = await api.delete(`${apiBase}/${material._id}`);
-      setFeedback({ type: "success", message: response.data.message });
-      setPagina((current) => (materiais.length === 1 && current > 1 ? current - 1 : current));
-      setRefreshKey((value) => value + 1);
-    } catch (error) {
-      setFeedback({ type: "error", message: error.response?.data?.message || "Não foi possível excluir o material" });
-    } finally {
-      setAcaoEmAndamento("");
-    }
+    const excluido = await dialog.confirm({
+      variant: "danger",
+      icon: "trash",
+      title: "Excluir material?",
+      message: "O material deixa de ficar disponível para o público e não poderá ser recuperado.",
+      details: [{ label: "Material", value: material.titulo }],
+      confirmLabel: "Excluir material",
+      busyLabel: "Excluindo material...",
+      errorFallback: "Não foi possível excluir o material.",
+      action: async () => (await api.delete(`${apiBase}/${material._id}`)).data,
+      successToast: (data) => ({ title: data?.message || "Material excluído" }),
+    });
+    setAcaoEmAndamento("");
+    if (!excluido) return;
+    setPagina((current) => (materiais.length === 1 && current > 1 ? current - 1 : current));
+    setRefreshKey((value) => value + 1);
   };
 
   const marcarImagemComErro = (id) => {
@@ -566,12 +568,6 @@ function AdminMateriaisMarketing({
             Novo material
           </button>
         </header>
-
-        {feedback && (
-          <div className={feedback.type === "success" ? styles.successFeedback : styles.errorFeedback} role="status">
-            {feedback.message}
-          </div>
-        )}
 
         <FilterToolbar
           activeFilterCount={filtrosAtivos}

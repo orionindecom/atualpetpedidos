@@ -1,0 +1,2506 @@
+TAP version 13
+# Subtest: campos obrigatórios vazios retornam mensagens específicas e simultâneas
+ok 1 - campos obrigatórios vazios retornam mensagens específicas e simultâneas
+  ---
+  duration_ms: 3.0936
+  type: 'test'
+  ...
+# Subtest: e-mail, CNPJ, telefone e senha inválidos preservam o motivo por campo
+ok 2 - e-mail, CNPJ, telefone e senha inválidos preservam o motivo por campo
+  ---
+  duration_ms: 1.1011
+  type: 'test'
+  ...
+# Subtest: confirmação diferente da senha é identificada sem persistência
+ok 3 - confirmação diferente da senha é identificada sem persistência
+  ---
+  duration_ms: 0.427
+  type: 'test'
+  ...
+# Subtest: máscaras são normalizadas antes da validação e persistência
+ok 4 - máscaras são normalizadas antes da validação e persistência
+  ---
+  duration_ms: 0.3876
+  type: 'test'
+  ...
+# Subtest: validadores aceitam documentos e telefones reais e recusam sequências
+ok 5 - validadores aceitam documentos e telefones reais e recusam sequências
+  ---
+  duration_ms: 0.4938
+  type: 'test'
+  ...
+# Subtest: payload aceita CPF mascarado ou normalizado e preserva a mensagem por tipo
+ok 6 - payload aceita CPF mascarado ou normalizado e preserva a mensagem por tipo
+  ---
+  duration_ms: 0.515
+  type: 'test'
+  ...
+# Subtest: tipo e mensagens do documento seguem a quantidade normalizada
+ok 7 - tipo e mensagens do documento seguem a quantidade normalizada
+  ---
+  duration_ms: 0.3896
+  type: 'test'
+  ...
+# Subtest: candidatos de duplicidade cobrem CPF e CNPJ normalizados ou mascarados
+ok 8 - candidatos de duplicidade cobrem CPF e CNPJ normalizados ou mascarados
+  ---
+  duration_ms: 1.2655
+  type: 'test'
+  ...
+# Subtest: API devolve errors por campo sem consultar o banco para payload inválido
+ok 9 - API devolve errors por campo sem consultar o banco para payload inválido
+  ---
+  duration_ms: 2.4972
+  type: 'test'
+  ...
+# Subtest: e-mail duplicado recebe conflito específico sem expor outros dados
+ok 10 - e-mail duplicado recebe conflito específico sem expor outros dados
+  ---
+  duration_ms: 1.4455
+  type: 'test'
+  ...
+# Subtest: CNPJ duplicado mascarado recebe conflito específico
+ok 11 - CNPJ duplicado mascarado recebe conflito específico
+  ---
+  duration_ms: 0.88
+  type: 'test'
+  ...
+# Subtest: CPF duplicado com outra máscara recebe conflito específico
+ok 12 - CPF duplicado com outra máscara recebe conflito específico
+  ---
+  duration_ms: 0.5435
+  type: 'test'
+  ...
+# Subtest: cadastro com CPF persiste o documento normalizado no campo legado
+ok 13 - cadastro com CPF persiste o documento normalizado no campo legado
+  ---
+  duration_ms: 141.4123
+  type: 'test'
+  ...
+# Subtest: cadastro válido cria cliente normalizado e mantém o fluxo de sucesso
+ok 14 - cadastro válido cria cliente normalizado e mantém o fluxo de sucesso
+  ---
+  duration_ms: 108.4782
+  type: 'test'
+  ...
+# Subtest: campos opcionais vazios não são gravados e não colidem no índice sparse
+ok 15 - campos opcionais vazios não são gravados e não colidem no índice sparse
+  ---
+  duration_ms: 127.6418
+  type: 'test'
+  ...
+# Subtest: conflito de índice durante criação mantém mensagem específica
+ok 16 - conflito de índice durante criação mantém mensagem específica
+  ---
+  duration_ms: 116.8283
+  type: 'test'
+  ...
+# Subtest: erro inesperado continua usando fallback seguro
+ok 17 - erro inesperado continua usando fallback seguro
+  ---
+  duration_ms: 0.9431
+  type: 'test'
+  ...
+# Subtest: aplica a prioridade comercial das categorias normalizadas
+ok 18 - aplica a prioridade comercial das categorias normalizadas
+  ---
+  duration_ms: 2.6837
+  type: 'test'
+  ...
+# Subtest: primeira pagina filtrada inicia por shampoos e preserva a sequencia
+ok 19 - primeira pagina filtrada inicia por shampoos e preserva a sequencia
+  ---
+  duration_ms: 32.343
+  type: 'test'
+  ...
+# Subtest: ordena por linha, nome normalizado e id deterministico
+ok 20 - ordena por linha, nome normalizado e id deterministico
+  ---
+  duration_ms: 0.7349
+  type: 'test'
+  ...
+# Subtest: campos nulos ou ausentes nao quebram a ordenacao
+ok 21 - campos nulos ou ausentes nao quebram a ordenacao
+  ---
+  duration_ms: 0.7271
+  type: 'test'
+  ...
+# Subtest: pipeline usa fallback seguro antes de normalizar strings
+ok 22 - pipeline usa fallback seguro antes de normalizar strings
+  ---
+  duration_ms: 0.9904
+  type: 'test'
+  ...
+# Subtest: pipeline paginado sem filtros usa pagina inicial valida
+ok 23 - pipeline paginado sem filtros usa pagina inicial valida
+  ---
+  duration_ms: 0.4424
+  type: 'test'
+  ...
+# Subtest: pipeline ordena todo o resultado antes de aplicar skip e limit
+ok 24 - pipeline ordena todo o resultado antes de aplicar skip e limit
+  ---
+  duration_ms: 2.4522
+  type: 'test'
+  ...
+# Subtest: pipeline legado mantem ordenacao completa sem paginacao
+ok 25 - pipeline legado mantem ordenacao completa sem paginacao
+  ---
+  duration_ms: 0.7909
+  type: 'test'
+  ...
+# Subtest: endpoint paginado e legado respondem sem erro interno
+ok 26 - endpoint paginado e legado respondem sem erro interno
+  ---
+  duration_ms: 2.6857
+  type: 'test'
+  ...
+# Subtest: usa paginacao padrao sem parametros
+ok 27 - usa paginacao padrao sem parametros
+  ---
+  duration_ms: 3.44
+  type: 'test'
+  ...
+# Subtest: normaliza paginacao e filtros validos
+ok 28 - normaliza paginacao e filtros validos
+  ---
+  duration_ms: 0.3528
+  type: 'test'
+  ...
+# Subtest: rejeita limites excessivos e paginas invalidas
+ok 29 - rejeita limites excessivos e paginas invalidas
+  ---
+  duration_ms: 0.4015
+  type: 'test'
+  ...
+# Subtest: rejeita filtros acima do tamanho maximo
+ok 30 - rejeita filtros acima do tamanho maximo
+  ---
+  duration_ms: 0.3392
+  type: 'test'
+  ...
+# Subtest: mantem resposta legada em array sem parametros de paginacao
+ok 31 - mantem resposta legada em array sem parametros de paginacao
+  ---
+  duration_ms: 0.3769
+  type: 'test'
+  ...
+# Subtest: retorna objeto quando pagina ou limite for enviado
+ok 32 - retorna objeto quando pagina ou limite for enviado
+  ---
+  duration_ms: 0.3526
+  type: 'test'
+  ...
+# Subtest: schema preserva aprovação, acesso e data de aprovação como conceitos separados
+ok 33 - schema preserva aprovação, acesso e data de aprovação como conceitos separados
+  ---
+  duration_ms: 2.6289
+  type: 'test'
+  ...
+# Subtest: validação aceita somente dados cadastrais editáveis e normaliza espaços
+ok 34 - validação aceita somente dados cadastrais editáveis e normaliza espaços
+  ---
+  duration_ms: 1.0125
+  type: 'test'
+  ...
+# Subtest: validação bloqueia e-mail, CNPJ, senha, papel, aprovação e acesso
+ok 35 - validação bloqueia e-mail, CNPJ, senha, papel, aprovação e acesso
+  ---
+  duration_ms: 0.662
+  type: 'test'
+  ...
+# Subtest: validação rejeita payload vazio, responsável vazio e tabela inválida
+ok 36 - validação rejeita payload vazio, responsável vazio e tabela inválida
+  ---
+  duration_ms: 0.4036
+  type: 'test'
+  ...
+# Subtest: rotas de clientes mantêm proteção administrativa global e expõem detalhe e PATCH
+ok 37 - rotas de clientes mantêm proteção administrativa global e expõem detalhe e PATCH
+  ---
+  duration_ms: 0.4331
+  type: 'test'
+  ...
+# Subtest: cliente, marketing e logística não passam pela autorização administrativa
+ok 38 - cliente, marketing e logística não passam pela autorização administrativa
+  ---
+  duration_ms: 0.3535
+  type: 'test'
+  ...
+# Subtest: detalhe devolve cliente e tabela sem senha nem versão de token
+ok 39 - detalhe devolve cliente e tabela sem senha nem versão de token
+  ---
+  duration_ms: 5.1875
+  type: 'test'
+  ...
+# Subtest: PATCH persiste tabela ativa de distribuidor sem alterar aprovação ou acesso
+ok 40 - PATCH persiste tabela ativa de distribuidor sem alterar aprovação ou acesso
+  ---
+  duration_ms: 1.6611
+  type: 'test'
+  ...
+# Subtest: PATCH não salva tabela inexistente, inativa ou destinada ao consumidor final
+ok 41 - PATCH não salva tabela inexistente, inativa ou destinada ao consumidor final
+  ---
+  duration_ms: 1.1236
+  type: 'test'
+  ...
+# Subtest: aprovação exige tabela disponível, registra a data e mantém retorno completo
+ok 42 - aprovação exige tabela disponível, registra a data e mantém retorno completo
+  ---
+  duration_ms: 1.8529
+  type: 'test'
+  ...
+# Subtest: aprovação falha sem falsa confirmação quando a tabela está indisponível
+ok 43 - aprovação falha sem falsa confirmação quando a tabela está indisponível
+  ---
+  duration_ms: 1.1167
+  type: 'test'
+  ...
+# Subtest: desativação revoga acesso sem apagar ou rebaixar a aprovação
+ok 44 - desativação revoga acesso sem apagar ou rebaixar a aprovação
+  ---
+  duration_ms: 0.5846
+  type: 'test'
+  ...
+# Subtest: reativação normaliza cadastro legado inativo e preserva compatibilidade
+ok 45 - reativação normaliza cadastro legado inativo e preserva compatibilidade
+  ---
+  duration_ms: 0.5954
+  type: 'test'
+  ...
+# Subtest: cadastro pendente não pode ser desativado como se já estivesse aprovado
+ok 46 - cadastro pendente não pode ser desativado como se já estivesse aprovado
+  ---
+  duration_ms: 0.4529
+  type: 'test'
+  ...
+# Subtest: listagem mantém tabela populada, aprovação, acesso e campos legados
+ok 47 - listagem mantém tabela populada, aprovação, acesso e campos legados
+  ---
+  duration_ms: 0.5621
+  type: 'test'
+  ...
+# Subtest: Groomer é aprovado sem tabela e cadastro pendente pode ser rejeitado
+ok 48 - Groomer é aprovado sem tabela e cadastro pendente pode ser rejeitado
+  ---
+  duration_ms: 20.7738
+  type: 'test'
+  ...
+# Subtest: catálogo futuro usa a tabela atual e pedido grava preços em snapshot imutável
+ok 49 - catálogo futuro usa a tabela atual e pedido grava preços em snapshot imutável
+  ---
+  duration_ms: 1.427
+  type: 'test'
+  ...
+# Subtest: login e middleware protegido continuam recusando cliente desativado
+ok 50 - login e middleware protegido continuam recusando cliente desativado
+  ---
+  duration_ms: 0.7257
+  type: 'test'
+  ...
+# Subtest: schema e login preservam o novo papel comercial no token e na resposta
+ok 51 - schema e login preservam o novo papel comercial no token e na resposta
+  ---
+  duration_ms: 229.2797
+  type: 'test'
+  ...
+# Subtest: middleware comercial permite somente Admin e Comercial
+ok 52 - middleware comercial permite somente Admin e Comercial
+  ---
+  duration_ms: 0.4868
+  type: 'test'
+  ...
+# Subtest: tabelas liberam consulta, criação, edição, status e duplicação
+ok 53 - tabelas liberam consulta, criação, edição, status e duplicação
+  ---
+  duration_ms: 0.5748
+  type: 'test'
+  ...
+# Subtest: preços liberam consulta e upsert com validação de IDs preservada
+ok 54 - preços liberam consulta e upsert com validação de IDs preservada
+  ---
+  duration_ms: 0.2602
+  type: 'test'
+  ...
+# Subtest: produtos ficam somente leitura para Comercial e mutações continuam Admin
+ok 55 - produtos ficam somente leitura para Comercial e mutações continuam Admin
+  ---
+  duration_ms: 0.4214
+  type: 'test'
+  ...
+# Subtest: Comercial continua bloqueado de Admin, Marketing e Logística
+ok 56 - Comercial continua bloqueado de Admin, Marketing e Logística
+  ---
+  duration_ms: 0.4535
+  type: 'test'
+  ...
+# Subtest: clientes, mutações administrativas, métricas e operadores mantêm autorização exclusiva
+ok 57 - clientes, mutações administrativas, métricas e operadores mantêm autorização exclusiva
+  ---
+  duration_ms: 0.7185
+  type: 'test'
+  ...
+# Subtest: API preserva 401 sem autenticação antes de avaliar a permissão
+ok 58 - API preserva 401 sem autenticação antes de avaliar a permissão
+  ---
+  duration_ms: 0.7018
+  type: 'test'
+  ...
+# Subtest: criação do usuário Comercial segue o fluxo interno protegido por confirmação
+ok 59 - criação do usuário Comercial segue o fluxo interno protegido por confirmação
+  ---
+  duration_ms: 1.22
+  type: 'test'
+  ...
+# Subtest: consulta, aprovação, edição e exclusão de pedidos reutilizam autorização comercial
+ok 60 - consulta, aprovação, edição e exclusão de pedidos reutilizam autorização comercial
+  ---
+  duration_ms: 0.937
+  type: 'test'
+  ...
+# Subtest: schema inclui Groomer sem remover papéis existentes e mantém campos profissionais
+ok 61 - schema inclui Groomer sem remover papéis existentes e mantém campos profissionais
+  ---
+  duration_ms: 2.8175
+  type: 'test'
+  ...
+# Subtest: cadastro Groomer exige contato e localização, mas mantém CPF/CNPJ opcional
+ok 62 - cadastro Groomer exige contato e localização, mas mantém CPF/CNPJ opcional
+  ---
+  duration_ms: 1.5013
+  type: 'test'
+  ...
+# Subtest: endpoint público cria Groomer pendente, normalizado e sem tabela
+ok 63 - endpoint público cria Groomer pendente, normalizado e sem tabela
+  ---
+  duration_ms: 128.0558
+  type: 'test'
+  ...
+# Subtest: duplicidade de e-mail é aplicada também ao cadastro Groomer
+ok 64 - duplicidade de e-mail é aplicada também ao cadastro Groomer
+  ---
+  duration_ms: 5.185
+  type: 'test'
+  ...
+# Subtest: Groomer pendente ou rejeitado não autentica; aprovado e ativo autentica
+ok 65 - Groomer pendente ou rejeitado não autentica; aprovado e ativo autentica
+  ---
+  duration_ms: 485.8649
+  type: 'test'
+  ...
+# Subtest: Groomer acessa conteúdo, mas continua bloqueado das rotas exclusivas de cliente
+ok 66 - Groomer acessa conteúdo, mas continua bloqueado das rotas exclusivas de cliente
+  ---
+  duration_ms: 0.4399
+  type: 'test'
+  ...
+# Subtest: Groomer não aceita tabela nem campos comerciais na edição administrativa
+ok 67 - Groomer não aceita tabela nem campos comerciais na edição administrativa
+  ---
+  duration_ms: 0.9962
+  type: 'test'
+  ...
+# Subtest: audiência nova é explícita e documentos antigos permanecem exclusivos de distribuidores
+ok 68 - audiência nova é explícita e documentos antigos permanecem exclusivos de distribuidores
+  ---
+  duration_ms: 0.6954
+  type: 'test'
+  ...
+# Subtest: materiais e treinamentos persistem público e validam distribuidor específico
+ok 69 - materiais e treinamentos persistem público e validam distribuidor específico
+  ---
+  duration_ms: 1.5723
+  type: 'test'
+  ...
+# Subtest: consulta individual de material aplica a audiência Groomer no banco
+ok 70 - consulta individual de material aplica a audiência Groomer no banco
+  ---
+  duration_ms: 0.8771
+  type: 'test'
+  ...
+# Subtest: detalhe e progresso de treinamento repetem a autorização por audiência
+ok 71 - detalhe e progresso de treinamento repetem a autorização por audiência
+  ---
+  duration_ms: 1.2272
+  type: 'test'
+  ...
+# Subtest: catálogo, pedidos e preços bloqueiam Groomer explicitamente no backend
+ok 72 - catálogo, pedidos e preços bloqueiam Groomer explicitamente no backend
+  ---
+  duration_ms: 1.535
+  type: 'test'
+  ...
+# Subtest: upload aceita somente JPG, PNG e WEBP com limite de 5 MB
+ok 73 - upload aceita somente JPG, PNG e WEBP com limite de 5 MB
+  ---
+  duration_ms: 2.9578
+  type: 'test'
+  ...
+# Subtest: assinatura inválida interrompe a request com 400
+ok 74 - assinatura inválida interrompe a request com 400
+  ---
+  duration_ms: 0.3696
+  type: 'test'
+  ...
+# Subtest: arquivo acima de 5 MB é recusado mesmo após o parser
+ok 75 - arquivo acima de 5 MB é recusado mesmo após o parser
+  ---
+  duration_ms: 0.4444
+  type: 'test'
+  ...
+# Subtest: remoção recusa publicId fora da pasta controlada
+ok 76 - remoção recusa publicId fora da pasta controlada
+  ---
+  duration_ms: 1.3112
+  type: 'test'
+  ...
+# Subtest: rotas administrativas autenticam antes do upload e aplicam rate limit
+ok 77 - rotas administrativas autenticam antes do upload e aplicam rate limit
+  ---
+  duration_ms: 0.5178
+  type: 'test'
+  ...
+# Subtest: admin cria treinamento com thumbnail e publicId não vaza na resposta
+ok 78 - admin cria treinamento com thumbnail e publicId não vaza na resposta
+  ---
+  duration_ms: 5.4979
+  type: 'test'
+  ...
+# Subtest: treinamento sem upload mantém campo vazio para fallback do YouTube
+ok 79 - treinamento sem upload mantém campo vazio para fallback do YouTube
+  ---
+  duration_ms: 1.0678
+  type: 'test'
+  ...
+# Subtest: admin cria material com imagem e campos internos não vazam
+ok 80 - admin cria material com imagem e campos internos não vazam
+  ---
+  duration_ms: 2.1246
+  type: 'test'
+  ...
+# Subtest: gestor cria banner com imagem validada e publicId não vaza
+ok 81 - gestor cria banner com imagem validada e publicId não vaza
+  ---
+  duration_ms: 1.7713
+  type: 'test'
+  ...
+# Subtest: edição sem arquivo preserva a thumbnail e URL legada
+ok 82 - edição sem arquivo preserva a thumbnail e URL legada
+  ---
+  duration_ms: 1.2656
+  type: 'test'
+  ...
+# Subtest: substituição só remove a thumbnail antiga após salvar a nova
+ok 83 - substituição só remove a thumbnail antiga após salvar a nova
+  ---
+  duration_ms: 1.673
+  type: 'test'
+  ...
+# Subtest: falha no Cloudinary retorna erro seguro e mantém imagem anterior
+ok 84 - falha no Cloudinary retorna erro seguro e mantém imagem anterior
+  ---
+  duration_ms: 1.4532
+  type: 'test'
+  ...
+# Subtest: URLs externas enviadas no body e campos desconhecidos são ignorados
+ok 85 - URLs externas enviadas no body e campos desconhecidos são ignorados
+  ---
+  duration_ms: 0.3536
+  type: 'test'
+  ...
+# Subtest: edição de material sem novo arquivo preserva imagem existente
+ok 86 - edição de material sem novo arquivo preserva imagem existente
+  ---
+  duration_ms: 0.9319
+  type: 'test'
+  ...
+# Subtest: nome normalizado preserva diluição e embalagem
+ok 87 - nome normalizado preserva diluição e embalagem
+  ---
+  duration_ms: 2.747
+  type: 'test'
+  ...
+# Subtest: identificador prevalece e duplicidades/conflitos não escolhem primeiro
+ok 88 - identificador prevalece e duplicidades/conflitos não escolhem primeiro
+  ---
+  duration_ms: 0.7446
+  type: 'test'
+  ...
+# Subtest: reexecução não planeja escrita e não considera preços de outras tabelas
+ok 89 - reexecução não planeja escrita e não considera preços de outras tabelas
+  ---
+  duration_ms: 1.9726
+  type: 'test'
+  ...
+# Subtest: linhas repetidas iguais colapsam; valores diferentes bloqueiam
+ok 90 - linhas repetidas iguais colapsam; valores diferentes bloqueiam
+  ---
+  duration_ms: 0.7719
+  type: 'test'
+  ...
+# Subtest: tabelas duplicadas, preços duplicados e itens ausentes bloqueiam
+ok 91 - tabelas duplicadas, preços duplicados e itens ausentes bloqueiam
+  ---
+  duration_ms: 0.7991
+  type: 'test'
+  ...
+# Subtest: EAN repetido em identidades diferentes não permite associação automática pelo código
+ok 92 - EAN repetido em identidades diferentes não permite associação automática pelo código
+  ---
+  duration_ms: 0.3658
+  type: 'test'
+  ...
+# Subtest: decisões finais fecham 160/151/150/1/9 sem inativos e separam variantes
+ok 93 - decisões finais fecham 160/151/150/1/9 sem inativos e separam variantes
+  ---
+  duration_ms: 20.1807
+  type: 'test'
+  ...
+# Subtest: mapa bloqueia fonte alterada, ID inativo/renomeado e pré-lavagem semelhante
+ok 94 - mapa bloqueia fonte alterada, ID inativo/renomeado e pré-lavagem semelhante
+  ---
+  duration_ms: 32.105
+  type: 'test'
+  ...
+# Subtest: reexecução preserva produto e 151 preços; auditoria detecta alteração alheia
+ok 95 - reexecução preserva produto e 151 preços; auditoria detecta alteração alheia
+  ---
+  duration_ms: 80.0186
+  type: 'test'
+  ...
+# Subtest: dataset possui os 149 produtos e 9 promocionais esperados
+ok 96 - dataset possui os 149 produtos e 9 promocionais esperados
+  ---
+  duration_ms: 4.6565
+  type: 'test'
+  ...
+# Subtest: dataset preserva a quantidade conferida em cada secao do PDF
+ok 97 - dataset preserva a quantidade conferida em cada secao do PDF
+  ---
+  duration_ms: 1.0435
+  type: 'test'
+  ...
+# Subtest: valores de linhas sensiveis permanecem nas colunas corretas
+ok 98 - valores de linhas sensiveis permanecem nas colunas corretas
+  ---
+  duration_ms: 0.4297
+  type: 'test'
+  ...
+# Subtest: correspondencia normaliza unidade e preserva diluicao
+ok 99 - correspondencia normaliza unidade e preserva diluicao
+  ---
+  duration_ms: 0.6431
+  type: 'test'
+  ...
+# Subtest: correspondencia incompleta e tratada como ambigua
+ok 100 - correspondencia incompleta e tratada como ambigua
+  ---
+  duration_ms: 1.3252
+  type: 'test'
+  ...
+# Subtest: Dream Color Pre-Lavagem nao aceita fragrancia e diluicao diferentes
+ok 101 - Dream Color Pre-Lavagem nao aceita fragrancia e diluicao diferentes
+  ---
+  duration_ms: 0.6533
+  type: 'test'
+  ...
+# Subtest: alias limitado reutiliza Zoom Pre-Lavagem sem diluicao no nome
+ok 102 - alias limitado reutiliza Zoom Pre-Lavagem sem diluicao no nome
+  ---
+  duration_ms: 0.8317
+  type: 'test'
+  ...
+# Subtest: produto The Luxe e localizado pelo bloco mesmo com nome sem linha literal
+ok 103 - produto The Luxe e localizado pelo bloco mesmo com nome sem linha literal
+  ---
+  duration_ms: 1.7398
+  type: 'test'
+  ...
+# Subtest: aromatizador e spray usam somente Cuidados Especiais existente
+ok 104 - aromatizador e spray usam somente Cuidados Especiais existente
+  ---
+  duration_ms: 2.1943
+  type: 'test'
+  ...
+# Subtest: Perfume e Display reutilizam a categoria existente Colonia
+ok 105 - Perfume e Display reutilizam a categoria existente Colonia
+  ---
+  duration_ms: 1.4417
+  type: 'test'
+  ...
+# Subtest: The Luxe normaliza acentos, especiais e E versus ampersand
+ok 106 - The Luxe normaliza acentos, especiais e E versus ampersand
+  ---
+  duration_ms: 13.0042
+  type: 'test'
+  ...
+# Subtest: desempate The Luxe prefere candidata com diluicao explicita igual
+ok 107 - desempate The Luxe prefere candidata com diluicao explicita igual
+  ---
+  duration_ms: 0.9158
+  type: 'test'
+  ...
+# Subtest: produto comum planejado como novo nao aparece como nao encontrado
+ok 108 - produto comum planejado como novo nao aparece como nao encontrado
+  ---
+  duration_ms: 1.8072
+  type: 'test'
+  ...
+# Subtest: The Luxe e ignorado antes de consultar produtos ou precos
+ok 109 - The Luxe e ignorado antes de consultar produtos ou precos
+  ---
+  duration_ms: 1.5206
+  type: 'test'
+  ...
+# Subtest: contagens separam os 42 The Luxe dos 107 produtos processaveis
+ok 110 - contagens separam os 42 The Luxe dos 107 produtos processaveis
+  ---
+  duration_ms: 2.2445
+  type: 'test'
+  ...
+# Subtest: linhas logicas usam valores canonicos sem conflito de capitalizacao
+ok 111 - linhas logicas usam valores canonicos sem conflito de capitalizacao
+  ---
+  duration_ms: 0.2433
+  type: 'test'
+  ...
+# Subtest: dataset Atacado fecha as 158 linhas extraidas do PDF
+ok 112 - dataset Atacado fecha as 158 linhas extraidas do PDF
+  ---
+  duration_ms: 6.5928
+  type: 'test'
+  ...
+# Subtest: dataset Atacado preserva contagens e identidades de cada bloco
+ok 113 - dataset Atacado preserva contagens e identidades de cada bloco
+  ---
+  duration_ms: 0.534
+  type: 'test'
+  ...
+# Subtest: valores unitarios sensiveis permanecem iguais ao PDF
+ok 114 - valores unitarios sensiveis permanecem iguais ao PDF
+  ---
+  duration_ms: 0.3228
+  type: 'test'
+  ...
+# Subtest: tabela Atacado e localizada sem diferenciar maiusculas e minusculas
+ok 115 - tabela Atacado e localizada sem diferenciar maiusculas e minusculas
+  ---
+  duration_ms: 0.8035
+  type: 'test'
+  ...
+# Subtest: normalizacao segura aceita acento, hifen, C barra COM e ampersand
+ok 116 - normalizacao segura aceita acento, hifen, C barra COM e ampersand
+  ---
+  duration_ms: 1.5486
+  type: 'test'
+  ...
+# Subtest: Dream Color Care e tratado como a mesma linha comercial do PDF
+ok 117 - Dream Color Care e tratado como a mesma linha comercial do PDF
+  ---
+  duration_ms: 0.2685
+  type: 'test'
+  ...
+# Subtest: aliases auditados usam IDs deterministas e nunca recaem em fuzzy match
+ok 118 - aliases auditados usam IDs deterministas e nunca recaem em fuzzy match
+  ---
+  duration_ms: 0.5215
+  type: 'test'
+  ...
+# Subtest: match nao ignora fragrancia, volume ou diluicao
+ok 119 - match nao ignora fragrancia, volume ou diluicao
+  ---
+  duration_ms: 0.5623
+  type: 'test'
+  ...
+# Subtest: planejamento nunca cria produto e compara preco por tabela mais produto
+ok 120 - planejamento nunca cria produto e compara preco por tabela mais produto
+  ---
+  duration_ms: 2.5518
+  type: 'test'
+  ...
+# Subtest: promocionais sao somente relatados e nunca entram no plano
+ok 121 - promocionais sao somente relatados e nunca entram no plano
+  ---
+  duration_ms: 0.9654
+  type: 'test'
+  ...
+# Subtest: planejamento ignora duplicado inativo e usa somente Jasmim ativo
+ok 122 - planejamento ignora duplicado inativo e usa somente Jasmim ativo
+  ---
+  duration_ms: 0.7741
+  type: 'test'
+  ...
+# Subtest: Talco usa somente o alias explicito confirmado
+ok 123 - Talco usa somente o alias explicito confirmado
+  ---
+  duration_ms: 0.6156
+  type: 'test'
+  ...
+# Subtest: precos Atacado de produtos inativos ficam fora do plano
+ok 124 - precos Atacado de produtos inativos ficam fora do plano
+  ---
+  duration_ms: 0.4871
+  type: 'test'
+  ...
+# Subtest: login cliente pendente: status somente após credenciais corretas
+ok 125 - login cliente pendente: status somente após credenciais corretas
+  ---
+  duration_ms: 10.5394
+  type: 'test'
+  ...
+# Subtest: login cliente reprovado: status somente após credenciais corretas
+ok 126 - login cliente reprovado: status somente após credenciais corretas
+  ---
+  duration_ms: 2.9959
+  type: 'test'
+  ...
+# Subtest: login groomer pendente: status somente após credenciais corretas
+ok 127 - login groomer pendente: status somente após credenciais corretas
+  ---
+  duration_ms: 2.7279
+  type: 'test'
+  ...
+# Subtest: login groomer reprovado: status somente após credenciais corretas
+ok 128 - login groomer reprovado: status somente após credenciais corretas
+  ---
+  duration_ms: 2.3135
+  type: 'test'
+  ...
+# Subtest: senha incorreta não revela pendente
+ok 129 - senha incorreta não revela pendente
+  ---
+  duration_ms: 2.3737
+  type: 'test'
+  ...
+# Subtest: senha incorreta não revela reprovado
+ok 130 - senha incorreta não revela reprovado
+  ---
+  duration_ms: 2.3651
+  type: 'test'
+  ...
+# Subtest: senha incorreta não revela aprovado
+ok 131 - senha incorreta não revela aprovado
+  ---
+  duration_ms: 2.3385
+  type: 'test'
+  ...
+# Subtest: conta inexistente mantém resposta de credencial inválida
+ok 132 - conta inexistente mantém resposta de credencial inválida
+  ---
+  duration_ms: 0.4047
+  type: 'test'
+  ...
+# Subtest: desativado mantém contrato e precedência sobre reprovação
+ok 133 - desativado mantém contrato e precedência sobre reprovação
+  ---
+  duration_ms: 3.9162
+  type: 'test'
+  ...
+# Subtest: aprovado preserva token e sessão sem dados internos
+ok 134 - aprovado preserva token e sessão sem dados internos
+  ---
+  duration_ms: 13.3565
+  type: 'test'
+  ...
+# Subtest: schema aceita logistica e Pedido preserva status antigos
+ok 135 - schema aceita logistica e Pedido preserva status antigos
+  ---
+  duration_ms: 3.9707
+  type: 'test'
+  ...
+# Subtest: pedido antigo sem campos logisticos continua valido
+ok 136 - pedido antigo sem campos logisticos continua valido
+  ---
+  duration_ms: 19.0061
+  type: 'test'
+  ...
+# Subtest: somente cliente depende de aprovacao de cadastro
+ok 137 - somente cliente depende de aprovacao de cadastro
+  ---
+  duration_ms: 0.2502
+  type: 'test'
+  ...
+# Subtest: logistica ativa acessa com token mesmo sem aprovacao de cliente
+ok 138 - logistica ativa acessa com token mesmo sem aprovacao de cliente
+  ---
+  duration_ms: 10.2643
+  type: 'test'
+  ...
+# Subtest: logistica inativa permanece bloqueada
+ok 139 - logistica inativa permanece bloqueada
+  ---
+  duration_ms: 2.7028
+  type: 'test'
+  ...
+# Subtest: middleware permite apenas admin e logistica na operacao
+ok 140 - middleware permite apenas admin e logistica na operacao
+  ---
+  duration_ms: 0.3763
+  type: 'test'
+  ...
+# Subtest: logistica nao ganha acesso a Admin nem Marketing
+ok 141 - logistica nao ganha acesso a Admin nem Marketing
+  ---
+  duration_ms: 0.463
+  type: 'test'
+  ...
+# Subtest: rotas logisticas e criacao de pedido aplicam middlewares corretos
+ok 142 - rotas logisticas e criacao de pedido aplicam middlewares corretos
+  ---
+  duration_ms: 0.4464
+  type: 'test'
+  ...
+# Subtest: transicoes logisticas seguem fluxo linear e aceitam legado
+ok 143 - transicoes logisticas seguem fluxo linear e aceitam legado
+  ---
+  duration_ms: 0.5658
+  type: 'test'
+  ...
+# Subtest: pedido pendente nao aceita alteracao operacional nem pela superficie compartilhada
+ok 144 - pedido pendente nao aceita alteracao operacional nem pela superficie compartilhada
+  ---
+  duration_ms: 1.5528
+  type: 'test'
+  ...
+# Subtest: aprovacao atomica registra admin e rejeita a segunda requisicao
+ok 145 - aprovacao atomica registra admin e rejeita a segunda requisicao
+  ---
+  duration_ms: 7.4919
+  type: 'test'
+  ...
+# Subtest: aprovacao atomica registra comercial e rejeita a segunda requisicao
+ok 146 - aprovacao atomica registra comercial e rejeita a segunda requisicao
+  ---
+  duration_ms: 2.3014
+  type: 'test'
+  ...
+# Subtest: inicio da separacao registra historico imutavel e autoria sem aceitar expedicao antecipada
+ok 147 - inicio da separacao registra historico imutavel e autoria sem aceitar expedicao antecipada
+  ---
+  duration_ms: 0.8371
+  type: 'test'
+  ...
+# Subtest: dados de faturamento e envio sao rejeitados antes do status faturado
+ok 148 - dados de faturamento e envio sao rejeitados antes do status faturado
+  ---
+  duration_ms: 0.3958
+  type: 'test'
+  ...
+# Subtest: pedido aprovado inicia separacao sem registrar quantidades antecipadamente
+ok 149 - pedido aprovado inicia separacao sem registrar quantidades antecipadamente
+  ---
+  duration_ms: 0.6127
+  type: 'test'
+  ...
+# Subtest: transicao invalida nao altera o pedido
+ok 150 - transicao invalida nao altera o pedido
+  ---
+  duration_ms: 0.2012
+  type: 'test'
+  ...
+# Subtest: admin nao pode regredir pedido entregue pela superficie logistica
+ok 151 - admin nao pode regredir pedido entregue pela superficie logistica
+  ---
+  duration_ms: 0.2066
+  type: 'test'
+  ...
+# Subtest: logistica nao marca entrega nem altera data de entrega
+ok 152 - logistica nao marca entrega nem altera data de entrega
+  ---
+  duration_ms: 0.6205
+  type: 'test'
+  ...
+# Subtest: confirmacao do cliente usa data do servidor e registra autoria
+ok 153 - confirmacao do cliente usa data do servidor e registra autoria
+  ---
+  duration_ms: 0.2747
+  type: 'test'
+  ...
+# Subtest: cliente dono confirma pedido enviado sem aceitar campos do body
+ok 154 - cliente dono confirma pedido enviado sem aceitar campos do body
+  ---
+  duration_ms: 0.6487
+  type: 'test'
+  ...
+# Subtest: cliente nao confirma pedido de outro cliente
+ok 155 - cliente nao confirma pedido de outro cliente
+  ---
+  duration_ms: 0.4714
+  type: 'test'
+  ...
+# Subtest: pedido nao enviado ou ja entregue nao pode ser confirmado
+ok 156 - pedido nao enviado ou ja entregue nao pode ser confirmado
+  ---
+  duration_ms: 0.571
+  type: 'test'
+  ...
+# Subtest: admin nao usa atualizacao comum para marcar entregue
+ok 157 - admin nao usa atualizacao comum para marcar entregue
+  ---
+  duration_ms: 0.3651
+  type: 'test'
+  ...
+# Subtest: whitelist aceita somente dados logisticos e link HTTPS
+ok 158 - whitelist aceita somente dados logisticos e link HTTPS
+  ---
+  duration_ms: 0.4638
+  type: 'test'
+  ...
+# Subtest: pedido faturado exige NF e datas antes de ser marcado como enviado
+ok 159 - pedido faturado exige NF e datas antes de ser marcado como enviado
+  ---
+  duration_ms: 0.5492
+  type: 'test'
+  ...
+# Subtest: pedido enviado bloqueia edicao posterior dos dados de expedicao
+ok 160 - pedido enviado bloqueia edicao posterior dos dados de expedicao
+  ---
+  duration_ms: 0.406
+  type: 'test'
+  ...
+# Subtest: separacao valida falta parcial, total e calcula situacao por produto
+ok 161 - separacao valida falta parcial, total e calcula situacao por produto
+  ---
+  duration_ms: 1.3072
+  type: 'test'
+  ...
+# Subtest: separacao rejeita quantidade negativa, acima da solicitada e conclusao pendente
+ok 162 - separacao rejeita quantidade negativa, acima da solicitada e conclusao pendente
+  ---
+  duration_ms: 0.7897
+  type: 'test'
+  ...
+# Subtest: conclusão da separação exige igualdade atual em todos os itens
+ok 163 - conclusão da separação exige igualdade atual em todos os itens
+  ---
+  duration_ms: 0.7201
+  type: 'test'
+  ...
+# Subtest: 1. pedido nao pode iniciar conferencia antes da separacao terminar
+ok 164 - 1. pedido nao pode iniciar conferencia antes da separacao terminar
+  ---
+  duration_ms: 0.4879
+  type: 'test'
+  ...
+# Subtest: 2. pedido separado corretamente entra em conferencia pendente e aceita correção antes da conclusão
+ok 165 - 2. pedido separado corretamente entra em conferencia pendente e aceita correção antes da conclusão
+  ---
+  duration_ms: 0.8341
+  type: 'test'
+  ...
+# Subtest: 3. conferencia correta exige todos os itens e pode ser concluida
+ok 166 - 3. conferencia correta exige todos os itens e pode ser concluida
+  ---
+  duration_ms: 1.346
+  type: 'test'
+  ...
+# Subtest: 4. conferencia divergente é bloqueada sem gravar uma conclusão inválida
+ok 167 - 4. conferencia divergente é bloqueada sem gravar uma conclusão inválida
+  ---
+  duration_ms: 0.4748
+  type: 'test'
+  ...
+# Subtest: 5. separação parcial bloqueia a conferência e permanece preservada
+ok 168 - 5. separação parcial bloqueia a conferência e permanece preservada
+  ---
+  duration_ms: 0.3297
+  type: 'test'
+  ...
+# Subtest: 6. conclusão correta grava quantidades finais consistentes
+ok 169 - 6. conclusão correta grava quantidades finais consistentes
+  ---
+  duration_ms: 0.4777
+  type: 'test'
+  ...
+# Subtest: 7. faturamento nao e oferecido enquanto a conferencia esta pendente
+ok 170 - 7. faturamento nao e oferecido enquanto a conferencia esta pendente
+  ---
+  duration_ms: 0.5888
+  type: 'test'
+  ...
+# Subtest: barreira Conferência para Faturamento rejeita conferência de versão antiga
+ok 171 - barreira Conferência para Faturamento rejeita conferência de versão antiga
+  ---
+  duration_ms: 0.4239
+  type: 'test'
+  ...
+# Subtest: 8. backend administrativo rejeita tentativa de pular conferencia
+ok 172 - 8. backend administrativo rejeita tentativa de pular conferencia
+  ---
+  duration_ms: 0.3879
+  type: 'test'
+  ...
+# Subtest: rota administrativa de status tambem exige dados antes do envio
+ok 173 - rota administrativa de status tambem exige dados antes do envio
+  ---
+  duration_ms: 0.4903
+  type: 'test'
+  ...
+# Subtest: 9. conferencia registra operador e horarios para o Admin
+ok 174 - 9. conferencia registra operador e horarios para o Admin
+  ---
+  duration_ms: 0.4798
+  type: 'test'
+  ...
+# Subtest: 10. Admin continua visualizando divergencias antigas
+ok 175 - 10. Admin continua visualizando divergencias antigas
+  ---
+  duration_ms: 0.2874
+  type: 'test'
+  ...
+# Subtest: 11. cliente nao recebe conferencia, operador ou separacao interna
+ok 176 - 11. cliente nao recebe conferencia, operador ou separacao interna
+  ---
+  duration_ms: 0.4335
+  type: 'test'
+  ...
+# Subtest: 12. pedido antigo sem conferencia continua podendo faturar pelo Admin
+ok 177 - 12. pedido antigo sem conferencia continua podendo faturar pelo Admin
+  ---
+  duration_ms: 0.3674
+  type: 'test'
+  ...
+# Subtest: 13. recarregar durante e depois da conferencia preserva os dados
+ok 178 - 13. recarregar durante e depois da conferencia preserva os dados
+  ---
+  duration_ms: 28.8745
+  type: 'test'
+  ...
+# Subtest: 14. conferencia concluida persiste apos faturamento, envio e entrega
+ok 179 - 14. conferencia concluida persiste apos faturamento, envio e entrega
+  ---
+  duration_ms: 0.7354
+  type: 'test'
+  ...
+# Subtest: edição Admin 10/8 para 8 preserva separação, recalcula total e exige nova conferência
+ok 180 - edição Admin 10/8 para 8 preserva separação, recalcula total e exige nova conferência
+  ---
+  duration_ms: 2.2378
+  type: 'test'
+  ...
+# Subtest: edição Admin 10/8 para 6 mantém as 8 físicas e reabre separação inconsistente
+ok 181 - edição Admin 10/8 para 6 mantém as 8 físicas e reabre separação inconsistente
+  ---
+  duration_ms: 0.3103
+  type: 'test'
+  ...
+# Subtest: edição Admin 10/8 para 12 preserva trabalho e deixa quatro unidades pendentes
+ok 182 - edição Admin 10/8 para 12 preserva trabalho e deixa quatro unidades pendentes
+  ---
+  duration_ms: 0.3888
+  type: 'test'
+  ...
+# Subtest: barreira de separação acompanha a quantidade alterada pelo Admin
+ok 183 - barreira de separação acompanha a quantidade alterada pelo Admin
+  ---
+  duration_ms: 1.1083
+  type: 'test'
+  ...
+# Subtest: remoção administrativa elimina exigência atual sem apagar auditoria da conferência
+ok 184 - remoção administrativa elimina exigência atual sem apagar auditoria da conferência
+  ---
+  duration_ms: 0.4492
+  type: 'test'
+  ...
+# Subtest: histórico administrativo aparece na timeline com valores e autoria
+ok 185 - histórico administrativo aparece na timeline com valores e autoria
+  ---
+  duration_ms: 1.1791
+  type: 'test'
+  ...
+# Subtest: backend rejeita conclusão direta da API quando separado difere do pedido atual
+ok 186 - backend rejeita conclusão direta da API quando separado difere do pedido atual
+  ---
+  duration_ms: 1.3162
+  type: 'test'
+  ...
+# Subtest: backend rejeita avanço direto da API com separação parcial
+ok 187 - backend rejeita avanço direto da API com separação parcial
+  ---
+  duration_ms: 0.432
+  type: 'test'
+  ...
+# Subtest: backend exige versão e rejeita atualização logística obsoleta
+ok 188 - backend exige versão e rejeita atualização logística obsoleta
+  ---
+  duration_ms: 0.3716
+  type: 'test'
+  ...
+# Subtest: backend rejeita edição comercial de pedido faturado e versão Admin obsoleta
+ok 189 - backend rejeita edição comercial de pedido faturado e versão Admin obsoleta
+  ---
+  duration_ms: 0.9172
+  type: 'test'
+  ...
+# Subtest: schema e política administrativa permitem edição somente antes do faturamento
+ok 190 - schema e política administrativa permitem edição somente antes do faturamento
+  ---
+  duration_ms: 0.1772
+  type: 'test'
+  ...
+# Subtest: pedido editado com conferência arquivada continua válido no schema
+ok 191 - pedido editado com conferência arquivada continua válido no schema
+  ---
+  duration_ms: 44.6697
+  type: 'test'
+  ...
+# Subtest: fechamento 1. pedido historico recebe isencao por padrao no schema
+ok 192 - fechamento 1. pedido historico recebe isencao por padrao no schema
+  ---
+  duration_ms: 0.4778
+  type: 'test'
+  ...
+# Subtest: fechamento 2. payload aceita peso com virgula e normaliza para numero
+ok 193 - fechamento 2. payload aceita peso com virgula e normaliza para numero
+  ---
+  duration_ms: 0.425
+  type: 'test'
+  ...
+# Subtest: fechamento 3. quantidade de volumes zero e rejeitada
+ok 194 - fechamento 3. quantidade de volumes zero e rejeitada
+  ---
+  duration_ms: 0.141
+  type: 'test'
+  ...
+# Subtest: fechamento 4. quantidade fracionaria de volumes e rejeitada
+ok 195 - fechamento 4. quantidade fracionaria de volumes e rejeitada
+  ---
+  duration_ms: 0.1758
+  type: 'test'
+  ...
+# Subtest: fechamento 5. peso zero e rejeitado
+ok 196 - fechamento 5. peso zero e rejeitado
+  ---
+  duration_ms: 0.1543
+  type: 'test'
+  ...
+# Subtest: fechamento 6. peso com separadores ambiguos e rejeitado
+ok 197 - fechamento 6. peso com separadores ambiguos e rejeitado
+  ---
+  duration_ms: 0.1945
+  type: 'test'
+  ...
+# Subtest: fechamento 7. descricao vazia e rejeitada
+ok 198 - fechamento 7. descricao vazia e rejeitada
+  ---
+  duration_ms: 0.1426
+  type: 'test'
+  ...
+# Subtest: fechamento 8. campo desconhecido e rejeitado
+ok 199 - fechamento 8. campo desconhecido e rejeitado
+  ---
+  duration_ms: 0.2104
+  type: 'test'
+  ...
+# Subtest: fechamento 9. deve ser salvo em operacao isolada
+ok 200 - fechamento 9. deve ser salvo em operacao isolada
+  ---
+  duration_ms: 0.3406
+  type: 'test'
+  ...
+# Subtest: fechamento 10. pedido historico isento nao aceita registro estruturado
+ok 201 - fechamento 10. pedido historico isento nao aceita registro estruturado
+  ---
+  duration_ms: 0.5868
+  type: 'test'
+  ...
+# Subtest: fechamento 11. nao pode ser preenchido antes do status separado
+ok 202 - fechamento 11. nao pode ser preenchido antes do status separado
+  ---
+  duration_ms: 0.2581
+  type: 'test'
+  ...
+# Subtest: fechamento 12. conferencia obrigatoria precisa estar concluida
+ok 203 - fechamento 12. conferencia obrigatoria precisa estar concluida
+  ---
+  duration_ms: 0.2489
+  type: 'test'
+  ...
+# Subtest: fechamento 13. Admin nao assume responsabilidade da Logistica
+ok 204 - fechamento 13. Admin nao assume responsabilidade da Logistica
+  ---
+  duration_ms: 0.214
+  type: 'test'
+  ...
+# Subtest: fechamento 14. conta Logistica sem operador identificado e rejeitada
+ok 205 - fechamento 14. conta Logistica sem operador identificado e rejeitada
+  ---
+  duration_ms: 0.2003
+  type: 'test'
+  ...
+# Subtest: fechamento 15. registro valido persiste dados autoria horario e ocorrencia
+ok 206 - fechamento 15. registro valido persiste dados autoria horario e ocorrencia
+  ---
+  duration_ms: 0.3786
+  type: 'test'
+  ...
+# Subtest: fechamento 16. alteracao substitui resumo atual e preserva rastreio anterior
+ok 207 - fechamento 16. alteracao substitui resumo atual e preserva rastreio anterior
+  ---
+  duration_ms: 0.2974
+  type: 'test'
+  ...
+# Subtest: fechamento 17. Admin nao fatura novo pedido sem fechamento
+ok 208 - fechamento 17. Admin nao fatura novo pedido sem fechamento
+  ---
+  duration_ms: 0.3472
+  type: 'test'
+  ...
+# Subtest: fechamento 18. Logistica nao fatura mesmo depois do fechamento
+ok 209 - fechamento 18. Logistica nao fatura mesmo depois do fechamento
+  ---
+  duration_ms: 0.3009
+  type: 'test'
+  ...
+# Subtest: fechamento 19. faturamento pelo Admin exige numero da Nota Fiscal
+ok 210 - fechamento 19. faturamento pelo Admin exige numero da Nota Fiscal
+  ---
+  duration_ms: 0.3091
+  type: 'test'
+  ...
+# Subtest: fechamento 20. faturamento pelo Admin exige data de faturamento
+ok 211 - fechamento 20. faturamento pelo Admin exige data de faturamento
+  ---
+  duration_ms: 0.3003
+  type: 'test'
+  ...
+# Subtest: fechamento 21. Admin fatura com fechamento NF e data completos
+ok 212 - fechamento 21. Admin fatura com fechamento NF e data completos
+  ---
+  duration_ms: 0.3701
+  type: 'test'
+  ...
+# Subtest: fechamento 22. dados de envio continuam bloqueados antes de faturado
+ok 213 - fechamento 22. dados de envio continuam bloqueados antes de faturado
+  ---
+  duration_ms: 0.2608
+  type: 'test'
+  ...
+# Subtest: fechamento 23. nao pode ser alterado depois de faturado
+ok 214 - fechamento 23. nao pode ser alterado depois de faturado
+  ---
+  duration_ms: 0.2543
+  type: 'test'
+  ...
+# Subtest: fechamento 24. DTO do cliente remove obrigatoriedade dados e operador
+ok 215 - fechamento 24. DTO do cliente remove obrigatoriedade dados e operador
+  ---
+  duration_ms: 0.2892
+  type: 'test'
+  ...
+# Subtest: fechamento 25. timeline estrutura o registro atual sem duplicar sua ocorrencia
+ok 216 - fechamento 25. timeline estrutura o registro atual sem duplicar sua ocorrencia
+  ---
+  duration_ms: 0.5063
+  type: 'test'
+  ...
+# Subtest: fechamento 26. relatorio administrativo inclui o resumo completo
+ok 217 - fechamento 26. relatorio administrativo inclui o resumo completo
+  ---
+  duration_ms: 37.5289
+  type: 'test'
+  ...
+# Subtest: fechamento 27. dados fiscais obrigatorios nao podem ser apagados depois do faturamento
+ok 218 - fechamento 27. dados fiscais obrigatorios nao podem ser apagados depois do faturamento
+  ---
+  duration_ms: 0.2809
+  type: 'test'
+  ...
+# Subtest: ocorrencias guardam autoria interna e nunca sao entregues ao cliente
+ok 219 - ocorrencias guardam autoria interna e nunca sao entregues ao cliente
+  ---
+  duration_ms: 0.2963
+  type: 'test'
+  ...
+# Subtest: tentativas comerciais sao rejeitadas e nunca entram no plano
+ok 220 - tentativas comerciais sao rejeitadas e nunca entram no plano
+  ---
+  duration_ms: 0.2161
+  type: 'test'
+  ...
+# Subtest: cliente recebe tracking sem historico nem observacao interna
+ok 221 - cliente recebe tracking sem historico nem observacao interna
+  ---
+  duration_ms: 0.4365
+  type: 'test'
+  ...
+# Subtest: filtros logisticos validam paginacao, periodo e aguardando acao
+ok 222 - filtros logisticos validam paginacao, periodo e aguardando acao
+  ---
+  duration_ms: 0.6405
+  type: 'test'
+  ...
+# Subtest: pedido entregue deixa de atender ao filtro aguardando acao
+ok 223 - pedido entregue deixa de atender ao filtro aguardando acao
+  ---
+  duration_ms: 0.1705
+  type: 'test'
+  ...
+# Subtest: filtro da logistica esconde pendentes e admin pode consulta-los
+ok 224 - filtro da logistica esconde pendentes e admin pode consulta-los
+  ---
+  duration_ms: 0.1545
+  type: 'test'
+  ...
+# Subtest: PDF de separacao e protegido para admin e logistica
+ok 225 - PDF de separacao e protegido para admin e logistica
+  ---
+  duration_ms: 0.5052
+  type: 'test'
+  ...
+# Subtest: PDF de separacao contem produtos e quantidades sem dados comerciais
+ok 226 - PDF de separacao contem produtos e quantidades sem dados comerciais
+  ---
+  duration_ms: 0.2906
+  type: 'test'
+  ...
+# Subtest: auditoria registra a criacao a partir da data persistida
+ok 227 - auditoria registra a criacao a partir da data persistida
+  ---
+  duration_ms: 1.0087
+  type: 'test'
+  ...
+# Subtest: auditoria ordena todos os eventos cronologicamente
+ok 228 - auditoria ordena todos os eventos cronologicamente
+  ---
+  duration_ms: 0.8348
+  type: 'test'
+  ...
+# Subtest: auditoria nao duplica aprovacao quando ha historico de status
+ok 229 - auditoria nao duplica aprovacao quando ha historico de status
+  ---
+  duration_ms: 0.4346
+  type: 'test'
+  ...
+# Subtest: auditoria usa aprovacao estruturada como compatibilidade
+ok 230 - auditoria usa aprovacao estruturada como compatibilidade
+  ---
+  duration_ms: 0.4197
+  type: 'test'
+  ...
+# Subtest: auditoria mapeia faturamento envio e entrega somente do historico
+ok 231 - auditoria mapeia faturamento envio e entrega somente do historico
+  ---
+  duration_ms: 0.3866
+  type: 'test'
+  ...
+# Subtest: auditoria usa datas operacionais reais como fallback de pedidos antigos
+ok 232 - auditoria usa datas operacionais reais como fallback de pedidos antigos
+  ---
+  duration_ms: 0.376
+  type: 'test'
+  ...
+# Subtest: auditoria nao duplica datas operacionais quando o historico existe
+ok 233 - auditoria nao duplica datas operacionais quando o historico existe
+  ---
+  duration_ms: 0.4988
+  type: 'test'
+  ...
+# Subtest: auditoria registra inicio e conclusao reais da separacao
+ok 234 - auditoria registra inicio e conclusao reais da separacao
+  ---
+  duration_ms: 0.395
+  type: 'test'
+  ...
+# Subtest: auditoria registra inicio e conclusao da conferencia
+ok 235 - auditoria registra inicio e conclusao da conferencia
+  ---
+  duration_ms: 0.4305
+  type: 'test'
+  ...
+# Subtest: auditoria detalha divergencia por produto
+ok 236 - auditoria detalha divergencia por produto
+  ---
+  duration_ms: 0.5362
+  type: 'test'
+  ...
+# Subtest: auditoria elimina ocorrencias automaticas duplicadas da conferencia
+ok 237 - auditoria elimina ocorrencias automaticas duplicadas da conferencia
+  ---
+  duration_ms: 0.4529
+  type: 'test'
+  ...
+# Subtest: auditoria elimina ocorrencia automatica duplicada da conclusao da separacao
+ok 238 - auditoria elimina ocorrencia automatica duplicada da conclusao da separacao
+  ---
+  duration_ms: 0.3669
+  type: 'test'
+  ...
+# Subtest: auditoria preserva ocorrencias manuais mesmo se eram marcadas ao cliente
+ok 239 - auditoria preserva ocorrencias manuais mesmo se eram marcadas ao cliente
+  ---
+  duration_ms: 0.3745
+  type: 'test'
+  ...
+# Subtest: auditoria preserva alteracoes reais de item na separacao
+ok 240 - auditoria preserva alteracoes reais de item na separacao
+  ---
+  duration_ms: 0.3298
+  type: 'test'
+  ...
+# Subtest: auditoria nao infere etapas apenas pelo status atual
+ok 241 - auditoria nao infere etapas apenas pelo status atual
+  ---
+  duration_ms: 0.2206
+  type: 'test'
+  ...
+# Subtest: auditoria e compativel com pedido antigo sem conferencia
+ok 242 - auditoria e compativel com pedido antigo sem conferencia
+  ---
+  duration_ms: 0.245
+  type: 'test'
+  ...
+# Subtest: detalhe interno inclui timeline e mantem dados operacionais
+ok 243 - detalhe interno inclui timeline e mantem dados operacionais
+  ---
+  duration_ms: 0.3507
+  type: 'test'
+  ...
+# Subtest: DTO do cliente usa whitelist comercial exata para cada item
+ok 244 - DTO do cliente usa whitelist comercial exata para cada item
+  ---
+  duration_ms: 0.2353
+  type: 'test'
+  ...
+# Subtest: DTO do cliente remove todos os dados internos inclusive legado publico
+ok 245 - DTO do cliente remove todos os dados internos inclusive legado publico
+  ---
+  duration_ms: 0.2357
+  type: 'test'
+  ...
+# Subtest: DTO do cliente preserva status tracking e valores comerciais
+ok 246 - DTO do cliente preserva status tracking e valores comerciais
+  ---
+  duration_ms: 0.1981
+  type: 'test'
+  ...
+# Subtest: pedido entregue nao oferece transicao nem para Admin
+ok 247 - pedido entregue nao oferece transicao nem para Admin
+  ---
+  duration_ms: 0.1534
+  type: 'test'
+  ...
+# Subtest: historico de entrega tambem encerra pedido que ja foi regredido no legado
+ok 248 - historico de entrega tambem encerra pedido que ja foi regredido no legado
+  ---
+  duration_ms: 0.2076
+  type: 'test'
+  ...
+# Subtest: pedido entregue rejeita tambem mutacao sem regressao
+ok 249 - pedido entregue rejeita tambem mutacao sem regressao
+  ---
+  duration_ms: 0.1338
+  type: 'test'
+  ...
+# Subtest: atualizador generico rejeita regressao de pedido entregue
+ok 250 - atualizador generico rejeita regressao de pedido entregue
+  ---
+  duration_ms: 0.2652
+  type: 'test'
+  ...
+# Subtest: ocorrencia pedida como cliente e normalizada para interna
+ok 251 - ocorrencia pedida como cliente e normalizada para interna
+  ---
+  duration_ms: 0.2436
+  type: 'test'
+  ...
+# Subtest: relatorio operacional possui rota exclusiva de Admin
+ok 252 - relatorio operacional possui rota exclusiva de Admin
+  ---
+  duration_ms: 0.1493
+  type: 'test'
+  ...
+# Subtest: dados do relatorio identificam aprovacao separacao conferencia e final
+ok 253 - dados do relatorio identificam aprovacao separacao conferencia e final
+  ---
+  duration_ms: 3.6511
+  type: 'test'
+  ...
+# Subtest: dados do relatorio incluem quantidades solicitada separada conferida final e faltante
+ok 254 - dados do relatorio incluem quantidades solicitada separada conferida final e faltante
+  ---
+  duration_ms: 3.0573
+  type: 'test'
+  ...
+# Subtest: dados do relatorio legado sinalizam ausencias sem inventar conferencia
+ok 255 - dados do relatorio legado sinalizam ausencias sem inventar conferencia
+  ---
+  duration_ms: 0.7224
+  type: 'test'
+  ...
+# Subtest: relatorio reconhece entrega persistida mesmo com status legado regredido
+ok 256 - relatorio reconhece entrega persistida mesmo com status legado regredido
+  ---
+  duration_ms: 0.7611
+  type: 'test'
+  ...
+# Subtest: dados do relatorio nao carregam precos comerciais nos itens
+ok 257 - dados do relatorio nao carregam precos comerciais nos itens
+  ---
+  duration_ms: 2.8926
+  type: 'test'
+  ...
+# Subtest: servico gera arquivo PDF e headers de download
+ok 258 - servico gera arquivo PDF e headers de download
+  ---
+  duration_ms: 249.8166
+  type: 'test'
+  ...
+# Subtest: schema de usuario aceita o papel marketing
+ok 259 - schema de usuario aceita o papel marketing
+  ---
+  duration_ms: 2.2778
+  type: 'test'
+  ...
+# Subtest: marketing acessa somente a gestao de conteudo, nao rotas admin
+ok 260 - marketing acessa somente a gestao de conteudo, nao rotas admin
+  ---
+  duration_ms: 0.8113
+  type: 'test'
+  ...
+# Subtest: rotas de marketing e banners aplicam os papeis corretos
+ok 261 - rotas de marketing e banners aplicam os papeis corretos
+  ---
+  duration_ms: 0.4164
+  type: 'test'
+  ...
+# Subtest: audiencia especifica exige IDs validos e o filtro inclui apenas o cliente
+ok 262 - audiencia especifica exige IDs validos e o filtro inclui apenas o cliente
+  ---
+  duration_ms: 2.985
+  type: 'test'
+  ...
+# Subtest: filtros do cliente exigem status, data e audiencia
+ok 263 - filtros do cliente exigem status, data e audiencia
+  ---
+  duration_ms: 0.5188
+  type: 'test'
+  ...
+# Subtest: banner valida datas, audiencia e ignora campos internos
+ok 264 - banner valida datas, audiencia e ignora campos internos
+  ---
+  duration_ms: 0.717
+  type: 'test'
+  ...
+# Subtest: materiais continuam usando link do Drive sem upload de documento
+ok 265 - materiais continuam usando link do Drive sem upload de documento
+  ---
+  duration_ms: 0.3202
+  type: 'test'
+  ...
+# Subtest: edicao de banner preserva imagem e ignora autoria enviada
+ok 266 - edicao de banner preserva imagem e ignora autoria enviada
+  ---
+  duration_ms: 1.7097
+  type: 'test'
+  ...
+# Subtest: status e exclusao de banner usam somente o registro localizado
+ok 267 - status e exclusao de banner usam somente o registro localizado
+  ---
+  duration_ms: 1.3309
+  type: 'test'
+  ...
+# Subtest: rota do cliente exige autenticacao
+ok 268 - rota do cliente exige autenticacao
+  ---
+  duration_ms: 2.6473
+  type: 'test'
+  ...
+# Subtest: cliente nao passa pelo middleware de gestao de conteudo
+ok 269 - cliente nao passa pelo middleware de gestao de conteudo
+  ---
+  duration_ms: 0.3946
+  type: 'test'
+  ...
+# Subtest: cliente consulta somente materiais ativos
+ok 270 - cliente consulta somente materiais ativos
+  ---
+  duration_ms: 0.5484
+  type: 'test'
+  ...
+# Subtest: valida URLs e recusa protocolos inseguros
+ok 271 - valida URLs e recusa protocolos inseguros
+  ---
+  duration_ms: 0.2666
+  type: 'test'
+  ...
+# Subtest: material aceita somente links seguros do Google Drive
+ok 272 - material aceita somente links seguros do Google Drive
+  ---
+  duration_ms: 1.1303
+  type: 'test'
+  ...
+# Subtest: valida obrigatorios, limite e campos desconhecidos
+ok 273 - valida obrigatorios, limite e campos desconhecidos
+  ---
+  duration_ms: 0.5793
+  type: 'test'
+  ...
+# Subtest: busca, filtros e ordenacao usam os criterios esperados
+ok 274 - busca, filtros e ordenacao usam os criterios esperados
+  ---
+  duration_ms: 1.1691
+  type: 'test'
+  ...
+# Subtest: administrador cria material valido com autoria do token
+ok 275 - administrador cria material valido com autoria do token
+  ---
+  duration_ms: 1.813
+  type: 'test'
+  ...
+# Subtest: administrador edita apenas campos permitidos
+ok 276 - administrador edita apenas campos permitidos
+  ---
+  duration_ms: 1.4224
+  type: 'test'
+  ...
+# Subtest: administrador ativa e desativa um material
+ok 277 - administrador ativa e desativa um material
+  ---
+  duration_ms: 1.1475
+  type: 'test'
+  ...
+# Subtest: regressão: aprovado sem início de separação não gera necessidade
+ok 278 - regressão: aprovado sem início de separação não gera necessidade
+  ---
+  duration_ms: 2.9281
+  type: 'test'
+  ...
+# Subtest: regressão: separação iniciada com 0 de 10 gera falta 10
+ok 279 - regressão: separação iniciada com 0 de 10 gera falta 10
+  ---
+  duration_ms: 1.0904
+  type: 'test'
+  ...
+# Subtest: regressão: separação iniciada com 4 de 10 gera falta 6
+ok 280 - regressão: separação iniciada com 4 de 10 gera falta 6
+  ---
+  duration_ms: 0.3241
+  type: 'test'
+  ...
+# Subtest: regressão: separação iniciada com 10 de 10 gera falta 0
+ok 281 - regressão: separação iniciada com 10 de 10 gera falta 0
+  ---
+  duration_ms: 0.2603
+  type: 'test'
+  ...
+# Subtest: regressão: dois pedidos não iniciados não aparecem no consolidado
+ok 282 - regressão: dois pedidos não iniciados não aparecem no consolidado
+  ---
+  duration_ms: 0.4743
+  type: 'test'
+  ...
+# Subtest: regressão: falta real de 5 não soma solicitação de 20 de pedido não iniciado
+ok 283 - regressão: falta real de 5 não soma solicitação de 20 de pedido não iniciado
+  ---
+  duration_ms: 0.3099
+  type: 'test'
+  ...
+# Subtest: etapa atual de separação comprova início; aprovação e etapas encerradas não geram falta
+ok 284 - etapa atual de separação comprova início; aprovação e etapas encerradas não geram falta
+  ---
+  duration_ms: 0.4862
+  type: 'test'
+  ...
+# Subtest: quantidades, aprovação e operador isolados não comprovam início da separação
+ok 285 - quantidades, aprovação e operador isolados não comprovam início da separação
+  ---
+  duration_ms: 0.5041
+  type: 'test'
+  ...
+# Subtest: histórico de separação não inclui pedido que já saiu da etapa
+ok 286 - histórico de separação não inclui pedido que já saiu da etapa
+  ---
+  duration_ms: 0.6557
+  type: 'test'
+  ...
+# Subtest: início comprovado no histórico não reabre pedidos cancelados ou posteriores ao faturamento
+ok 287 - início comprovado no histórico não reabre pedidos cancelados ou posteriores ao faturamento
+  ---
+  duration_ms: 0.748
+  type: 'test'
+  ...
+# Subtest: consolida produtos por ID em todos os pedidos, conta pedidos distintos e ordena por falta
+ok 288 - consolida produtos por ID em todos os pedidos, conta pedidos distintos e ordena por falta
+  ---
+  duration_ms: 0.8362
+  type: 'test'
+  ...
+# Subtest: necessidade usa quantidade separada independentemente da conferência
+ok 289 - necessidade usa quantidade separada independentemente da conferência
+  ---
+  duration_ms: 0.501
+  type: 'test'
+  ...
+# Subtest: pedido iniciado inclui itens pendentes e sem registro, inclusive em separação reaberta
+ok 290 - pedido iniciado inclui itens pendentes e sem registro, inclusive em separação reaberta
+  ---
+  duration_ms: 0.3863
+  type: 'test'
+  ...
+# Subtest: quantidades completas/excedentes não geram demanda nem compensam faltas de outros pedidos
+ok 291 - quantidades completas/excedentes não geram demanda nem compensam faltas de outros pedidos
+  ---
+  duration_ms: 0.2153
+  type: 'test'
+  ...
+# Subtest: não reabre demanda de pedido entregue com status inconsistente
+ok 292 - não reabre demanda de pedido entregue com status inconsistente
+  ---
+  duration_ms: 0.2635
+  type: 'test'
+  ...
+# Subtest: consolidação não corta a demanda na primeira página, não une nomes iguais e não altera documentos
+ok 293 - consolidação não corta a demanda na primeira página, não une nomes iguais e não altera documentos
+  ---
+  duration_ms: 21.5164
+  type: 'test'
+  ...
+# Subtest: HTTP: Admin/Logística consultam necessidade; demais perfis e sessão ausente são bloqueados
+ok 294 - HTTP: Admin/Logística consultam necessidade; demais perfis e sessão ausente são bloqueados
+  ---
+  duration_ms: 81.9511
+  type: 'test'
+  ...
+# Subtest: HTTP: Logística recebe pedido sem valores após edição e separação e não acessa rotas comerciais
+ok 295 - HTTP: Logística recebe pedido sem valores após edição e separação e não acessa rotas comerciais
+  ---
+  duration_ms: 99.8634
+  type: 'test'
+  ...
+# Subtest: HTTP: inclusão por admin inicializa 10/0/10 e preserva itens separados e permissões
+ok 296 - HTTP: inclusão por admin inicializa 10/0/10 e preserva itens separados e permissões
+  ---
+  duration_ms: 96.3207
+  type: 'test'
+  ...
+# Subtest: HTTP: inclusão por comercial inicializa 10/0/10 e preserva itens separados e permissões
+ok 297 - HTTP: inclusão por comercial inicializa 10/0/10 e preserva itens separados e permissões
+  ---
+  duration_ms: 82.3382
+  type: 'test'
+  ...
+# Subtest: HTTP: endpoints comerciais exigem o Comercial sem ampliar cadastro administrativo ou criação do cliente
+ok 298 - HTTP: endpoints comerciais exigem o Comercial sem ampliar cadastro administrativo ou criação do cliente
+  ---
+  duration_ms: 35.1489
+  type: 'test'
+  ...
+# Subtest: HTTP: diferentes distribuidores usam seus próprios preços; origem/autoria/status não podem ser forjados
+ok 299 - HTTP: diferentes distribuidores usam seus próprios preços; origem/autoria/status não podem ser forjados
+  ---
+  duration_ms: 26.7326
+  type: 'test'
+  ...
+# Subtest: HTTP: cliente continua dono e origem Cliente, mesmo enviando distribuidor/autoria falsos
+ok 300 - HTTP: cliente continua dono e origem Cliente, mesmo enviando distribuidor/autoria falsos
+  ---
+  duration_ms: 7.2435
+  type: 'test'
+  ...
+# Subtest: HTTP: preço e nome vêm do cadastro; preço zero é válido e item sem preço impede pedido parcial
+ok 301 - HTTP: preço e nome vêm do cadastro; preço zero é válido e item sem preço impede pedido parcial
+  ---
+  duration_ms: 12.6813
+  type: 'test'
+  ...
+# Subtest: schema exige responsável comercial e mantém identidade de criação imutável
+ok 302 - schema exige responsável comercial e mantém identidade de criação imutável
+  ---
+  duration_ms: 9.8001
+  type: 'test'
+  ...
+# Subtest: HTTP: valida elegibilidade, tabela vigente, produtos e quantidades antes de persistir
+ok 303 - HTTP: valida elegibilidade, tabela vigente, produtos e quantidades antes de persistir
+  ---
+  duration_ms: 58.2966
+  type: 'test'
+  ...
+# Subtest: HTTP: entrar em separação gera demanda imediatamente e cada alteração recalcula o faltante
+ok 304 - HTTP: entrar em separação gera demanda imediatamente e cada alteração recalcula o faltante
+  ---
+  duration_ms: 44.3381
+  type: 'test'
+  ...
+# Subtest: formulário → API → necessidade inclui item vazio enquanto outro tem falta registrada
+ok 305 - formulário → API → necessidade inclui item vazio enquanto outro tem falta registrada
+  ---
+  duration_ms: 13.4894
+  type: 'test'
+  ...
+# Subtest: listagem de distribuidores usa projeção mínima e somente clientes elegíveis
+ok 306 - listagem de distribuidores usa projeção mínima e somente clientes elegíveis
+  ---
+  duration_ms: 0.5568
+  type: 'test'
+  ...
+# Subtest: HTTP: carteira valida IDs em clientes, catálogo, criação, detalhes, PDF e edição
+ok 307 - HTTP: carteira valida IDs em clientes, catálogo, criação, detalhes, PDF e edição
+  ---
+  duration_ms: 35.98
+  type: 'test'
+  ...
+# Subtest: HTTP: tela de pedidos do vendedor consulta produtos auxiliares, sem poder alterar catálogo
+ok 308 - HTTP: tela de pedidos do vendedor consulta produtos auxiliares, sem poder alterar catálogo
+  ---
+  duration_ms: 10.7561
+  type: 'test'
+  ...
+# Subtest: HTTP: vendedor acompanha pedido do distribuidor, edita antes da operação e respeita transferência
+ok 309 - HTTP: vendedor acompanha pedido do distribuidor, edita antes da operação e respeita transferência
+  ---
+  duration_ms: 38.4441
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial preserva escopo global e ganha treinamento por permissão
+ok 310 - HTTP: Comercial preserva escopo global e ganha treinamento por permissão
+  ---
+  duration_ms: 18.6395
+  type: 'test'
+  ...
+# Subtest: HTTP: Admin atribui e troca vendedor; outras contas não gerenciam usuários
+ok 311 - HTTP: Admin atribui e troca vendedor; outras contas não gerenciam usuários
+  ---
+  duration_ms: 18.5332
+  type: 'test'
+  ...
+# Subtest: HTTP: Admin cria pessoa, valida campos e altera perfil, permissões e status com invalidação da sessão
+ok 312 - HTTP: Admin cria pessoa, valida campos e altera perfil, permissões e status com invalidação da sessão
+  ---
+  duration_ms: 307.9597
+  type: 'test'
+  ...
+# Subtest: HTTP: sessão legada sem permissões ou carteira mantém identidade e acesso padrão
+ok 313 - HTTP: sessão legada sem permissões ou carteira mantém identidade e acesso padrão
+  ---
+  duration_ms: 12.9642
+  type: 'test'
+  ...
+# Subtest: HTTP: regressão completa cliente → produção → separação → conferência → faturamento → recebimento
+ok 314 - HTTP: regressão completa cliente → produção → separação → conferência → faturamento → recebimento
+  ---
+  duration_ms: 60.8019
+  type: 'test'
+  ...
+# Subtest: HTTP: regressão completa vendedor → produção → separação → conferência → faturamento → recebimento
+ok 315 - HTTP: regressão completa vendedor → produção → separação → conferência → faturamento → recebimento
+  ---
+  duration_ms: 58.6506
+  type: 'test'
+  ...
+# Subtest: HTTP: presets e permissões efetivas são fornecidos pelo backend
+ok 316 - HTTP: presets e permissões efetivas são fornecidos pelo backend
+  ---
+  duration_ms: 7.987
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial não executa criarTreinamentos por padrão (POST)
+ok 317 - HTTP: Comercial não executa criarTreinamentos por padrão (POST)
+  ---
+  duration_ms: 4.4617
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial não executa editarTreinamentos por padrão (PUT)
+ok 318 - HTTP: Comercial não executa editarTreinamentos por padrão (PUT)
+  ---
+  duration_ms: 4.1368
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial não executa editarTreinamentos por padrão (PATCH)
+ok 319 - HTTP: Comercial não executa editarTreinamentos por padrão (PATCH)
+  ---
+  duration_ms: 4.2967
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial não executa excluirTreinamentos por padrão (DELETE)
+ok 320 - HTTP: Comercial não executa excluirTreinamentos por padrão (DELETE)
+  ---
+  duration_ms: 4.6836
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial consulta treinamento e indicadores sem permissão de escrita
+ok 321 - HTTP: Comercial consulta treinamento e indicadores sem permissão de escrita
+  ---
+  duration_ms: 6.9537
+  type: 'test'
+  ...
+# Subtest: HTTP: Comercial não recebe materiais e respeita overrides
+ok 322 - HTTP: Comercial não recebe materiais e respeita overrides
+  ---
+  duration_ms: 6.9294
+  type: 'test'
+  ...
+# Subtest: HTTP: troca e remoção atualizam escopo e retornam cliente atualizado
+ok 323 - HTTP: troca e remoção atualizam escopo e retornam cliente atualizado
+  ---
+  duration_ms: 25.1956
+  type: 'test'
+  ...
+# Subtest: HTTP: acompanhamento inclui público elegível que ainda não iniciou
+ok 324 - HTTP: acompanhamento inclui público elegível que ainda não iniciou
+  ---
+  duration_ms: 5.0997
+  type: 'test'
+  ...
+# Subtest: HTTP: conflito concorrente na atribuição não sobrescreve outra relação
+ok 325 - HTTP: conflito concorrente na atribuição não sobrescreve outra relação
+  ---
+  duration_ms: 4.4521
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica primeira atribuição
+ok 326 - HTTP: atribuição atômica primeira atribuição
+  ---
+  duration_ms: 4.8346
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica primeira atribuição desatualizada
+ok 327 - HTTP: atribuição atômica primeira atribuição desatualizada
+  ---
+  duration_ms: 4.2577
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica troca A para B
+ok 328 - HTTP: atribuição atômica troca A para B
+  ---
+  duration_ms: 4.1198
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica troca com responsável desatualizado
+ok 329 - HTTP: atribuição atômica troca com responsável desatualizado
+  ---
+  duration_ms: 4.6783
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica remoção
+ok 330 - HTTP: atribuição atômica remoção
+  ---
+  duration_ms: 4.1937
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica remoção desatualizada
+ok 331 - HTTP: atribuição atômica remoção desatualizada
+  ---
+  duration_ms: 4.247
+  type: 'test'
+  ...
+# Subtest: HTTP: atribuição atômica Comercial para Vendedor
+ok 332 - HTTP: atribuição atômica Comercial para Vendedor
+  ---
+  duration_ms: 4.1442
+  type: 'test'
+  ...
+# Subtest: HTTP: duas escritas concorrentes possuem apenas um vencedor e uma auditoria
+ok 333 - HTTP: duas escritas concorrentes possuem apenas um vencedor e uma auditoria
+  ---
+  duration_ms: 7.5243
+  type: 'test'
+  ...
+# Subtest: HTTP: responsável esperado obrigatório e validado (undefined)
+ok 334 - HTTP: responsável esperado obrigatório e validado (undefined)
+  ---
+  duration_ms: 4.4879
+  type: 'test'
+  ...
+# Subtest: HTTP: responsável esperado obrigatório e validado ("")
+ok 335 - HTTP: responsável esperado obrigatório e validado ("")
+  ---
+  duration_ms: 4.3773
+  type: 'test'
+  ...
+# Subtest: HTTP: responsável esperado obrigatório e validado ("invalido")
+ok 336 - HTTP: responsável esperado obrigatório e validado ("invalido")
+  ---
+  duration_ms: 4.2044
+  type: 'test'
+  ...
+# Subtest: HTTP: responsável esperado obrigatório e validado ({})
+ok 337 - HTTP: responsável esperado obrigatório e validado ({})
+  ---
+  duration_ms: 3.9425
+  type: 'test'
+  ...
+# Subtest: HTTP: responsável esperado obrigatório e validado (false)
+ok 338 - HTTP: responsável esperado obrigatório e validado (false)
+  ---
+  duration_ms: 4.5208
+  type: 'test'
+  ...
+# Subtest: HTTP: responsáveis retorna apenas Vendedor e Comercial ativos com campos mínimos
+ok 339 - HTTP: responsáveis retorna apenas Vendedor e Comercial ativos com campos mínimos
+  ---
+  duration_ms: 6.6132
+  type: 'test'
+  ...
+# Subtest: model de operador oculta pinHash e preserva auditoria administrativa
+ok 340 - model de operador oculta pinHash e preserva auditoria administrativa
+  ---
+  duration_ms: 4.8059
+  type: 'test'
+  ...
+# Subtest: Admin cadastra operador com bcrypt e API nunca devolve o hash
+ok 341 - Admin cadastra operador com bcrypt e API nunca devolve o hash
+  ---
+  duration_ms: 158.848
+  type: 'test'
+  ...
+# Subtest: Admin altera nome, desativa e redefine PIN sem expor o hash
+ok 342 - Admin altera nome, desativa e redefine PIN sem expor o hash
+  ---
+  duration_ms: 139.1862
+  type: 'test'
+  ...
+# Subtest: Logística lista somente id e nome de operadores ativos
+ok 343 - Logística lista somente id e nome de operadores ativos
+  ---
+  duration_ms: 1.3447
+  type: 'test'
+  ...
+# Subtest: somente a conta Logística consulta e valida operadores
+ok 344 - somente a conta Logística consulta e valida operadores
+  ---
+  duration_ms: 0.4602
+  type: 'test'
+  ...
+# Subtest: rotas aplicam autorização, limitação de PIN e contexto por pedido
+ok 345 - rotas aplicam autorização, limitação de PIN e contexto por pedido
+  ---
+  duration_ms: 0.4048
+  type: 'test'
+  ...
+# Subtest: PIN incorreto e operador inativo não liberam o pedido
+ok 346 - PIN incorreto e operador inativo não liberam o pedido
+  ---
+  duration_ms: 4.3912
+  type: 'test'
+  ...
+# Subtest: PIN correto emite contexto curto vinculado a usuário, operador e pedido
+ok 347 - PIN correto emite contexto curto vinculado a usuário, operador e pedido
+  ---
+  duration_ms: 7.9175
+  type: 'test'
+  ...
+# Subtest: middleware rejeita ausência, adulteração, outro pedido e operador inativo
+ok 348 - middleware rejeita ausência, adulteração, outro pedido e operador inativo
+  ---
+  duration_ms: 3.1667
+  type: 'test'
+  ...
+# Subtest: contexto expirado ou emitido para outra conta é rejeitado
+ok 349 - contexto expirado ou emitido para outra conta é rejeitado
+  ---
+  duration_ms: 3.1729
+  type: 'test'
+  ...
+# Subtest: contexto válido define autoria no backend e Admin não precisa de PIN
+ok 350 - contexto válido define autoria no backend e Admin não precisa de PIN
+  ---
+  duration_ms: 1.7386
+  type: 'test'
+  ...
+# Subtest: Pedro separa e Wesley confere com snapshots independentes
+ok 351 - Pedro separa e Wesley confere com snapshots independentes
+  ---
+  duration_ms: 20.226
+  type: 'test'
+  ...
+# Subtest: troca de operador na mesma separação preserva todos os eventos
+ok 352 - troca de operador na mesma separação preserva todos os eventos
+  ---
+  duration_ms: 0.5789
+  type: 'test'
+  ...
+# Subtest: Wesley separa e Pedro precisa corrigir a divergência antes de concluir
+ok 353 - Wesley separa e Pedro precisa corrigir a divergência antes de concluir
+  ---
+  duration_ms: 1.0999
+  type: 'test'
+  ...
+# Subtest: histórico legado e DTO do cliente continuam sem dados de operador
+ok 354 - histórico legado e DTO do cliente continuam sem dados de operador
+  ---
+  duration_ms: 0.3777
+  type: 'test'
+  ...
+# Subtest: GET e PATCH preservam a visibilidade financeira do perfil logistica
+ok 355 - GET e PATCH preservam a visibilidade financeira do perfil logistica
+  ---
+  duration_ms: 8.1894
+  type: 'test'
+  ...
+# Subtest: GET e PATCH preservam a visibilidade financeira do perfil admin
+ok 356 - GET e PATCH preservam a visibilidade financeira do perfil admin
+  ---
+  duration_ms: 1.4048
+  type: 'test'
+  ...
+# Subtest: resposta da edição calcula faltante ao adicionar item e ao igualar pedido e separação
+ok 357 - resposta da edição calcula faltante ao adicionar item e ao igualar pedido e separação
+  ---
+  duration_ms: 0.9183
+  type: 'test'
+  ...
+# Subtest: API calcula faltante pela separação e preserva quantidade final como informação distinta
+ok 358 - API calcula faltante pela separação e preserva quantidade final como informação distinta
+  ---
+  duration_ms: 0.2986
+  type: 'test'
+  ...
+# Subtest: PDF de separação contém somente produtos e quantidades
+ok 359 - PDF de separação contém somente produtos e quantidades
+  ---
+  duration_ms: 20.617
+  type: 'test'
+  ...
+# Subtest: admin: consulta lista e detalhes de pedido de outro usuário
+ok 360 - admin: consulta lista e detalhes de pedido de outro usuário
+  ---
+  duration_ms: 17.8293
+  type: 'test'
+  ...
+# Subtest: admin: edição usa preços vigentes e persiste autoria em todos os históricos
+ok 361 - admin: edição usa preços vigentes e persiste autoria em todos os históricos
+  ---
+  duration_ms: 18.3327
+  type: 'test'
+  ...
+# Subtest: admin: edição preserva validação, versão e bloqueio após faturamento
+ok 362 - admin: edição preserva validação, versão e bloqueio após faturamento
+  ---
+  duration_ms: 2.3957
+  type: 'test'
+  ...
+# Subtest: admin: exclusão preserva remoção, pedido inexistente e bloqueio de entrega
+ok 363 - admin: exclusão preserva remoção, pedido inexistente e bloqueio de entrega
+  ---
+  duration_ms: 1.4575
+  type: 'test'
+  ...
+# Subtest: comercial: consulta lista e detalhes de pedido de outro usuário
+ok 364 - comercial: consulta lista e detalhes de pedido de outro usuário
+  ---
+  duration_ms: 1.5494
+  type: 'test'
+  ...
+# Subtest: comercial: edição usa preços vigentes e persiste autoria em todos os históricos
+ok 365 - comercial: edição usa preços vigentes e persiste autoria em todos os históricos
+  ---
+  duration_ms: 10.189
+  type: 'test'
+  ...
+# Subtest: comercial: edição preserva validação, versão e bloqueio após faturamento
+ok 366 - comercial: edição preserva validação, versão e bloqueio após faturamento
+  ---
+  duration_ms: 1.0563
+  type: 'test'
+  ...
+# Subtest: comercial: exclusão preserva remoção, pedido inexistente e bloqueio de entrega
+ok 367 - comercial: exclusão preserva remoção, pedido inexistente e bloqueio de entrega
+  ---
+  duration_ms: 0.937
+  type: 'test'
+  ...
+# Subtest: estatística trata lista vazia, um valor, pares, ímpares, outlier e inválidos
+ok 368 - estatística trata lista vazia, um valor, pares, ímpares, outlier e inválidos
+  ---
+  duration_ms: 1.7051
+  type: 'test'
+  ...
+# Subtest: duração valida exige dois marcos coerentes
+ok 369 - duração valida exige dois marcos coerentes
+  ---
+  duration_ms: 0.1698
+  type: 'test'
+  ...
+# Subtest: alerta usa limite fixo com amostra pequena e P90 com amostra suficiente
+ok 370 - alerta usa limite fixo com amostra pequena e P90 com amostra suficiente
+  ---
+  duration_ms: 0.1766
+  type: 'test'
+  ...
+# Subtest: filtro de período respeita São Paulo, presets, intervalo máximo e operador
+ok 371 - filtro de período respeita São Paulo, presets, intervalo máximo e operador
+  ---
+  duration_ms: 1.1406
+  type: 'test'
+  ...
+# Subtest: cenário controlado calcula exatamente os oito tempos pedidos
+ok 372 - cenário controlado calcula exatamente os oito tempos pedidos
+  ---
+  duration_ms: 0.9081
+  type: 'test'
+  ...
+# Subtest: ausência de etapas e duração negativa não contaminam médias
+ok 373 - ausência de etapas e duração negativa não contaminam médias
+  ---
+  duration_ms: 1.2928
+  type: 'test'
+  ...
+# Subtest: qualidade agrega faltas, divergências e produtos sem confundir venda
+ok 374 - qualidade agrega faltas, divergências e produtos sem confundir venda
+  ---
+  duration_ms: 0.599
+  type: 'test'
+  ...
+# Subtest: pedidos demorados são ordenados por tempo total
+ok 375 - pedidos demorados são ordenados por tempo total
+  ---
+  duration_ms: 0.419
+  type: 'test'
+  ...
+# Subtest: Pedro separa e Wesley confere sem misturar durações
+ok 376 - Pedro separa e Wesley confere sem misturar durações
+  ---
+  duration_ms: 2.6411
+  type: 'test'
+  ...
+# Subtest: dois operadores na mesma separação preservam eventos mas não recebem duração falsa
+ok 377 - dois operadores na mesma separação preservam eventos mas não recebem duração falsa
+  ---
+  duration_ms: 1.1834
+  type: 'test'
+  ...
+# Subtest: filtro por operador usa snapshots inclusive de operador desativado
+ok 378 - filtro por operador usa snapshots inclusive de operador desativado
+  ---
+  duration_ms: 1.0841
+  type: 'test'
+  ...
+# Subtest: métricas preservam a conferência arquivada após alteração administrativa
+ok 379 - métricas preservam a conferência arquivada após alteração administrativa
+  ---
+  duration_ms: 0.4545
+  type: 'test'
+  ...
+# Subtest: pedidos ativos diferenciam fila, operação e acima do padrão; entregues não entram
+ok 380 - pedidos ativos diferenciam fila, operação e acima do padrão; entregues não entram
+  ---
+  duration_ms: 0.5852
+  type: 'test'
+  ...
+# Subtest: rota de métricas exige autenticação e perfil Admin no backend
+ok 381 - rota de métricas exige autenticação e perfil Admin no backend
+  ---
+  duration_ms: 0.3084
+  type: 'test'
+  ...
+# Subtest: resposta de métricas não expõe valores ou dados internos de cliente
+ok 382 - resposta de métricas não expõe valores ou dados internos de cliente
+  ---
+  duration_ms: 0.3663
+  type: 'test'
+  ...
+# Subtest: dados do PDF respeitam filtros, amostras e também aceitam período vazio
+ok 383 - dados do PDF respeitam filtros, amostras e também aceitam período vazio
+  ---
+  duration_ms: 0.5992
+  type: 'test'
+  ...
+# Subtest: PDF de métricas gera arquivo legível mesmo sem dados
+ok 384 - PDF de métricas gera arquivo legível mesmo sem dados
+  ---
+  duration_ms: 81.5624
+  type: 'test'
+  ...
+# Subtest: instrumentacao remove query strings e ids dos caminhos
+ok 385 - instrumentacao remove query strings e ids dos caminhos
+  ---
+  duration_ms: 1.3519
+  type: 'test'
+  ...
+# Subtest: pipeline de clientes preserva defaults e remove dados sensiveis
+ok 386 - pipeline de clientes preserva defaults e remove dados sensiveis
+  ---
+  duration_ms: 1.2722
+  type: 'test'
+  ...
+# Subtest: pipeline de clientes pendentes mantem o filtro administrativo
+ok 387 - pipeline de clientes pendentes mantem o filtro administrativo
+  ---
+  duration_ms: 0.2826
+  type: 'test'
+  ...
+# Subtest: pipeline de precos converte o id e faz lookup dos produtos
+ok 388 - pipeline de precos converte o id e faz lookup dos produtos
+  ---
+  duration_ms: 1.8364
+  type: 'test'
+  ...
+# Subtest: dashboard limita concorrencia e preserva a ordem dos resultados
+ok 389 - dashboard limita concorrencia e preserva a ordem dos resultados
+  ---
+  duration_ms: 39.038
+  type: 'test'
+  ...
+# Subtest: planeja somente tipo do Distribuidor e criacao de Cliente Final Loja
+ok 390 - planeja somente tipo do Distribuidor e criacao de Cliente Final Loja
+  ---
+  duration_ms: 3.4902
+  type: 'test'
+  ...
+# Subtest: reutiliza candidata unica de Loja e planeja somente seu tipo ausente
+ok 391 - reutiliza candidata unica de Loja e planeja somente seu tipo ausente
+  ---
+  duration_ms: 0.8354
+  type: 'test'
+  ...
+# Subtest: nunca considera Atacado como candidata a Cliente Final Loja
+ok 392 - nunca considera Atacado como candidata a Cliente Final Loja
+  ---
+  duration_ms: 0.9328
+  type: 'test'
+  ...
+# Subtest: interrompe em conflitos de nome, tipo e duplicidade
+ok 393 - interrompe em conflitos de nome, tipo e duplicidade
+  ---
+  duration_ms: 0.4988
+  type: 'test'
+  ...
+# Subtest: bloqueia mutacao fora de test ou staging
+ok 394 - bloqueia mutacao fora de test ou staging
+  ---
+  duration_ms: 2.0183
+  type: 'test'
+  ...
+# Subtest: permite mutacao em test e staging
+ok 395 - permite mutacao em test e staging
+  ---
+  duration_ms: 0.5824
+  type: 'test'
+  ...
+# Subtest: permite confirmacao explicita com variavel nominal
+ok 396 - permite confirmacao explicita com variavel nominal
+  ---
+  duration_ms: 1.1117
+  type: 'test'
+  ...
+# Subtest: todos e somente ativos; produtos e outras tabelas não entram nas operações
+ok 397 - todos e somente ativos; produtos e outras tabelas não entram nas operações
+  ---
+  duration_ms: 1.9373
+  type: 'test'
+  ...
+# Subtest: sincroniza preço errado e remove apenas associações inativas/órfãs da demonstração
+ok 398 - sincroniza preço errado e remove apenas associações inativas/órfãs da demonstração
+  ---
+  duration_ms: 0.5094
+  type: 'test'
+  ...
+# Subtest: duplicatas e status desconhecido bloqueiam
+ok 399 - duplicatas e status desconhecido bloqueiam
+  ---
+  duration_ms: 0.4352
+  type: 'test'
+  ...
+# Subtest: auditoria e reexecução detectam omissões, preço errado, duplicatas e alterações alheias
+ok 400 - auditoria e reexecução detectam omissões, preço errado, duplicatas e alterações alheias
+  ---
+  duration_ms: 16.6191
+  type: 'test'
+  ...
+# Subtest: rotas de conteúdo exigem autenticação e perfil externo permitido
+ok 401 - rotas de conteúdo exigem autenticação e perfil externo permitido
+  ---
+  duration_ms: 1.9129
+  type: 'test'
+  ...
+# Subtest: cliente nao aprovado e interrompido pelo middleware
+ok 402 - cliente nao aprovado e interrompido pelo middleware
+  ---
+  duration_ms: 5.3404
+  type: 'test'
+  ...
+# Subtest: cliente não gerencia treinamentos e Marketing compartilha a gestão
+ok 403 - cliente não gerencia treinamentos e Marketing compartilha a gestão
+  ---
+  duration_ms: 0.2249
+  type: 'test'
+  ...
+# Subtest: extrai somente IDs validos dos formatos permitidos
+ok 404 - extrai somente IDs validos dos formatos permitidos
+  ---
+  duration_ms: 0.4987
+  type: 'test'
+  ...
+# Subtest: recusa dominio arbitrario, protocolo inseguro, HTML e ID malformado
+ok 405 - recusa dominio arbitrario, protocolo inseguro, HTML e ID malformado
+  ---
+  duration_ms: 0.1632
+  type: 'test'
+  ...
+# Subtest: validacao normaliza videoId e ignora campos desconhecidos
+ok 406 - validacao normaliza videoId e ignora campos desconhecidos
+  ---
+  duration_ms: 0.7379
+  type: 'test'
+  ...
+# Subtest: busca, filtros, publicacao, limite e ordenacao sao seguros
+ok 407 - busca, filtros, publicacao, limite e ordenacao sao seguros
+  ---
+  duration_ms: 0.6231
+  type: 'test'
+  ...
+# Subtest: listagem do cliente nao projeta videoId
+ok 408 - listagem do cliente nao projeta videoId
+  ---
+  duration_ms: 0.4952
+  type: 'test'
+  ...
+# Subtest: detalhe autorizado retorna videoId e progresso
+ok 409 - detalhe autorizado retorna videoId e progresso
+  ---
+  duration_ms: 1.0391
+  type: 'test'
+  ...
+# Subtest: administrador cria e edita treinamento com autoria controlada
+ok 410 - administrador cria e edita treinamento com autoria controlada
+  ---
+  duration_ms: 1.2403
+  type: 'test'
+  ...
+# Subtest: administrador ativa e desativa treinamento
+ok 411 - administrador ativa e desativa treinamento
+  ---
+  duration_ms: 0.4937
+  type: 'test'
+  ...
+# Subtest: percentual e conclusao sao calculados no backend e limitados a 100
+ok 412 - percentual e conclusao sao calculados no backend e limitados a 100
+  ---
+  duration_ms: 0.203
+  type: 'test'
+  ...
+# Subtest: progresso usa upsert, maximos e nao apaga conclusao em regressao
+ok 413 - progresso usa upsert, maximos e nao apaga conclusao em regressao
+  ---
+  duration_ms: 0.5732
+  type: 'test'
+  ...
+# Subtest: conclusao e registrada uma vez ao atingir o limite
+ok 414 - conclusao e registrada uma vez ao atingir o limite
+  ---
+  duration_ms: 0.4236
+  type: 'test'
+  ...
+# Subtest: treinamento inacessivel nao permite atualizar progresso
+ok 415 - treinamento inacessivel nao permite atualizar progresso
+  ---
+  duration_ms: 0.3448
+  type: 'test'
+  ...
+# Subtest: indice unico impede progresso duplicado por treinamento e usuario
+ok 416 - indice unico impede progresso duplicado por treinamento e usuario
+  ---
+  duration_ms: 0.4456
+  type: 'test'
+  ...
+1..416
+# tests 416
+# suites 0
+# pass 416
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4186.1819

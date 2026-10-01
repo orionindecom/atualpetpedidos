@@ -53,7 +53,7 @@ test("rotas, guard e login direcionam logistica ao painel proprio", () => {
   assert.match(app, /path="\/logistica"[\s\S]*?<RoleRoute role="logistica">/);
   assert.match(app, /path="\/logistica\/pedidos"[\s\S]*?<RoleRoute role="logistica">/);
   assert.match(guards, /logistica: "\/logistica"/);
-  assert.match(guards, /logistica: "\/logistica\/dashboard"/);
+  assert.match(guards, /api\.get\("\/auth\/me"\)/);
   assert.match(login, /logistica: "\/logistica"/);
 });
 
@@ -116,7 +116,8 @@ test("distribuidor visualiza tracking sem campos internos", () => {
 test("cliente confirma recebimento somente quando o pedido esta enviado", () => {
   const page = readSource("../src/pages/MeusPedidos/MeusPedidos.jsx");
   assert.match(page, /pedido\.status === "enviado"/);
-  assert.match(page, /Confirma que este pedido foi recebido\?/);
+  assert.match(page, /Você recebeu seu pedido\?/);
+  assert.doesNotMatch(page, /window\.confirm/);
   assert.match(page, /api\.patch\(`\/pedidos\/\$\{pedido\._id\}\/confirmar-recebimento`\)/);
   assert.match(page, /Confirmar recebimento/);
   assert.match(page, /setPedidos/);

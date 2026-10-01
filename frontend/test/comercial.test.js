@@ -6,15 +6,15 @@ const readSource = (relativePath) => (
   readFileSync(new URL(relativePath, import.meta.url), "utf8")
 );
 
-test("login e guards direcionam Comercial diretamente para Preços", () => {
+test("login e guards direcionam Comercial para dashboard de vendas", () => {
   const login = readSource("../src/pages/Login/Login.jsx");
   const guards = readSource("../src/components/RouteGuards/RouteGuards.jsx");
 
-  assert.match(login, /comercial: "\/precos"/);
-  assert.match(guards, /comercial: "\/precos"/);
-  assert.match(guards, /comercial: "\/tabelas"/);
+  assert.match(login, /comercial: "\/vendas"/);
+  assert.match(guards, /comercial: "\/vendas"/);
+  assert.match(guards, /api\.get\("\/auth\/me"\)/);
   assert.match(guards, /Array\.isArray\(roles\) \? roles : \[role\]/);
-  assert.match(guards, /allowedRoles\.includes\(session\.usuario\.tipo\)/);
+  assert.match(guards, /canOpenRoute\(session\.usuario/);
 });
 
 test("rotas de Preços e Tabelas aceitam Admin ou Comercial", () => {
@@ -58,9 +58,9 @@ test("menu Comercial mostra Preços, Tabelas e Pedidos", () => {
   assert.match(block, /to: "\/pedidos"/);
   assert.doesNotMatch(
     block,
-    /\/produtos|\/clientes|\/marketing|\/logistica|metricas|operadores|banners|treinamentos/i
+    /\/produtos|\/clientes|\/marketing|\/logistica|metricas|operadores|banners/i
   );
-  assert.match(navbar, /const isCommercial = usuario\?\.tipo === "comercial"/);
+  assert.match(navbar, /\["comercial", "vendedor"\]\.includes\(usuario\?\.tipo\)/);
   assert.match(navbar, /Equipe Comercial/);
   assert.match(navbar, /Painel Comercial/);
 });

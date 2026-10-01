@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getAuthSession } from "../../utils/authSession";
+import { hasGlobalScope, hasPermission } from "../../utils/permissions";
 import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 import styles from "./AdminPedidos.module.css";
 import {
   abrirOuBaixarPdfPedido,
@@ -21,7 +24,8 @@ import {
 } from "../../utils/orderOperations";
 
 function AdminPedidos() {
-  const isAdmin = getAuthSession()?.usuario.tipo === "admin";
+  const usuario = getAuthSession()?.usuario;
+  const isAdmin = usuario?.tipo === "admin";
   const [searchParams, setSearchParams] = useSearchParams();
   const openedFromMetrics = useRef("");
   const [pedidos, setPedidos] = useState([]);
@@ -44,6 +48,7 @@ function AdminPedidos() {
   const [downloadingCommercialPdf, setDownloadingCommercialPdf] = useState(false);
   const [downloadingReportPdf, setDownloadingReportPdf] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
+  const { dialog, toast } = useFeedback();
   const [detailFeedback, setDetailFeedback] = useState(null);
 
   const statusOptions = ORDER_STATUS;
@@ -94,7 +99,9 @@ function AdminPedidos() {
       });
     } catch (error) {
       console.error(error);
-      alert("Não foi possível abrir ou baixar o PDF do pedido.");
+      toast.error("Não foi possível abrir o PDF", {
+        description: `Tente baixar o pedido ${pedido.numeroPedido} novamente em instantes.`,
+      });
     }
   };
 
@@ -116,11 +123,13 @@ function AdminPedidos() {
       setTransitions(isAdmin ? response.data.transicoesPermitidas || [] : []);
       setOperationsForm(buildOrderOperationsForm(pedido));
     } catch (error) {
-      alert(error.response?.data?.message || "Não foi possível abrir o pedido");
+      toast.error("Não foi possível abrir o pedido", {
+        description: getApiErrorMessage(error, "Atualize a lista e tente novamente."),
+      });
     } finally {
       setDetailLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, toast]);
 
   useEffect(() => {
     const pedidoId = searchParams.get("pedido") || "";
@@ -312,7 +321,9 @@ function AdminPedidos() {
       }));
 
     if (itens.length === 0) {
-      alert("O pedido precisa ter pelo menos um item");
+      toast.warning("Pedido sem itens", {
+        description: "Informe a quantidade de pelo menos um produto antes de salvar.",
+      });
       return;
     }
 
@@ -324,35 +335,38 @@ function AdminPedidos() {
       });
       atualizarPedidoNaLista(response.data.pedido);
 
-      alert("Pedido atualizado com sucesso");
+      toast.success("Pedido atualizado", {
+        description: `As alterações do pedido ${modalPedido.numeroPedido} foram salvas.`,
+      });
 
       fecharModal();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Erro ao atualizar pedido");
+      toast.error("Não foi possível atualizar o pedido", {
+        description: getApiErrorMessage(error, "Tente novamente em instantes."),
+      });
     }
   };
 
   const excluirPedido = async (pedidoId) => {
-    const confirmar = confirm(
-      "Deseja realmente excluir este pedido? Essa ação não pode ser desfeita."
-    );
-
-    if (!confirmar) return;
-
+    const pedido = detail?._id === pedidoId ? detail : pedidos.find((item) => item._id === pedidoId);
     setDeletingOrder(true);
-    try {
-      await api.delete(`/pedidos/${pedidoId}`);
-
-      alert("Pedido excluído com sucesso");
-      fecharDetalhes();
-      carregarDados();
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Erro ao excluir pedido");
-    } finally {
-      setDeletingOrder(false);
-    }
+    const excluido = await dialog.confirm({
+      variant: "danger",
+      icon: "trash",
+      title: "Excluir pedido?",
+      message: "O pedido será removido definitivamente. Essa ação não pode ser desfeita.",
+      details: pedido?.numeroPedido ? [{ label: "Pedido", value: pedido.numeroPedido }] : [],
+      confirmLabel: "Excluir pedido",
+      busyLabel: "Excluindo pedido...",
+      errorFallback: "Não foi possível excluir o pedido.",
+      action: () => api.delete(`/pedidos/${pedidoId}`),
+      successToast: { title: "Pedido excluído", description: pedido?.numeroPedido ? `O pedido ${pedido.numeroPedido} foi removido.` : "" },
+    });
+    setDeletingOrder(false);
+    if (!excluido) return;
+    fecharDetalhes();
+    carregarDados();
   };
 
   const pedidosFiltrados = pedidos.filter((pedido) => {
@@ -383,7 +397,7 @@ function AdminPedidos() {
 
       <div className={styles.container}>
         <h1>Pedidos</h1>
-        {getAuthSession()?.usuario.tipo === "comercial" && <Link className={styles.novoPedido} to="/pedidos/novo">Novo pedido</Link>}
+        {hasPermission(usuario, "criarPedidos") && <Link className={styles.novoPedido} to="/pedidos/novo">Novo pedido</Link>}
 
         {pedidos.length === 0 && <p>Nenhum pedido encontrado.</p>}
 
@@ -455,9 +469,9 @@ function AdminPedidos() {
             transitions={transitions}
             isAdmin={isAdmin}
             showPrices
-            canApprove
-            canEdit
-            canDelete
+            canApprove={hasPermission(usuario, "aprovarPedidos")}
+            canEdit={hasPermission(usuario, "editarPedidos") && (hasGlobalScope(usuario) || ["aguardando_aprovacao", "novo", "em_analise"].includes(detail.status))}
+            canDelete={hasPermission(usuario, "excluirPedidos")}
             canOperate={isAdmin}
             saving={savingOperations}
             conferenceBusy={conferenceBusy}

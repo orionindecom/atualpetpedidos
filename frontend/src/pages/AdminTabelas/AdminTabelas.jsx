@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Navbar from "../../components/Navbar/Navbar";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { getApiErrorMessage } from "../../utils/apiErrors";
 import styles from "./AdminTabelas.module.css";
 
 function AdminTabelas() {
@@ -12,6 +14,9 @@ function AdminTabelas() {
   });
   const [editando, setEditando] = useState(null);
   const [novoNome, setNovoNome] = useState({});
+  const [errosCopia, setErrosCopia] = useState({});
+  const [ocupado, setOcupado] = useState("");
+  const { toast } = useFeedback();
 
   const tiposTabela = {
     distribuidor: "Distribuidor",
@@ -39,18 +44,28 @@ function AdminTabelas() {
 
   const salvarTabela = async (e) => {
     e.preventDefault();
+    if (ocupado) return;
+    setOcupado("salvar");
 
-    if (editando) {
-      await api.put(`/tabelas/${editando._id}`, form);
-      alert("Tabela atualizada com sucesso");
-    } else {
-      await api.post("/tabelas", form);
-      alert("Tabela criada com sucesso");
+    try {
+      if (editando) {
+        await api.put(`/tabelas/${editando._id}`, form);
+        toast.success("Tabela atualizada", { description: `${form.nome} foi salva.` });
+      } else {
+        await api.post("/tabelas", form);
+        toast.success("Tabela criada", { description: `${form.nome} já pode receber preços.` });
+      }
+
+      setForm({ nome: "", descricao: "", tipo: "distribuidor" });
+      setEditando(null);
+      carregarTabelas();
+    } catch (error) {
+      toast.error("Não foi possível salvar a tabela", {
+        description: getApiErrorMessage(error, "Revise os dados e tente novamente."),
+      });
+    } finally {
+      setOcupado("");
     }
-
-    setForm({ nome: "", descricao: "", tipo: "distribuidor" });
-    setEditando(null);
-    carregarTabelas();
   };
 
   const editarTabela = (tabela) => {
@@ -68,28 +83,48 @@ function AdminTabelas() {
   };
 
   const alternarStatus = async (tabela) => {
-    await api.put(`/tabelas/${tabela._id}`, {
-      ativa: !tabela.ativa,
-    });
-
-    carregarTabelas();
+    if (ocupado) return;
+    setOcupado(tabela._id);
+    try {
+      await api.put(`/tabelas/${tabela._id}`, {
+        ativa: !tabela.ativa,
+      });
+      toast.success(tabela.ativa ? "Tabela inativada" : "Tabela ativada", { description: tabela.nome });
+      carregarTabelas();
+    } catch (error) {
+      toast.error("Não foi possível alterar a tabela", {
+        description: getApiErrorMessage(error, "Tente novamente em instantes."),
+      });
+    } finally {
+      setOcupado("");
+    }
   };
 
   const duplicarTabela = async (tabela) => {
     const nome = novoNome[tabela._id];
 
-    if (!nome) {
-      alert("Informe o nome da nova tabela");
+    if (!nome?.trim()) {
+      setErrosCopia((current) => ({ ...current, [tabela._id]: "Informe o nome da nova tabela." }));
+      document.getElementById(`copia-${tabela._id}`)?.focus();
       return;
     }
+    if (ocupado) return;
+    setOcupado(tabela._id);
 
-    await api.post(`/tabelas/${tabela._id}/duplicar`, {
-      novoNome: nome,
-    });
-
-    alert("Tabela duplicada com sucesso");
-    setNovoNome({ ...novoNome, [tabela._id]: "" });
-    carregarTabelas();
+    try {
+      await api.post(`/tabelas/${tabela._id}/duplicar`, {
+        novoNome: nome,
+      });
+      toast.success("Tabela duplicada", { description: `${nome} foi criada a partir de ${tabela.nome}.` });
+      setNovoNome({ ...novoNome, [tabela._id]: "" });
+      carregarTabelas();
+    } catch (error) {
+      toast.error("Não foi possível duplicar a tabela", {
+        description: getApiErrorMessage(error, "Tente novamente em instantes."),
+      });
+    } finally {
+      setOcupado("");
+    }
   };
 
   return (
@@ -128,8 +163,8 @@ function AdminTabelas() {
               </option>
             </select>
 
-            <button type="submit">
-              {editando ? "Salvar Alterações" : "Criar Tabela"}
+            <button type="submit" disabled={ocupado === "salvar"}>
+              {ocupado === "salvar" ? "Salvando..." : editando ? "Salvar Alterações" : "Criar Tabela"}
             </button>
 
             {editando && (
@@ -170,22 +205,34 @@ function AdminTabelas() {
                         : styles.ativarBtn
                     }
                     onClick={() => alternarStatus(tabela)}
+                    disabled={ocupado === tabela._id}
                   >
                     {tabela.ativa ? "Inativar" : "Ativar"}
                   </button>
 
                   <input
+                    id={`copia-${tabela._id}`}
                     placeholder="Nome da cópia"
+                    aria-label={`Nome da cópia de ${tabela.nome}`}
+                    aria-invalid={errosCopia[tabela._id] ? "true" : undefined}
+                    aria-describedby={errosCopia[tabela._id] ? `copia-erro-${tabela._id}` : undefined}
                     value={novoNome[tabela._id] || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNovoNome({
                         ...novoNome,
                         [tabela._id]: e.target.value,
-                      })
-                    }
+                      });
+                      setErrosCopia((current) => ({ ...current, [tabela._id]: "" }));
+                    }}
                   />
 
-                  <button onClick={() => duplicarTabela(tabela)}>
+                  {errosCopia[tabela._id] && (
+                    <span id={`copia-erro-${tabela._id}`} className={styles.erroCampo} role="alert">
+                      {errosCopia[tabela._id]}
+                    </span>
+                  )}
+
+                  <button onClick={() => duplicarTabela(tabela)} disabled={ocupado === tabela._id}>
                     Duplicar
                   </button>
                 </div>

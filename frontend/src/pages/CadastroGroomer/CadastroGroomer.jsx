@@ -5,6 +5,8 @@ import logo from "../../assets/logo-atualpet-white.png";
 import AuthMascots from "../../components/AuthMascots/AuthMascots";
 import mascotStyles from "../../components/AuthMascots/AuthMascots.module.css";
 import AuthInstitutionalArt from "../../components/AuthInstitutionalArt/AuthInstitutionalArt";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { GROOMER_REGISTRATION_SENT_DIALOG } from "../../utils/accessFeedback";
 import {
   formatRegistrationDocument,
   formatRegistrationPhone,
@@ -42,6 +44,7 @@ const maskValue = (name, value) => {
 
 function CadastroGroomer() {
   const navigate = useNavigate();
+  const { dialog } = useFeedback();
   const [form, setForm] = useState({ ...INITIAL_FORM });
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState("");
@@ -84,7 +87,7 @@ function CadastroGroomer() {
     setFeedback("");
     try {
       await api.post("/auth/cadastro-groomer", form);
-      window.alert("Cadastro de Groomer enviado com sucesso. Aguarde aprovação.");
+      await dialog.alert(GROOMER_REGISTRATION_SENT_DIALOG);
       navigate("/login");
     } catch (error) {
       const apiErrors = getRegistrationApiFieldErrors(error.response?.data);

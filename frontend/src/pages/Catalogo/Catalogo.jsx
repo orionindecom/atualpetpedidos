@@ -9,6 +9,7 @@ import {
 import Navbar from "../../components/Navbar/Navbar";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import modalStyles from "../../components/OrderDetails/OrderDetails.module.css";
 import DistributorBanners from "../../components/DistributorBanners/DistributorBanners";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
@@ -25,6 +26,7 @@ const LIMITE_CATALOGO = 12;
 function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
     const catalogoUrl = distribuidor ? `/pedidos/comercial/distribuidores/${distribuidor._id}/catalogo` : "/catalogo";
     const tabelaPrecoId = distribuidor?.tabelaPrecoId?._id;
+    const { dialog, toast } = useFeedback();
     const [produtos, setProdutos] = useState([]);
     const [produtosConhecidos, setProdutosConhecidos] = useState({});
     const [quantidades, setQuantidades] = useState({});
@@ -348,8 +350,18 @@ function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
         else gerarPedido();
     };
 
-    const trocarDistribuidor = () => {
-        if (itensSelecionados.length > 0 && !window.confirm("Trocar o distribuidor e limpar os itens deste pedido?")) return;
+    const trocarDistribuidor = async () => {
+        if (itensSelecionados.length > 0) {
+            const confirmado = await dialog.confirm({
+                variant: "warning",
+                icon: "cart",
+                title: "Trocar distribuidor?",
+                message: "Os itens escolhidos neste pedido serão removidos para você selecionar outro distribuidor.",
+                details: [{ label: "Itens no pedido", value: String(itensSelecionados.length) }],
+                confirmLabel: "Trocar e limpar pedido",
+            });
+            if (!confirmado) return;
+        }
         onTrocarDistribuidor();
     };
 
@@ -361,7 +373,9 @@ function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
             });
         } catch (error) {
             console.error(error);
-            alert("Não foi possível abrir ou baixar o PDF do pedido.");
+            toast.error("Não foi possível abrir o PDF", {
+                description: `Tente baixar o pedido ${pedido.numeroPedido} novamente em instantes.`,
+            });
         }
     };
 

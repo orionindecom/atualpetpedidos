@@ -222,3 +222,10 @@
 .inativarBtn:hover {
   background: #b91c1c !important;
 }
+
+.erroCampo {
+  flex-basis: 100%;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}

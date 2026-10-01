@@ -3,6 +3,7 @@ import api from "../../api/axios";
 import ClientDetailModal from "../../components/ClientDetails/ClientDetailModal";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import {
   buildAdminClientForm,
   buildAdminClientPayload,
@@ -75,6 +76,7 @@ function AdminClientes() {
   const [actionBusy, setActionBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const detailRequestRef = useRef(0);
+  const { dialog } = useFeedback();
 
   useEffect(() => {
     let active = true;
@@ -247,59 +249,76 @@ function AdminClientes() {
     }
   };
 
-  const rejeitarCliente = async () => {
-    const label = getClientAccountTypeLabel(clientDetail);
-    if (!window.confirm(`Deseja realmente rejeitar o cadastro deste ${label}?`)) return;
-
+  // Ações de conta passam pelo diálogo da Central: a requisição acontece dentro dele
+  // (com carregamento e erro no próprio diálogo) e o resultado aparece no cadastro aberto.
+  const executarAcaoConta = async (options, request) => {
+    let resultado = null;
     setActionBusy(true);
     setFeedback(null);
-    try {
-      const response = await api.put(`/clientes/${selectedClientId}/rejeitar`);
-      atualizarClienteLocal(response.data.cliente);
-      setFeedback({ type: "success", message: response.data.message });
-    } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error, "Erro ao rejeitar cadastro.") });
-    } finally {
-      setActionBusy(false);
-    }
+    const concluido = await dialog.confirm({
+      ...options,
+      action: async (valor) => {
+        resultado = (await request(valor)).data;
+      },
+    });
+    setActionBusy(false);
+    if (!concluido || !resultado) return;
+    if (resultado.cliente) atualizarClienteLocal(resultado.cliente);
+    setFeedback({ type: "success", message: resultado.message });
   };
 
-  const alternarAcesso = async () => {
+  const rejeitarCliente = () => executarAcaoConta({
+    variant: "warning",
+    icon: "fileX",
+    title: "Recusar cadastro?",
+    message: `${getClientDisplayName(clientDetail)} não terá acesso à Central enquanto o cadastro estiver recusado.`,
+    details: [{ label: "Perfil", value: getClientAccountTypeLabel(clientDetail) }],
+    confirmLabel: "Recusar cadastro",
+    busyLabel: "Recusando...",
+    errorFallback: "Não foi possível recusar o cadastro.",
+  }, () => api.put(`/clientes/${selectedClientId}/rejeitar`));
+
+  const alternarAcesso = () => {
     const active = isClientAccountActive(clientDetail);
     const action = active ? "desativar" : "reativar";
-    const confirmation = window.confirm(
-      `Deseja realmente ${active ? "desativar" : "reativar"} o acesso deste ${getClientAccountTypeLabel(clientDetail)}?`
-    );
-    if (!confirmation) return;
-
-    setActionBusy(true);
-    setFeedback(null);
-    try {
-      const response = await api.put(`/clientes/${selectedClientId}/${action}`);
-      atualizarClienteLocal(response.data.cliente);
-      setFeedback({ type: "success", message: response.data.message });
-    } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error, `Erro ao ${action} cliente.`) });
-    } finally {
-      setActionBusy(false);
-    }
+    const nome = getClientDisplayName(clientDetail);
+    return executarAcaoConta(active ? {
+      variant: "warning",
+      icon: "lock",
+      title: "Desativar acesso?",
+      message: `${nome} não conseguirá entrar na Central até o acesso ser reativado.`,
+      confirmLabel: "Desativar acesso",
+      busyLabel: "Desativando...",
+      errorFallback: "Não foi possível desativar o acesso.",
+    } : {
+      variant: "confirm",
+      icon: "userCheck",
+      title: "Reativar acesso?",
+      message: `${nome} voltará a entrar na Central com a senha atual.`,
+      confirmLabel: "Reativar acesso",
+      busyLabel: "Reativando...",
+      errorFallback: "Não foi possível reativar o acesso.",
+    }, () => api.put(`/clientes/${selectedClientId}/${action}`));
   };
 
-  const redefinirSenha = async () => {
-    const novaSenha = window.prompt("Digite a nova senha (mínimo de 8 caracteres):");
-    if (!novaSenha) return;
-
-    setActionBusy(true);
-    setFeedback(null);
-    try {
-      const response = await api.put(`/clientes/${selectedClientId}/redefinir-senha`, { novaSenha });
-      setFeedback({ type: "success", message: response.data.message });
-    } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error, "Erro ao redefinir senha.") });
-    } finally {
-      setActionBusy(false);
-    }
-  };
+  const redefinirSenha = () => executarAcaoConta({
+    variant: "confirm",
+    icon: "key",
+    title: "Redefinir senha",
+    message: `Defina uma nova senha de acesso para ${getClientDisplayName(clientDetail)}.`,
+    field: {
+      label: "Nova senha",
+      type: "password",
+      autoComplete: "new-password",
+      minLength: 8,
+      maxLength: 128,
+      requiredMessage: "Informe a nova senha.",
+      help: "Mínimo de 8 caracteres. Compartilhe a senha por um canal seguro.",
+    },
+    confirmLabel: "Redefinir senha",
+    busyLabel: "Redefinindo...",
+    errorFallback: "Não foi possível redefinir a senha.",
+  }, (novaSenha) => api.put(`/clientes/${selectedClientId}/redefinir-senha`, { novaSenha }));
 
   return (
     <>
@@ -460,6 +479,12 @@ function AdminClientes() {
           onReject={rejeitarCliente}
           onToggleActive={alternarAcesso}
           onResetPassword={redefinirSenha}
+          onClientChange={({ _id, vendedorResponsavelId }) => {
+            setClientes((current) => current.map((client) => (
+              client._id === _id ? { ...client, vendedorResponsavelId } : client
+            )));
+            setClientDetail((current) => (current?._id === _id ? { ...current, vendedorResponsavelId } : current));
+          }}
         />
       )}
     </>

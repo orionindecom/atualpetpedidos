@@ -1,24 +1,17 @@
+import { canOpenRoute } from "../../utils/permissions";
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import { clearAuthSession, getAuthSession } from "../../utils/authSession";
 
 const roleHome = {
   admin: "/admin",
-  comercial: "/precos",
+  comercial: "/vendas",
+  vendedor: "/vendas",
   marketing: "/marketing",
   logistica: "/logistica",
-  cliente: "/catalogo",
+  cliente: "/conta",
   groomer: "/groomer",
-};
-
-const validationEndpoint = {
-  admin: "/produtos",
-  comercial: "/tabelas",
-  marketing: "/marketing/dashboard",
-  logistica: "/logistica/dashboard",
-  cliente: "/pedidos/meus",
-  groomer: "/treinamentos?limite=1",
 };
 
 function AccessChecking() {
@@ -33,7 +26,11 @@ export function HomeRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Navigate to={roleHome[session.usuario.tipo] || "/login"} replace />;
+  const home = roleHome[session.usuario.tipo] || '/login';
+  const destino = [home, '/carteira', '/pedidos', '/precos', '/treinamentos', '/materiais-marketing', '/usuarios']
+    .find((path) => canOpenRoute(session.usuario, path, path === home ? [session.usuario.tipo] : []));
+  if (!destino) return <main style={{ padding: 32 }}><h1>Nenhum acesso disponível</h1><p>Solicite ao administrador a revisão das suas permissões.</p><Link to="/login" onClick={clearAuthSession}>Sair</Link></main>;
+  return <Navigate to={destino} replace />;
 }
 
 export function RoleRoute({ role, roles, children }) {
@@ -55,7 +52,7 @@ export function RoleRoute({ role, roles, children }) {
 
       if (
         !currentSession ||
-        !allowedRolesKey.split(",").includes(currentSession.usuario.tipo)
+        !canOpenRoute(currentSession.usuario, location.pathname, allowedRolesKey.split(","))
       ) {
         return;
       }
@@ -63,7 +60,12 @@ export function RoleRoute({ role, roles, children }) {
       setValidation({ key: validationKey, isAllowed: null });
 
       try {
-        await api.get(validationEndpoint[currentSession.usuario.tipo]);
+        const { data } = await api.get("/auth/me");
+        localStorage.setItem("usuario", JSON.stringify({ ...currentSession.usuario, ...data.usuario }));
+        if (!canOpenRoute(data.usuario, location.pathname, allowedRolesKey.split(","))) {
+          if (isActive) setValidation({ key: validationKey, isAllowed: false });
+          return;
+        }
 
         if (isActive) {
           setValidation({ key: validationKey, isAllowed: true });
@@ -89,13 +91,8 @@ export function RoleRoute({ role, roles, children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (!allowedRoles.includes(session.usuario.tipo)) {
-    return (
-      <Navigate
-        to={roleHome[session.usuario.tipo] || "/login"}
-        replace
-      />
-    );
+  if (!canOpenRoute(session.usuario, location.pathname, allowedRoles)) {
+    return <main style={{ padding: 32 }}><h1>Acesso negado</h1><p>Você não possui permissão para este módulo.</p><Link to="/">Voltar ao início</Link></main>;
   }
 
   if (validation.key !== validationKey || validation.isAllowed === null) {

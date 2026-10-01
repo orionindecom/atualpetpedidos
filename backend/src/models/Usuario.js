@@ -23,10 +23,20 @@ const usuarioSchema = new mongoose.Schema(
 
         tipo: {
             type: String,
-            enum: ["admin", "comercial", "marketing", "logistica", "cliente", "groomer"],
+            enum: ["admin", "comercial", "vendedor", "marketing", "logistica", "cliente", "groomer"],
             default: "cliente",
         },
 
+        permissoes: { type: mongoose.Schema.Types.Mixed, default: undefined },
+        historicoAdministrativo: [{
+            _id: false,
+            acao: { type: String, enum: ['criacao', 'edicao', 'vendedor'] },
+            autorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' },
+            em: { type: Date, default: Date.now },
+            antes: mongoose.Schema.Types.Mixed,
+            depois: mongoose.Schema.Types.Mixed,
+        }],
+        vendedorResponsavelId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", default: undefined },
         razaoSocial: {
             type: String,
             trim: true,
@@ -116,6 +126,7 @@ const usuarioSchema = new mongoose.Schema(
     }
 );
 
+usuarioSchema.index({ vendedorResponsavelId: 1, tipo: 1 });
 usuarioSchema.index({ tipo: 1, statusCadastro: 1, ativo: 1, createdAt: -1 });
 
 export default mongoose.model("Usuario", usuarioSchema);

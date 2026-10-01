@@ -1,3 +1,4 @@
+import Usuario from "../models/Usuario.js";
 import mongoose from "mongoose";
 import Treinamento from "../models/Treinamento.js";
 import ProgressoTreinamento from "../models/ProgressoTreinamento.js";
@@ -412,7 +413,7 @@ export const listarProgressoAdmin = async (req, res) => {
     }
 
     const treinamento = await Treinamento.findById(req.params.id)
-      .select("_id titulo")
+      .select("_id titulo publicos audienciaTipo distribuidoresIds")
       .lean();
     if (!treinamento) {
       return res.status(404).json({ message: "Treinamento não encontrado" });
@@ -464,6 +465,31 @@ export const listarProgressoAdmin = async (req, res) => {
   } catch (error) {
     return logAndSendError(res, error, "listar progresso administrativo");
   }
+};
+
+// Público elegível, incluindo quem ainda não possui registro de progresso.
+export const listarNaoIniciadosAdmin = async (req, res) => {
+  try {
+    const query = parseTrainingQuery(req.query, { admin: true });
+    if (!query) return res.status(400).json({ message: 'Parâmetros de consulta inválidos' });
+    const treinamento = await Treinamento.findById(req.params.id).select('_id titulo publicos audienciaTipo distribuidoresIds').lean();
+    if (!treinamento) return res.status(404).json({ message: 'Treinamento não encontrado' });
+    const publicos = treinamento.publicos?.length ? treinamento.publicos : ['cliente'];
+    const audience = publicos.map((tipo) => ({ tipo, ...(tipo === 'cliente' && treinamento.audienciaTipo === 'especificos'
+      ? { _id: { $in: treinamento.distribuidoresIds || [] } } : {}) }));
+    const iniciados = await ProgressoTreinamento.distinct('usuarioId', { treinamentoId: treinamento._id }).maxTimeMS(MAX_QUERY_TIME_MS);
+    const eligible = { ativo: true, statusCadastro: 'aprovado', $or: audience };
+    const filter = { ...eligible, _id: { $nin: iniciados } };
+    const [usuarios, totalItens, totalElegiveis] = await Promise.all([
+      Usuario.find(filter).select('_id nomeResponsavel nomeFantasia nomeProfissional email tipo')
+        .sort({ nomeResponsavel: 1, _id: 1 }).skip((query.pagina - 1) * query.limite).limit(query.limite).lean().maxTimeMS(MAX_QUERY_TIME_MS),
+      Usuario.countDocuments(filter).maxTimeMS(MAX_QUERY_TIME_MS),
+      Usuario.countDocuments(eligible).maxTimeMS(MAX_QUERY_TIME_MS),
+    ]);
+    return res.json({ treinamento, usuarios: usuarios.map((usuarioId) => ({ usuarioId, percentualAssistido: 0, concluido: false, iniciadoEm: null, ultimoAcessoEm: null })),
+      resumo: { totalElegiveis, totalNaoIniciaram: totalItens },
+      paginacao: { paginaAtual: query.pagina, totalPaginas: Math.ceil(totalItens / query.limite), totalItens, limite: query.limite } });
+  } catch (error) { return logAndSendError(res, error, 'listar usuários que não iniciaram'); }
 };
 
 export const listarTreinamentosCliente = async (req, res) => {
@@ -614,7 +640,7 @@ export const atualizarProgresso = async (req, res) => {
       update,
       {
         upsert: true,
-        new: true,
+        returnDocument: 'after',
         runValidators: true,
         setDefaultsOnInsert: false,
       }

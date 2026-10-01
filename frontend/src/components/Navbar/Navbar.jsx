@@ -1,3 +1,4 @@
+import { canOpenRoute, hasGlobalScope } from "../../utils/permissions";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Navbar.module.css";
@@ -9,6 +10,7 @@ const adminLinks = [
   { to: "/tabelas", label: "Tabelas", group: "Comercial" },
   { to: "/precos", label: "Preços", group: "Comercial" },
   { to: "/clientes", label: "Clientes", group: "Relacionamento" },
+  { to: "/usuarios", label: "Usuários e permissões", group: "Relacionamento" },
   { to: "/pedidos", label: "Pedidos", group: "Operação" },
   { to: "/necessidade-producao", label: "Necessidade de Produção", group: "Operação" },
   {
@@ -30,11 +32,25 @@ const adminLinks = [
   { to: "/admin/treinamentos", label: "Treinamentos", group: "Conteúdo" },
 ];
 
+// Vendedor e Comercial compartilham o menu; cada item aparece conforme as permissões efetivas.
 const comercialLinks = [
+  { to: "/vendas", label: "Dashboard", group: "Comercial" },
+  { to: "/carteira", label: "Minha carteira", globalLabel: "Clientes", group: "Comercial" },
   { to: "/pedidos", label: "Pedidos", group: "Comercial" },
   { to: "/pedidos/novo", label: "Novo pedido", group: "Comercial" },
   { to: "/precos", label: "Preços", group: "Comercial" },
   { to: "/tabelas", label: "Tabelas de Preços", group: "Comercial" },
+  { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+  { to: "/admin/treinamentos", label: "Acompanhamento", group: "Conteúdo" },
+  { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
+];
+
+// Acessos concedidos individualmente a perfis que normalmente não os possuem.
+const permissionLinks = [
+  { to: "/usuarios", label: "Usuários", group: "Gestão" },
+  { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+  { to: "/admin/treinamentos", label: "Acompanhamento", group: "Conteúdo", skip: ["marketing"] },
+  { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
 ];
 
 const marketingLinks = [
@@ -51,6 +67,7 @@ const logisticaLinks = [
 ];
 
 const clienteLinks = [
+  { to: "/conta", label: "Dashboard", group: "Visão geral" },
   { to: "/catalogo", label: "Catálogo", group: "Comercial" },
   { to: "/meus-pedidos", label: "Meus Pedidos", group: "Comercial" },
   {
@@ -72,6 +89,15 @@ const groomerLinks = [
   { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
 ];
 
+// Painéis cujas subpáginas têm item próprio no menu.
+const EXACT_ROUTES = new Set(["/pedidos", "/admin", "/marketing", "/logistica"]);
+
+// Mantém os itens de um mesmo grupo juntos, na ordem em que o grupo aparece.
+const groupLinks = (links) => {
+  const groups = [...new Set(links.map((link) => link.group))];
+  return groups.flatMap((group) => links.filter((link) => link.group === group));
+};
+
 function Navbar() {
   const navigate = useNavigate();
   const menuButtonRef = useRef(null);
@@ -80,12 +106,12 @@ function Navbar() {
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const isAdmin = usuario?.tipo === "admin";
-  const isCommercial = usuario?.tipo === "comercial";
+  const isCommercial = ["comercial", "vendedor"].includes(usuario?.tipo);
   const isMarketing = usuario?.tipo === "marketing";
   const isLogistica = usuario?.tipo === "logistica";
   const isGroomer = usuario?.tipo === "groomer";
   const isBackoffice = isAdmin || isCommercial || isMarketing || isLogistica;
-  const links = isAdmin
+  const baseLinks = isAdmin
     ? adminLinks
     : isCommercial
       ? comercialLinks
@@ -96,21 +122,27 @@ function Navbar() {
           : isGroomer
             ? groomerLinks
             : clienteLinks;
+  const extraLinks = isAdmin ? [] : permissionLinks.filter((link) => !link.skip?.includes(usuario?.tipo));
+  const links = groupLinks([...baseLinks, ...extraLinks]
+    .filter((link, index, all) => all.findIndex((item) => item.to === link.to) === index && canOpenRoute(usuario, link.to, [usuario?.tipo]))
+    .map((link) => (link.globalLabel && hasGlobalScope(usuario) ? { ...link, label: link.globalLabel } : link)));
   const home = isAdmin
     ? "/admin"
     : isCommercial
-      ? "/precos"
+      ? "/vendas"
       : isMarketing
         ? "/marketing"
         : isLogistica
           ? "/logistica"
           : isGroomer
             ? "/groomer"
-            : "/catalogo";
+            : "/conta";
   const profileCopy = isAdmin
     ? { brand: "Administração", account: "Administrador", mobile: "Administração" }
     : isCommercial
-      ? { brand: "Comercial", account: "Equipe Comercial", mobile: "Painel Comercial" }
+      ? usuario?.tipo === "vendedor"
+        ? { brand: "Vendas", account: "Vendedor", mobile: "Painel de Vendas" }
+        : { brand: "Comercial", account: "Equipe Comercial", mobile: "Painel Comercial" }
       : isMarketing
         ? { brand: "Marketing", account: "Equipe de Marketing", mobile: "Painel de Marketing" }
         : isLogistica
@@ -190,7 +222,7 @@ function Navbar() {
               {(index === 0 || links[index - 1].group !== link.group) && (
                 <span>{link.group}</span>
               )}
-              <NavLink to={link.to} end={link.to === "/pedidos"} className={linkClass}>
+              <NavLink to={link.to} end={EXACT_ROUTES.has(link.to)} className={linkClass}>
                 {link.label}
               </NavLink>
             </div>
@@ -237,7 +269,7 @@ function Navbar() {
                   {(index === 0 || links[index - 1].group !== link.group) && (
                     <span className={styles.mobileGroupLabel}>{link.group}</span>
                   )}
-                  <NavLink to={link.to} end={link.to === "/pedidos"} className={linkClass} onClick={fecharMenu}>
+                  <NavLink to={link.to} end={EXACT_ROUTES.has(link.to)} className={linkClass} onClick={fecharMenu}>
                     {link.label}
                   </NavLink>
                 </div>

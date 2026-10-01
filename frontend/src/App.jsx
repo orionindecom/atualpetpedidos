@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ContaDashboard from "./pages/ContaDashboard/ContaDashboard";
+import AdminUsuarios from "./pages/AdminUsuarios/AdminUsuarios";
+import Carteira from "./pages/Carteira/Carteira";
 import Login from "./pages/Login/Login";
 import Catalogo from "./pages/Catalogo/Catalogo";
 import MeusPedidos from "./pages/MeusPedidos/MeusPedidos";
@@ -39,6 +42,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/conta" element={<RoleRoute role="cliente"><ContaDashboard /></RoleRoute>} />
+        <Route path="/vendas" element={<RoleRoute roles={["vendedor", "comercial", "admin"]}><ContaDashboard sales /></RoleRoute>} />
+        <Route path="/carteira" element={<RoleRoute roles={["vendedor", "comercial", "admin"]}><Carteira /></RoleRoute>} />
+        <Route path="/usuarios" element={<RoleRoute role="admin"><AdminUsuarios /></RoleRoute>} />
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<Login />} />

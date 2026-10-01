@@ -1,4 +1,5 @@
 import express from "express";
+import { exigirPermissao } from '../middlewares/permissionMiddleware.js';
 import {
   cadastrarProduto,
   listarProdutos,
@@ -36,7 +37,7 @@ router.post(
 router.get(
   "/",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao('comercial', 'pedidosTodos', 'pedidosCarteira'),
   listarProdutos
 );
 

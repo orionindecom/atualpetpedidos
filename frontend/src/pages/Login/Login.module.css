@@ -149,6 +149,24 @@
   background: #ea580c;
 }
 
+.formError {
+  margin: 0;
+  padding: 11px 13px;
+  border-left: 3px solid var(--danger);
+  border-radius: 6px;
+  background: #fff7f5;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.form button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+
 .footer {
   margin-top: 24px;
   display: flex;

@@ -1,8 +1,10 @@
+import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderProgress from "../../components/OrderProgress/OrderProgress";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import {
   formatCurrency,
@@ -25,18 +27,21 @@ const statusClasse = (status = "") => {
 };
 
 function MeusPedidos() {
+  const [searchParams] = useSearchParams();
   const [pedidos, setPedidos] = useState([]);
   const [pedidoExpandido, setPedidoExpandido] = useState(null);
   const [confirmandoRecebimento, setConfirmandoRecebimento] = useState(null);
+  const { dialog, toast } = useFeedback();
 
   useEffect(() => {
     async function carregarPedidos() {
       const response = await api.get("/pedidos/meus");
       setPedidos(response.data);
+      setPedidoExpandido(searchParams.get("pedido") || null);
     }
 
     carregarPedidos();
-  }, []);
+  }, [searchParams]);
 
   const baixarPdf = async (pedido) => {
     try {
@@ -46,23 +51,46 @@ function MeusPedidos() {
       });
     } catch (error) {
       console.error(error);
-      alert("Não foi possível abrir ou baixar o PDF do pedido.");
+      toast.error("Não foi possível abrir o PDF", {
+        description: `Tente baixar o pedido ${pedido.numeroPedido} novamente em instantes.`,
+      });
     }
   };
 
+  // Confirmação e sucesso acontecem no mesmo diálogo: ele só muda de estado
+  // depois da resposta da API e permanece aberto se ocorrer erro.
   const confirmarRecebimento = async (pedido) => {
-    if (!window.confirm("Confirma que este pedido foi recebido?")) return;
-
-    setConfirmandoRecebimento(pedido._id);
-    try {
-      const response = await api.patch(`/pedidos/${pedido._id}/confirmar-recebimento`);
-      setPedidos((current) => current.map((item) => (
-        item._id === pedido._id ? response.data.pedido : item
-      )));
-    } catch (error) {
-      alert(error.response?.data?.message || "Não foi possível confirmar o recebimento.");
-    } finally {
-      setConfirmandoRecebimento(null);
+    const confirmado = await dialog.confirm({
+      variant: "confirm",
+      icon: "package",
+      title: "Você recebeu seu pedido?",
+      message: "Confirme somente depois que o pedido tiver sido entregue.",
+      details: [{ label: "Pedido", value: pedido.numeroPedido }],
+      confirmLabel: "Confirmar recebimento",
+      busyLabel: "Confirmando recebimento...",
+      errorFallback: "Não foi possível confirmar o recebimento. Tente novamente.",
+      action: async () => {
+        setConfirmandoRecebimento(pedido._id);
+        try {
+          const response = await api.patch(`/pedidos/${pedido._id}/confirmar-recebimento`);
+          setPedidos((current) => current.map((item) => (
+            item._id === pedido._id ? response.data.pedido : item
+          )));
+        } finally {
+          setConfirmandoRecebimento(null);
+        }
+      },
+      success: {
+        icon: "packageCheck",
+        title: "Recebimento confirmado!",
+        message: `O pedido ${pedido.numeroPedido} foi marcado como recebido.`,
+        confirmLabel: "Concluir",
+      },
+    });
+    setConfirmandoRecebimento(null);
+    // O botão de confirmação some após o recebimento; o foco volta para o próprio pedido.
+    if (confirmado) {
+      window.requestAnimationFrame(() => document.querySelector(`[data-pedido-andamento="${pedido._id}"]`)?.focus());
     }
   };
 
@@ -96,6 +124,7 @@ function MeusPedidos() {
                   <button
                     type="button"
                     className={styles.trackingButton}
+                    data-pedido-andamento={pedido._id}
                     aria-expanded={pedidoExpandido === pedido._id}
                     onClick={() => setPedidoExpandido((current) => (
                       current === pedido._id ? null : pedido._id

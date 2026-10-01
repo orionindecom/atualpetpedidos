@@ -42,6 +42,7 @@ test("schema e login preservam o novo papel comercial no token e na resposta", a
   assert.deepEqual(Usuario.schema.path("tipo").enumValues, [
     "admin",
     "comercial",
+    "vendedor",
     "marketing",
     "logistica",
     "cliente",
@@ -131,7 +132,7 @@ test("produtos ficam somente leitura para Comercial e mutações continuam Admin
   const listRoute = findRoute(produtoRouter, "/", "get");
   assert.deepEqual(middlewareNames(listRoute).slice(0, 2), [
     "proteger",
-    "somenteGestorComercial",
+    "verificarPermissao",
   ]);
 
   for (const [path, method] of [["/", "post"], ["/:id", "put"], ["/:id", "delete"]]) {
@@ -201,12 +202,12 @@ test("criação do usuário Comercial segue o fluxo interno protegido por confir
 test("consulta, aprovação, edição e exclusão de pedidos reutilizam autorização comercial", () => {
   for (const [path, method] of [["/", "get"], ["/:id/aprovacao", "get"], ["/:id/aprovar", "patch"], ["/:id", "put"], ["/:id", "delete"]]) {
     const route = findRoute(pedidoRouter, path, method);
-    assert.deepEqual(middlewareNames(route).slice(0, 2), ["proteger", "somenteGestorComercial"]);
+    assert.deepEqual(middlewareNames(route).slice(0, 2), ["proteger", "verificarPermissao"]);
     for (const tipo of Usuario.schema.path("tipo").enumValues) {
       const response = createResponse();
       let allowed = false;
       route.route.stack[1].handle({ usuario: { tipo } }, response, () => { allowed = true; });
-      assert.equal(allowed, ["admin", "comercial"].includes(tipo), tipo);
+      assert.equal(allowed, ["admin", "comercial", "vendedor"].includes(tipo), tipo);
     }
   }
 });

@@ -5,6 +5,8 @@ import logo from "../../assets/logo-atualpet-white.png";
 import AuthMascots from "../../components/AuthMascots/AuthMascots";
 import mascotStyles from "../../components/AuthMascots/AuthMascots.module.css";
 import AuthInstitutionalArt from "../../components/AuthInstitutionalArt/AuthInstitutionalArt";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { REGISTRATION_SENT_DIALOG } from "../../utils/accessFeedback";
 import {
   formatRegistrationDocument,
   formatRegistrationPhone,
@@ -42,6 +44,7 @@ const maskFieldValue = (name, value) => {
 
 function Cadastro() {
   const navigate = useNavigate();
+  const { dialog } = useFeedback();
   const formRef = useRef(null);
   const progressRef = useRef(null);
   const [form, setForm] = useState({ ...INITIAL_FORM });
@@ -129,7 +132,7 @@ function Cadastro() {
     setFeedback(null);
     try {
       await api.post("/auth/cadastro", form);
-      window.alert("Cadastro enviado com sucesso. Aguarde aprovação.");
+      await dialog.alert(REGISTRATION_SENT_DIALOG);
       navigate("/login");
     } catch (error) {
       const responseData = error.response?.data;

@@ -1,0 +1,113 @@
+/* Toasts seguem as faixas de feedback da Central: fundo branco,
+   borda lateral de 3px na cor do estado e texto em peso 700. */
+.region {
+  width: min(400px, calc(100vw - 32px));
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1200;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  --tone: var(--brand-primary-strong);
+  --tone-bg: var(--brand-primary-soft);
+  --tone-ink: var(--brand-primary-ink);
+  padding: 12px 10px 12px 14px;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--tone);
+  border-radius: 8px;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 10px;
+  box-shadow: var(--shadow-medium);
+  pointer-events: auto;
+  animation: toastIn 200ms ease-out;
+}
+
+.toast[data-variant="success"] { --tone: var(--success); --tone-bg: #e7f5ee; --tone-ink: var(--success); }
+.toast[data-variant="error"] { --tone: var(--danger); --tone-bg: #fdecea; --tone-ink: var(--danger); }
+.toast[data-variant="warning"] { --tone: var(--brand-accent); --tone-bg: var(--brand-accent-soft); --tone-ink: var(--brand-accent-ink); }
+
+.icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+  display: grid;
+  place-items: center;
+}
+
+.icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.text {
+  min-width: 0;
+  padding-top: 4px;
+  display: grid;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+
+.text strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.text span {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.close {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.close svg {
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .region {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    left: 16px;
+    width: auto;
+  }
+}

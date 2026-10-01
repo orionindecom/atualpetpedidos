@@ -248,7 +248,131 @@
   color: #166534;
 }
 
+
+.sellerSection {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.sellerCurrent {
+  padding: 14px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sellerCurrent > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.sellerCurrent strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.sellerCurrent span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sellerCurrent .sellerEmpty {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sellerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sellerEditor {
+  display: grid;
+  gap: 6px;
+}
+
+.sellerEditor label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sellerEditor small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sellerEditor .unsaved {
+  color: var(--brand-accent-ink);
+  font-weight: 700;
+}
+
+.sellerEditorRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.sellerEditorRow select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-small);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.sellerEditorRow select:focus {
+  border-color: var(--brand-primary-strong);
+  outline: 3px solid rgba(113, 196, 192, 0.2);
+}
+
+.sellerSection .successMessage,
+.sellerSection .errorMessage,
+.sellerSection .warningMessage,
+.sellerSection .stateMessage {
+  margin: 0 0 12px;
+}
+
+.warningMessage {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #f6d3ad;
+  border-radius: 8px;
+  background: var(--brand-accent-soft);
+  color: var(--brand-accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 @media (max-width: 760px) {
+  .sellerCurrent {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sellerEditorRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sellerEditorRow select {
+    grid-column: 1 / -1;
+  }
+
+  .sellerActions button {
+    flex: 1;
+  }
+
   .overlay {
     padding: 8px;
   }

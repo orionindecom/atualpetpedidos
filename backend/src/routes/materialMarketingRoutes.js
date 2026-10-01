@@ -1,3 +1,4 @@
+import { exigirPermissao } from "../middlewares/permissionMiddleware.js";
 import express from "express";
 import {
   buscarMaterialCliente,
@@ -9,7 +10,7 @@ import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.use(proteger, somentePublicoConteudo);
+router.use(proteger, exigirPermissao("materiais"));
 router.get("/", listarMateriaisCliente);
 router.get("/:id", validateObjectIdParam(), buscarMaterialCliente);
 

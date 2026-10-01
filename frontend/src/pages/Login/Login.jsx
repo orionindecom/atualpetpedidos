@@ -6,15 +6,23 @@ import logo from "../../assets/logo-atualpet-white.png";
 import AuthMascots from "../../components/AuthMascots/AuthMascots";
 import mascotStyles from "../../components/AuthMascots/AuthMascots.module.css";
 import AuthInstitutionalArt from "../../components/AuthInstitutionalArt/AuthInstitutionalArt";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
+import { classifyLoginError } from "../../utils/accessFeedback";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [entrando, setEntrando] = useState(false);
+  const [erroLogin, setErroLogin] = useState("");
+  const { dialog } = useFeedback();
 
   const navigate = useNavigate();
 
   const fazerLogin = async (e) => {
     e.preventDefault();
+    if (entrando) return;
+    setErroLogin("");
+    setEntrando(true);
 
     try {
       const response = await api.post("/auth/login", {
@@ -27,15 +35,22 @@ function Login() {
 
       const homeByRole = {
         admin: "/admin",
-        comercial: "/precos",
+        comercial: "/vendas",
+        vendedor: "/vendas",
         marketing: "/marketing",
         logistica: "/logistica",
-        cliente: "/catalogo",
+        cliente: "/conta",
         groomer: "/groomer",
       };
       navigate(homeByRole[response.data.usuario.tipo] || "/login");
     } catch (error) {
-      alert(error.response?.data?.message || "Erro ao realizar login");
+      setEntrando(false);
+      const acesso = classifyLoginError(error);
+      if (acesso.dialog) {
+        dialog.alert(acesso.dialog);
+        return;
+      }
+      setErroLogin(acesso.message);
     }
   };
 
@@ -69,7 +84,7 @@ function Login() {
                   type="email"
                   placeholder="seuemail@empresa.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setErroLogin(""); }}
                   required
                 />
               </label>
@@ -80,12 +95,14 @@ function Login() {
                   type="password"
                   placeholder="Digite sua senha"
                   value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
+                  onChange={(e) => { setSenha(e.target.value); setErroLogin(""); }}
                   required
                 />
               </label>
 
-              <button type="submit">Entrar na Central</button>
+              {erroLogin && <p className={styles.formError} role="alert">{erroLogin}</p>}
+
+              <button type="submit" disabled={entrando}>{entrando ? "Entrando..." : "Entrar na Central"}</button>
             </form>
 
             <div className={styles.footer}>

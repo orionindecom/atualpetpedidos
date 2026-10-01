@@ -83,7 +83,7 @@ const leanQuery = (value) => ({
 
 test("schema inclui Groomer sem remover papéis existentes e mantém campos profissionais", () => {
   assert.deepEqual(Usuario.schema.path("tipo").enumValues, [
-    "admin", "comercial", "marketing", "logistica", "cliente", "groomer",
+    "admin", "comercial", "vendedor", "marketing", "logistica", "cliente", "groomer",
   ]);
   for (const field of [
     "cidade", "estado", "nomeProfissional", "instagram", "tiktok", "observacaoCadastro",
@@ -223,10 +223,10 @@ test("Groomer acessa conteúdo, mas continua bloqueado das rotas exclusivas de c
   assert.equal(clientCalled, false);
 
   assert.deepEqual(materialRouter.stack.slice(0, 2).map((layer) => layer.name), [
-    "proteger", "somentePublicoConteudo",
+    "proteger", "verificarPermissao",
   ]);
   assert.deepEqual(trainingRouter.stack.slice(0, 2).map((layer) => layer.name), [
-    "proteger", "somentePublicoConteudo",
+    "proteger", "verificarPermissao",
   ]);
 });
 
@@ -358,7 +358,7 @@ test("catálogo, pedidos e preços bloqueiam Groomer explicitamente no backend",
   const orders = readFileSync(new URL("../src/routes/pedidoRoutes.js", import.meta.url), "utf8");
   assert.match(catalog, /proteger, somenteCliente, listarCatalogoCliente/);
   assert.match(catalog, /proteger, somenteCliente, listarPrecosClienteFinal/);
-  assert.match(orders, /somenteClienteOuAdmin/);
+  assert.match(orders, /exigirPermissao/);
 
   for (const relativePath of [
     "../src/routes/precoProdutoRoutes.js",

@@ -1,3 +1,4 @@
+import { exigirPermissao } from "../middlewares/permissionMiddleware.js";
 import express from "express";
 import {
   atualizarProgresso,
@@ -10,7 +11,7 @@ import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.use(proteger, somentePublicoConteudo);
+router.use(proteger, exigirPermissao("treinamentos"));
 router.get("/", listarTreinamentosCliente);
 router.get("/:id", validateObjectIdParam(), buscarTreinamentoCliente);
 router.put("/:id/progresso", validateObjectIdParam(), atualizarProgresso);

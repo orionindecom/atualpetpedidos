@@ -28,7 +28,9 @@ const unlockBodyScroll = () => {
 };
 
 const isTopmostDialog = (dialog) => {
-  const dialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+  const dialogs = document.querySelectorAll(
+    '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]'
+  );
   return dialogs[dialogs.length - 1] === dialog;
 };
 

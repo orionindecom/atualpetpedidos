@@ -1,3 +1,4 @@
+import { effectivePermissions } from "../utils/permissions.js";
 import Usuario from "../models/Usuario.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -187,6 +188,13 @@ export const login = async (req, res) => {
     }
 
     if (cadastroExternoBloqueiaAcesso(usuario)) {
+      if (usuario.statusCadastro === 'pendente' || usuario.statusCadastro === 'reprovado') {
+        return res.status(403).json({
+          code: usuario.statusCadastro === 'pendente' ? 'REGISTRATION_PENDING' : 'REGISTRATION_REJECTED',
+          status: usuario.statusCadastro,
+          message: usuario.statusCadastro === 'pendente' ? 'Cadastro ainda não aprovado.' : 'Cadastro não aprovado.',
+        });
+      }
       return res.status(403).json({
         message: "Cadastro ainda não aprovado pelo administrador",
       });
@@ -207,6 +215,8 @@ export const login = async (req, res) => {
         nomeResponsavel: usuario.nomeResponsavel,
         email: usuario.email,
         tipo: usuario.tipo,
+        permissoes: usuario.permissoes,
+        permissoesEfetivas: effectivePermissions(usuario),
         tabelaPrecoId: usuario.tabelaPrecoId,
         statusCadastro: usuario.statusCadastro,
       },

@@ -9,7 +9,11 @@ import {
 import Navbar from "../../components/Navbar/Navbar";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { getApiErrorMessage } from "../../utils/apiErrors";
+import { getAuthSession } from "../../utils/authSession";
+import { hasPermission } from "../../utils/permissions";
 import {
   buildTrainingAudiencePayload,
   changeTrainingDistributorAudience,
@@ -293,43 +297,111 @@ function TrainingFormModal({ apiBase, training, onClose, onSaved }) {
   );
 }
 
+const personName = (usuario) =>
+  usuario?.nomeFantasia || usuario?.nomeProfissional || usuario?.nomeResponsavel || "Usuário";
+
+const audienceLabel = (usuario) => (usuario?.tipo === "groomer" ? "Groomer" : usuario?.tipo === "cliente" ? "Distribuidor" : "");
+
+function ProgressRow({ item, percent, status, done, lastAccess }) {
+  return (
+    <div>
+      <span><strong>{personName(item.usuarioId)}</strong><small>{[audienceLabel(item.usuarioId), item.usuarioId?.email].filter(Boolean).join(" — ")}</small></span>
+      <span className={styles.progressValue}>
+        <span className={styles.progressBar} aria-hidden="true"><span style={{ width: `${percent}%` }} /></span>
+        <span>{percent}%</span>
+        <em data-done={done}>{status}</em>
+      </span>
+      <time>{lastAccess}</time>
+    </div>
+  );
+}
+
+// Acompanhamento: iniciados (/progresso) e público elegível que ainda não iniciou (/nao-iniciados).
 function ProgressModal({ apiBase, training, onClose }) {
   const [data, setData] = useState(null);
+  const [notStarted, setNotStarted] = useState(null);
+  const [notStartedError, setNotStartedError] = useState("");
   const [error, setError] = useState("");
+  const [tab, setTab] = useState("iniciaram");
   const dialogRef = useModalDialog({ onClose });
-
   useEffect(() => {
     const controller = new AbortController();
     api.get(`${apiBase}/${training._id}/progresso`, { signal: controller.signal })
       .then((response) => setData(response.data))
       .catch((requestError) => {
-        if (requestError.code !== "ERR_CANCELED") setError(requestError.response?.data?.message || "Não foi possível carregar o progresso");
+        if (requestError.code !== "ERR_CANCELED") setError(getApiErrorMessage(requestError, "Não foi possível carregar o progresso"));
+      });
+    api.get(`${apiBase}/${training._id}/nao-iniciados`, { signal: controller.signal })
+      .then((response) => setNotStarted(response.data))
+      .catch((requestError) => {
+        if (requestError.code !== "ERR_CANCELED") setNotStartedError(getApiErrorMessage(requestError, "Não foi possível carregar quem ainda não iniciou"));
       });
     return () => controller.abort();
   }, [apiBase, training._id]);
+
+  const started = data?.usuarios || [];
+  const pending = notStarted?.usuarios || [];
+  const eligible = notStarted?.resumo?.totalElegiveis;
+  const lastAccess = data?.resumo?.ultimoAcessoEm ? new Date(data.resumo.ultimoAcessoEm).toLocaleDateString("pt-BR") : "—";
+  const tabs = [
+    { id: "iniciaram", label: "Iniciaram", count: data ? data.resumo.totalIniciaram : null },
+    { id: "nao-iniciaram", label: "Não iniciaram", count: notStarted ? notStarted.resumo.totalNaoIniciaram : null },
+  ];
 
   return (
     <div className={styles.modalOverlay} onMouseDown={onClose}>
       <section ref={dialogRef} className={`${styles.modal} ${styles.progressModal}`} role="dialog" aria-modal="true" aria-labelledby="progress-title" tabIndex="-1" onMouseDown={(event) => event.stopPropagation()}>
         <header className={styles.modalHeader}><div><span>Acompanhamento</span><h2 id="progress-title">{training.titulo}</h2></div><button type="button" aria-label="Fechar acompanhamento do treinamento" onClick={onClose}>Fechar</button></header>
-        {error ? <div className={styles.stateBox} role="alert">{error}</div> : !data ? <div className={styles.stateBox}>Carregando progresso...</div> : (
+        {error ? <div className={styles.stateBox} role="alert">{error}</div> : !data ? <div className={styles.stateBox} role="status">Carregando progresso...</div> : (
           <div className={styles.progressContent}>
             <div className={styles.metrics}>
+              {eligible !== undefined && <div><span>Público elegível</span><strong>{eligible}</strong></div>}
               <div><span>Iniciaram</span><strong>{data.resumo.totalIniciaram}</strong></div>
               <div><span>Concluíram</span><strong>{data.resumo.totalConcluiram}</strong></div>
-              <div><span>Média</span><strong>{Math.round(data.resumo.mediaProgresso)}%</strong></div>
+              <div><span>Média assistida</span><strong>{Math.round(data.resumo.mediaProgresso || 0)}%</strong></div>
+              <div><span>Último acesso</span><strong className={styles.metricDate}>{lastAccess}</strong></div>
             </div>
-            {data.usuarios.length === 0 ? <div className={styles.stateBox}>Nenhum usuário iniciou este treinamento.</div> : (
-              <div className={styles.progressList}>
-                {data.usuarios.map((item) => (
-                  <div key={item.usuarioId?._id || item.usuarioId}>
-                    <span><strong>{item.usuarioId?.nomeFantasia || item.usuarioId?.nomeProfissional || item.usuarioId?.nomeResponsavel || "Usuário"}</strong><small>{item.usuarioId?.email || ""}</small></span>
-                    <span>{Math.round(item.percentualAssistido)}% • {item.concluido ? "Concluído" : "Em andamento"}</span>
-                    <time>{item.ultimoAcessoEm ? new Date(item.ultimoAcessoEm).toLocaleDateString("pt-BR") : "Sem acesso recente"}</time>
+            <div className={styles.progressTabs} role="tablist" aria-label="Situação do público">
+              {tabs.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  id={`progress-tab-${item.id}`}
+                  aria-selected={tab === item.id}
+                  aria-controls="progress-panel"
+                  onClick={() => setTab(item.id)}
+                >
+                  {item.label}{item.count !== null && <span>{item.count}</span>}
+                </button>
+              ))}
+            </div>
+            <div role="tabpanel" id="progress-panel" aria-labelledby={`progress-tab-${tab}`}>
+              {tab === "iniciaram" ? (
+                started.length === 0 ? <div className={styles.stateBox}>Ninguém iniciou este treinamento ainda.</div> : (
+                  <div className={styles.progressList}>
+                    {started.map((item) => (
+                      <ProgressRow
+                        key={item.usuarioId?._id || item.usuarioId}
+                        item={item}
+                        percent={Math.max(0, Math.min(100, Math.round(item.percentualAssistido || 0)))}
+                        status={item.concluido ? "Concluído" : "Em andamento"}
+                        done={Boolean(item.concluido)}
+                        lastAccess={item.ultimoAcessoEm ? new Date(item.ultimoAcessoEm).toLocaleDateString("pt-BR") : "Sem acesso recente"}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )
+              ) : notStartedError ? <div className={styles.stateBox} role="alert">{notStartedError}</div> : !notStarted ? <div className={styles.stateBox} role="status">Carregando público...</div> : pending.length === 0 ? (
+                <div className={styles.stateBox}>Todo o público elegível já iniciou este treinamento.</div>
+              ) : (
+                <div className={styles.progressList}>
+                  {pending.map((item) => (
+                    <ProgressRow key={item.usuarioId?._id || item.usuarioId} item={item} percent={0} status="Não iniciado" done={false} lastAccess="Nunca acessou" />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </section>
@@ -379,12 +451,19 @@ function AdminTreinamentos({
   const [refreshKey, setRefreshKey] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [feedback, setFeedback] = useState(null);
+  const { dialog, toast } = useFeedback();
   const [formTraining, setFormTraining] = useState(undefined);
   const [previewTraining, setPreviewTraining] = useState(null);
   const [progressTraining, setProgressTraining] = useState(null);
   const [actionId, setActionId] = useState("");
   const [imageErrors, setImageErrors] = useState(new Set());
+  // Ações exibidas conforme as permissões efetivas; o backend valida cada operação.
+  const usuario = getAuthSession()?.usuario;
+  const canCreate = hasPermission(usuario, "criarTreinamentos");
+  const canEdit = hasPermission(usuario, "editarTreinamentos");
+  const canDelete = hasPermission(usuario, "excluirTreinamentos");
+  const canTrack = hasPermission(usuario, "acompanharTreinamentos");
+  const canManage = canCreate || canEdit || canDelete;
 
   const filtrosAtivos = Object.entries(filtrosAplicados).filter(
     ([key, value]) => key !== "busca" && Boolean(value)
@@ -413,30 +492,36 @@ function AdminTreinamentos({
 
   const applyFilters = (event) => { event.preventDefault(); setPagina(1); setFiltrosAplicados({ ...filtros }); };
   const clearFilters = () => { setFiltros(filtrosIniciais); setFiltrosAplicados(filtrosIniciais); setPagina(1); };
-  const saved = (message) => { setFormTraining(undefined); setFeedback({ type: "success", message }); setRefreshKey((value) => value + 1); };
+  const saved = (message) => { setFormTraining(undefined); toast.success(message); setRefreshKey((value) => value + 1); };
   const closeActionMenu = (event) => event.currentTarget.closest("details")?.removeAttribute("open");
 
   const changeStatus = async (training) => {
     setActionId(training._id);
     try {
       const response = await api.patch(`${apiBase}/${training._id}/status`, { ativo: !training.ativo });
-      setFeedback({ type: "success", message: response.data.message });
+      toast.success(response.data.message);
       setRefreshKey((value) => value + 1);
     } catch (error) {
-      setFeedback({ type: "error", message: error.response?.data?.message || "Não foi possível alterar o status" });
+      toast.error("Não foi possível alterar o status", { description: getApiErrorMessage(error, "Tente novamente em instantes.") });
     } finally { setActionId(""); }
   };
 
   const remove = async (training) => {
-    if (!window.confirm(`Excluir definitivamente o treinamento "${training.titulo}" e seus progressos?`)) return;
     setActionId(training._id);
-    try {
-      const response = await api.delete(`${apiBase}/${training._id}`);
-      setFeedback({ type: "success", message: response.data.message });
-      setRefreshKey((value) => value + 1);
-    } catch (error) {
-      setFeedback({ type: "error", message: error.response?.data?.message || "Não foi possível excluir o treinamento" });
-    } finally { setActionId(""); }
+    const excluido = await dialog.confirm({
+      variant: "danger",
+      icon: "trash",
+      title: "Excluir treinamento?",
+      message: "O treinamento e o progresso registrado pelo público serão excluídos definitivamente.",
+      details: [{ label: "Treinamento", value: training.titulo }],
+      confirmLabel: "Excluir treinamento",
+      busyLabel: "Excluindo treinamento...",
+      errorFallback: "Não foi possível excluir o treinamento.",
+      action: async () => (await api.delete(`${apiBase}/${training._id}`)).data,
+      successToast: (data) => ({ title: data?.message || "Treinamento excluído" }),
+    });
+    setActionId("");
+    if (excluido) setRefreshKey((value) => value + 1);
   };
 
   return (
@@ -444,12 +529,13 @@ function AdminTreinamentos({
       <Navbar />
       <main className={styles.container}>
         <PageHeader
-          eyebrow="Administração de conteúdo"
+          eyebrow={canManage ? "Administração de conteúdo" : "Acompanhamento"}
           title={pageTitle}
-          description="Publique e acompanhe conteúdos por público autorizado."
-          action={<button type="button" className={styles.primaryButton} onClick={() => setFormTraining(null)}>Novo treinamento</button>}
+          description={canManage
+            ? "Publique e acompanhe conteúdos por público autorizado."
+            : "Veja quem já assistiu, quem ainda não iniciou e o progresso de cada treinamento."}
+          action={canCreate ? <button type="button" className={styles.primaryButton} onClick={() => setFormTraining(null)}>Novo treinamento</button> : null}
         />
-        {feedback && <div className={feedback.type === "success" ? styles.successFeedback : styles.errorFeedback} role="status">{feedback.message}</div>}
         <FilterToolbar
           activeFilterCount={filtrosAtivos}
           layout="stacked"
@@ -494,14 +580,18 @@ function AdminTreinamentos({
                     <div className={styles.metadata}><span>{[training.marca, training.linha].filter(Boolean).join(" • ") || "Sem marca ou linha"}</span><span>{training.instrutor || "Sem instrutor"} • {formatTrainingDuration(training.duracaoSegundos)}</span><span>Publicação: {formatDate(training.publicadoEm)}</span></div>
                   </div>
                   <footer className={styles.cardActions}>
-                    <button className={styles.editButton} onClick={() => setFormTraining(training)}>Editar</button>
+                    {canEdit ? (
+                      <button className={styles.editButton} onClick={() => setFormTraining(training)}>Editar</button>
+                    ) : canTrack ? (
+                      <button className={styles.editButton} onClick={() => setProgressTraining(training)}>Ver acompanhamento</button>
+                    ) : <span />}
                     <details className={styles.actionMenu}>
                       <summary aria-label={`Mais ações para ${training.titulo}`}>⋯</summary>
                       <div>
-                        <button onClick={(event) => { closeActionMenu(event); setPreviewTraining(training); }}>Abrir prévia</button>
-                        <button onClick={(event) => { closeActionMenu(event); setProgressTraining(training); }}>Ver progresso</button>
-                        <button disabled={actionId === training._id} onClick={(event) => { closeActionMenu(event); changeStatus(training); }}>{training.ativo ? "Desativar" : "Ativar"}</button>
-                        <button className={styles.deleteButton} disabled={actionId === training._id} onClick={(event) => { closeActionMenu(event); remove(training); }}>Excluir</button>
+                        <button onClick={(event) => { closeActionMenu(event); setPreviewTraining(training); }}>Abrir treinamento</button>
+                        {canTrack && canEdit && <button onClick={(event) => { closeActionMenu(event); setProgressTraining(training); }}>Ver acompanhamento</button>}
+                        {canEdit && <button disabled={actionId === training._id} onClick={(event) => { closeActionMenu(event); changeStatus(training); }}>{training.ativo ? "Desativar" : "Ativar"}</button>}
+                        {canDelete && <button className={styles.deleteButton} disabled={actionId === training._id} onClick={(event) => { closeActionMenu(event); remove(training); }}>Excluir</button>}
                       </div>
                     </details>
                   </footer>

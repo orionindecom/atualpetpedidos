@@ -1,0 +1,34 @@
+.badge {
+  width: fit-content;
+  padding: 4px 11px 4px 9px;
+  border: 1px solid #d7dedc;
+  border-radius: 20px;
+  background: #f8faf9;
+  color: #374441;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge::before {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  content: "";
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.badge[data-tone="novo"] { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.badge[data-tone="novo"]::before { background: #3b82f6; }
+.badge[data-tone="separacao"] { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.badge[data-tone="separacao"]::before { background: #f59e0b; }
+.badge[data-tone="enviado"] { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
+.badge[data-tone="enviado"]::before { background: #06b6d4; }
+.badge[data-tone="entregue"] { background: #f0fdf4; color: #166534; border-color: #86efac; }
+.badge[data-tone="entregue"]::before { background: #22c55e; }
+.badge[data-tone="cancelado"] { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.badge[data-tone="cancelado"]::before { background: #ef4444; }

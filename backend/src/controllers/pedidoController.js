@@ -1,4 +1,5 @@
-import { temPapel } from "../middlewares/adminMiddleware.js";
+import { hasPermission, isSalesUser } from "../utils/permissions.js";
+import { filtroPedidos, podeAcessarPedido } from "../services/authorizationService.js";
 import Pedido from "../models/Pedido.js";
 import PrecoProduto from "../models/PrecoProduto.js";
 import Produto from "../models/Produto.js";
@@ -138,9 +139,9 @@ const montarItensPedido = async (itens, tabelaPrecoId) => {
 export const criarPedido = async (req, res) => {
   try {
     const { itens, observacao } = req.body;
-    const comercial = req.usuario.tipo === "comercial";
+    const comercial = isSalesUser(req.usuario);
 
-    if (!temPapel(req.usuario, ["cliente", "comercial"])) {
+    if (!(req.usuario.tipo === "cliente" || hasPermission(req.usuario, "criarPedidos"))) {
       return res.status(403).json({ message: "Acesso negado" });
     }
 
@@ -154,7 +155,7 @@ export const criarPedido = async (req, res) => {
     }
 
     const { cliente, tabela } = await obterClientePedido(
-      comercial ? req.body.clienteId : req.usuario._id
+      comercial ? req.body.clienteId : req.usuario._id, req.usuario
     );
     if (comercial && req.body.tabelaPrecoId && String(req.body.tabelaPrecoId) !== String(cliente.tabelaPrecoId)) {
       return res.status(409).json({ message: "A tabela do distribuidor mudou. Selecione-o novamente para revisar os preços." });
@@ -176,12 +177,13 @@ export const criarPedido = async (req, res) => {
 
     const pedido = await criarPedidoComNumeroUnico({
       clienteId: cliente._id,
+      vendedorResponsavelId: cliente.vendedorResponsavelId,
       origem: comercial ? "comercial" : "cliente",
-      ...(comercial ? { criadoPor: {
+      criadoPor: {
         usuarioId: req.usuario._id,
-        usuarioNome: req.usuario.nomeResponsavel || req.usuario.nomeFantasia || "Comercial",
+        usuarioNome: req.usuario.nomeResponsavel || req.usuario.nomeFantasia || "Usuário",
         usuarioTipo: req.usuario.tipo,
-      } } : {}),
+      },
       nomeResponsavel: cliente.nomeResponsavel,
       nomeFantasiaCliente: cliente.nomeFantasia,
       razaoSocialCliente: cliente.razaoSocial,
@@ -245,7 +247,7 @@ export const confirmarRecebimento = async (req, res) => {
       },
       update,
       {
-        new: true,
+        returnDocument: 'after',
         runValidators: true,
       }
     );
@@ -285,7 +287,7 @@ export const confirmarRecebimento = async (req, res) => {
 
 export const listarTodosPedidos = async (req, res) => {
   try {
-    const pedidos = await Pedido.find().sort({ createdAt: -1 }).lean();
+    const pedidos = await Pedido.find(await filtroPedidos(req.usuario)).sort({ createdAt: -1 }).lean();
 
     return res.status(200).json(pedidos.map(enrichOrderSeparation));
   } catch (error) {
@@ -295,7 +297,7 @@ export const listarTodosPedidos = async (req, res) => {
 
 export const buscarPedidoPorId = async (req, res) => {
   try {
-    const gestorComercial = temPapel(req.usuario, ["admin", "comercial"]);
+    const gestorComercial = hasPermission(req.usuario, "pedidosTodos");
     const query = Pedido.findById(req.params.id);
     if (gestorComercial) {
       query.select("+historicoStatus +observacaoLogistica +ocorrencias +historicoAlteracoes +historicoConferencias");
@@ -309,8 +311,7 @@ export const buscarPedidoPorId = async (req, res) => {
     }
 
     if (
-      !gestorComercial &&
-      String(pedido.clienteId) !== String(req.usuario._id)
+      !(await podeAcessarPedido(req.usuario, pedido))
     ) {
       return res.status(403).json({
         message: "Você não tem permissão para acessar este pedido",
@@ -318,7 +319,7 @@ export const buscarPedidoPorId = async (req, res) => {
     }
 
     return res.status(200).json(
-      gestorComercial
+      (gestorComercial || hasPermission(req.usuario, "pedidosCarteira"))
         ? enrichInternalOrderDetail(pedido)
         : sanitizeClientOrder(pedido)
     );
@@ -338,8 +339,7 @@ export const gerarPdf = async (req, res) => {
     }
 
     if (
-      req.usuario.tipo !== "admin" &&
-      String(pedido.clienteId) !== String(req.usuario._id)
+      !(await podeAcessarPedido(req.usuario, pedido))
     ) {
       return res.status(403).json({
         message: "Sem permissão",
@@ -434,6 +434,10 @@ export const atualizarStatusPedido = async (req, res) => {
 
 export const aprovarPedidoAdmin = async (req, res) => {
   try {
+    if (!hasPermission(req.usuario, "pedidosTodos")) {
+      const alvo = await Pedido.findById(req.params.id);
+      if (!alvo || !(await podeAcessarPedido(req.usuario, alvo))) return res.status(403).json({ message: "Acesso negado" });
+    }
     const now = new Date();
     const aprovacao = {
       aprovadoEm: now,
@@ -464,7 +468,7 @@ export const aprovarPedidoAdmin = async (req, res) => {
         $inc: { __v: 1 },
       },
       {
-        new: true,
+        returnDocument: 'after',
         runValidators: true,
       }
     ).select("+historicoStatus +observacaoLogistica +ocorrencias");
@@ -515,6 +519,13 @@ export const atualizarPedidoAdmin = async (req, res) => {
       return res.status(404).json({
         message: "Pedido não encontrado",
       });
+    }
+
+    if (!hasPermission(req.usuario, "editarPedidos") || !(await podeAcessarPedido(req.usuario, pedido))) {
+      return res.status(403).json({ message: "Sem permissão para editar este pedido" });
+    }
+    if (!hasPermission(req.usuario, "pedidosTodos") && !["aguardando_aprovacao", "novo", "em_analise"].includes(pedido.status)) {
+      return res.status(409).json({ message: "Este pedido já entrou na operação e não pode ser editado pelo vendedor" });
     }
 
     if (Number(pedido.__v || 0) !== Number(versaoPedido)) {
@@ -581,6 +592,7 @@ export const excluirPedidoAdmin = async (req, res) => {
       });
     }
 
+    if (!hasPermission(req.usuario, "excluirPedidos") || !(await podeAcessarPedido(req.usuario, pedido))) return res.status(403).json({ message: "Acesso negado" });
     if (pedidoPossuiEntregaConfirmada(pedido)) {
       return res.status(409).json({
         message: "Pedidos entregues são mantidos para consulta e não podem ser excluídos",

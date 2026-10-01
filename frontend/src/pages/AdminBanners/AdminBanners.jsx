@@ -8,6 +8,7 @@ import {
 } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { buildImageFormData } from "../../utils/imageUpload";
 import styles from "./AdminBanners.module.css";
 
@@ -209,7 +210,7 @@ function AdminBanners() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [feedback, setFeedback] = useState(null);
+  const { dialog, toast } = useFeedback();
   const [modalBanner, setModalBanner] = useState(undefined);
   const [busyId, setBusyId] = useState("");
 
@@ -239,7 +240,7 @@ function AdminBanners() {
 
   const completeForm = (message) => {
     setModalBanner(undefined);
-    setFeedback({ type: "success", message });
+    toast.success(message);
     setRefreshKey((value) => value + 1);
   };
 
@@ -247,28 +248,33 @@ function AdminBanners() {
     setBusyId(banner._id);
     try {
       const response = await api.patch(`/marketing/banners/${banner._id}/status`, { ativo: !banner.ativo });
-      setFeedback({ type: "success", message: response.data.message });
+      toast.success(response.data.message);
       setRefreshKey((value) => value + 1);
     } catch (requestError) {
-      setFeedback({ type: "error", message: requestError.response?.data?.message || "Não foi possível alterar o status" });
+      toast.error(requestError.response?.data?.message || "Não foi possível alterar o status");
     } finally {
       setBusyId("");
     }
   };
 
   const remove = async (banner) => {
-    if (!window.confirm(`Excluir definitivamente o banner "${banner.tituloInterno}"?`)) return;
     setBusyId(banner._id);
-    try {
-      const response = await api.delete(`/marketing/banners/${banner._id}`);
-      setFeedback({ type: "success", message: response.data.message });
-      setPage((current) => banners.length === 1 && current > 1 ? current - 1 : current);
-      setRefreshKey((value) => value + 1);
-    } catch (requestError) {
-      setFeedback({ type: "error", message: requestError.response?.data?.message || "Não foi possível excluir o banner" });
-    } finally {
-      setBusyId("");
-    }
+    const excluido = await dialog.confirm({
+      variant: "danger",
+      icon: "trash",
+      title: "Excluir banner?",
+      message: "O banner deixa de ser exibido para os distribuidores e não poderá ser recuperado.",
+      details: [{ label: "Banner", value: banner.tituloInterno }],
+      confirmLabel: "Excluir banner",
+      busyLabel: "Excluindo banner...",
+      errorFallback: "Não foi possível excluir o banner.",
+      action: async () => (await api.delete(`/marketing/banners/${banner._id}`)).data,
+      successToast: (data) => ({ title: data?.message || "Banner excluído" }),
+    });
+    setBusyId("");
+    if (!excluido) return;
+    setPage((current) => banners.length === 1 && current > 1 ? current - 1 : current);
+    setRefreshKey((value) => value + 1);
   };
 
   return (
@@ -280,7 +286,6 @@ function AdminBanners() {
           <button type="button" className={styles.primaryButton} onClick={() => setModalBanner(null)}>Novo banner</button>
         </header>
 
-        {feedback && <div className={feedback.type === "success" ? styles.successFeedback : styles.errorFeedback} role="status">{feedback.message}</div>}
 
         <FilterToolbar
           activeFilterCount={appliedFilters.ativo ? 1 : 0}

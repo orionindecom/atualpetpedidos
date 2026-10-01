@@ -1,3 +1,8 @@
+import { useState } from "react";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
+import SellerAssignment from "./SellerAssignment";
+import { getAuthSession } from "../../utils/authSession";
+import { hasPermission } from "../../utils/permissions";
 import {
   formatClientDocument,
   getClientAccountTypeLabel,
@@ -47,6 +52,7 @@ function ClientDetailModal({
   onReject,
   onToggleActive,
   onResetPassword,
+  onClientChange,
 }) {
   const hasClient = Boolean(client && typeof client === "object");
   const groomer = hasClient && isGroomerAccount(client);
@@ -67,11 +73,19 @@ function ClientDetailModal({
   const approvalStatus = hasClient ? client.statusCadastro || "pendente" : "";
   const canToggleActive = ["aprovado", "inativo"].includes(approvalStatus);
   const busy = saving || actionBusy;
-  const dialogRef = useModalDialog({ onClose, closeDisabled: busy });
+  const [sellerDirty, setSellerDirty] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const canAssignSeller = hasClient && client.tipo === "cliente" && hasPermission(getAuthSession()?.usuario, "usuarios");
+  const requestClose = () => {
+    if (busy) return;
+    if (sellerDirty) setConfirmDiscard(true);
+    else onClose();
+  };
+  const dialogRef = useModalDialog({ onClose: requestClose, closeDisabled: busy });
 
   return (
     <div className={styles.overlay} onMouseDown={(event) => {
-      if (event.target === event.currentTarget && !busy) onClose();
+      if (event.target === event.currentTarget) requestClose();
     }}>
       <section
         ref={dialogRef}
@@ -92,7 +106,7 @@ function ClientDetailModal({
             type="button"
             className={styles.closeButton}
             aria-label="Fechar detalhes do cliente"
-            onClick={onClose}
+            onClick={requestClose}
             disabled={busy}
           >
             Fechar
@@ -260,6 +274,15 @@ function ClientDetailModal({
               )}
             </form>
 
+            {canAssignSeller && (
+              <SellerAssignment
+                key={client._id}
+                cliente={client}
+                onChange={onClientChange}
+                onEditingChange={setSellerDirty}
+              />
+            )}
+
             <section className={styles.accountSection}>
               <div className={styles.sectionHeading}>
                 <div>
@@ -320,6 +343,19 @@ function ClientDetailModal({
           )}
         </div>
       </section>
+
+      {confirmDiscard && (
+        <ConfirmDialog
+          tone="warning"
+          icon="edit"
+          title="Descartar alterações?"
+          message="A alteração do vendedor responsável ainda não foi salva."
+          cancelLabel="Continuar editando"
+          confirmLabel="Descartar"
+          onCancel={() => setConfirmDiscard(false)}
+          onConfirm={() => { setConfirmDiscard(false); onClose(); }}
+        />
+      )}
     </div>
   );
 }

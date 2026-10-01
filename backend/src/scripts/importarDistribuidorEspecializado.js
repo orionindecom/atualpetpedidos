@@ -734,7 +734,7 @@ const aplicarItem = async (item, relatorio, session) => {
       { $set: { valor: preco.valor } },
       {
         upsert: true,
-        new: true,
+        returnDocument: 'after',
         setDefaultsOnInsert: true,
         runValidators: true,
         session,

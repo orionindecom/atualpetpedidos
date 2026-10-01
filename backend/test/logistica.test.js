@@ -191,6 +191,7 @@ test("schema aceita logistica e Pedido preserva status antigos", () => {
   assert.deepEqual(Usuario.schema.path("tipo").enumValues, [
     "admin",
     "comercial",
+    "vendedor",
     "marketing",
     "logistica",
     "cliente",
@@ -322,7 +323,7 @@ test("rotas logisticas e criacao de pedido aplicam middlewares corretos", () => 
   assert.ok(approvalRoute);
   assert.deepEqual(approvalRoute.route.stack.slice(0, 2).map((layer) => layer.name), [
     "proteger",
-    "somenteGestorComercial",
+    "verificarPermissao",
   ]);
 });
 
@@ -408,8 +409,8 @@ test(`aprovacao atomica registra ${tipo} e rejeita a segunda requisicao`, async 
   assert.equal(capturedUpdate.$set.status, "aprovado");
   assert.equal(capturedUpdate.$set.aprovacao.usuarioTipo, tipo);
   const document = new Pedido({ aprovacao: capturedUpdate.$set.aprovacao, historicoStatus: [capturedUpdate.$push.historicoStatus] });
-  assert.equal(document.aprovacao.validateSync(), undefined);
-  assert.equal(document.historicoStatus[0].validateSync(), undefined);
+  await document.aprovacao.validate();
+  await document.historicoStatus[0].validate();
   assert.equal(capturedUpdate.$set.aprovacao.usuarioNome, "Ana Admin");
   assert.equal(capturedUpdate.$push.historicoStatus.usuarioTipo, tipo);
 });

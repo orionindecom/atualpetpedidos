@@ -1,3 +1,4 @@
+import { exigirPermissao } from "../middlewares/permissionMiddleware.js";
 import express from "express";
 
 import {
@@ -15,11 +16,10 @@ import {
 } from "../controllers/pedidoController.js";
 
 import { proteger } from "../middlewares/authMiddleware.js";
-import { somenteAdmin, somenteComercial, somenteGestorComercial } from "../middlewares/adminMiddleware.js";
+import { somenteAdmin } from "../middlewares/adminMiddleware.js";
 import { listarCatalogoDistribuidor, listarDistribuidoresPedido } from "../controllers/pedidoComercialController.js";
 import {
   somenteCliente,
-  somenteClienteOuAdmin,
 } from "../middlewares/clienteMiddleware.js";
 import {
   adminLimiter,
@@ -29,9 +29,9 @@ import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
 
-router.get("/comercial/distribuidores", proteger, somenteComercial, adminLimiter, listarDistribuidoresPedido);
-router.get("/comercial/distribuidores/:id/catalogo", proteger, somenteComercial, adminLimiter, validateObjectIdParam(), listarCatalogoDistribuidor);
-router.post("/comercial", proteger, somenteComercial, pedidoLimiter, criarPedido);
+router.get("/comercial/distribuidores", proteger, exigirPermissao("clientes"), adminLimiter, listarDistribuidoresPedido);
+router.get("/comercial/distribuidores/:id/catalogo", proteger, exigirPermissao("clientes"), adminLimiter, validateObjectIdParam(), listarCatalogoDistribuidor);
+router.post("/comercial", proteger, exigirPermissao("criarPedidos"), pedidoLimiter, criarPedido);
 
 router.post(
   "/",
@@ -51,7 +51,7 @@ router.get(
 router.get(
   "/",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao("pedidosTodos", "pedidosCarteira"),
   adminLimiter,
   listarTodosPedidos
 );
@@ -68,16 +68,17 @@ router.patch(
 router.patch(
   "/:id/aprovar",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao("pedidosTodos", "pedidosCarteira"),
   adminLimiter,
   validateObjectIdParam(),
+  exigirPermissao("aprovarPedidos"),
   aprovarPedidoAdmin
 );
 
 router.get(
   "/:id/aprovacao",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao("pedidosTodos", "pedidosCarteira"),
   validateObjectIdParam(),
   buscarPedidoPorId
 );
@@ -85,7 +86,7 @@ router.get(
 router.get(
   "/:id/pdf",
   proteger,
-  somenteClienteOuAdmin,
+  (req, res, next) => req.usuario.tipo === "cliente" ? next() : exigirPermissao("pedidosTodos", "pedidosCarteira")(req, res, next),
   validateObjectIdParam(),
   gerarPdf
 );
@@ -102,25 +103,27 @@ router.get(
 router.put(
   "/:id",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao("pedidosTodos", "pedidosCarteira"),
   adminLimiter,
   validateObjectIdParam(),
+  exigirPermissao("editarPedidos"),
   atualizarPedidoAdmin
 );
 
 router.delete(
   "/:id",
   proteger,
-  somenteGestorComercial,
+  exigirPermissao("pedidosTodos", "pedidosCarteira"),
   adminLimiter,
   validateObjectIdParam(),
+  exigirPermissao("excluirPedidos"),
   excluirPedidoAdmin
 );
 
 router.get(
   "/:id",
   proteger,
-  somenteClienteOuAdmin,
+  (req, res, next) => req.usuario.tipo === "cliente" ? next() : exigirPermissao("pedidosTodos", "pedidosCarteira")(req, res, next),
   validateObjectIdParam(),
   buscarPedidoPorId
 );

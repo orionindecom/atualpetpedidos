@@ -1,3 +1,5 @@
+import usuarioRoutes from "./routes/usuarioRoutes.js";
+import carteiraRoutes from "./routes/carteiraRoutes.js";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -87,6 +89,8 @@ app.use(
   })
 );
 
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/carteira", carteiraRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/clientes", clienteRoutes);
 app.use("/api/produtos", produtoRoutes);

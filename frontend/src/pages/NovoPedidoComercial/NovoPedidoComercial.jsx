@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Navbar from "../../components/Navbar/Navbar";
@@ -8,6 +9,8 @@ import layout from "../LogisticaDashboard/LogisticaDashboard.module.css";
 import styles from "./NovoPedidoComercial.module.css";
 
 function NovoPedidoComercial() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const clienteInicial = searchParams.get("cliente");
   const [clientes, setClientes] = useState(null);
   const [selecionado, setSelecionado] = useState(null);
   const [busca, setBusca] = useState("");
@@ -18,13 +21,13 @@ function NovoPedidoComercial() {
   useEffect(() => {
     const controller = new AbortController();
     api.get("/pedidos/comercial/distribuidores", { signal: controller.signal })
-      .then((response) => { if (!controller.signal.aborted) setClientes(response.data); })
+      .then((response) => { if (!controller.signal.aborted) { setClientes(response.data); if (clienteInicial) { const cliente = response.data.find((c) => c._id === clienteInicial); if (cliente) setSelecionado(cliente); else setErro("Cliente indisponível ou fora da sua carteira."); } } })
       .catch((error) => { if (!controller.signal.aborted) setErro(error.response?.data?.message || "Não foi possível carregar os distribuidores"); });
     return () => controller.abort();
-  }, [reload]);
+  }, [reload, clienteInicial]);
 
   if (selecionado) return <Catalogo key={selecionado._id} distribuidor={selecionado} onTrocarDistribuidor={() => {
-    setSelecionado(null); setClientes(null); setReload((value) => value + 1);
+    setSearchParams({}); setSelecionado(null); setClientes(null); setReload((value) => value + 1);
   }} />;
 
   const filtrados = (clientes || []).filter((cliente) =>

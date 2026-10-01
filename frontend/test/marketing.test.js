@@ -18,7 +18,7 @@ test("guard e login direcionam marketing para seu painel", () => {
   const guards = readSource("../src/components/RouteGuards/RouteGuards.jsx");
   const login = readSource("../src/pages/Login/Login.jsx");
   assert.match(guards, /marketing: "\/marketing"/);
-  assert.match(guards, /marketing: "\/marketing\/dashboard"/);
+  assert.match(guards, /api\.get\("\/auth\/me"\)/);
   assert.match(login, /marketing: "\/marketing"/);
 });
 

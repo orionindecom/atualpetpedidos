@@ -160,6 +160,8 @@ export const buildAudienceFilter = (usuarioId) => ({
 });
 
 export const buildContentAudienceFilter = (usuario) => {
+  // Contas internas autorizadas estudam o conteúdo publicado para apoiar distribuidores.
+  if (["admin", "comercial", "vendedor", "marketing", "logistica"].includes(usuario?.tipo)) return {};
   if (usuario?.tipo === "groomer") {
     return { publicos: "groomer" };
   }

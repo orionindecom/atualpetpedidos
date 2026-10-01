@@ -1,3 +1,4 @@
+import { hasPermission } from "../utils/permissions.js";
 import Pedido from "../models/Pedido.js";
 import { gerarPdfSeparacaoPedido } from "../services/pdfSeparacaoService.js";
 import {
@@ -760,6 +761,10 @@ export const gerarPdfSeparacao = async (req, res) => {
 
 export const atualizarPedidoLogistica = async (req, res) => {
   try {
+    if ((req.body.conferencia && !hasPermission(req.usuario, 'conferencia')) ||
+      ((req.body.status === 'faturado' || req.body.numeroNotaFiscal || req.body.dataFaturamento) && !hasPermission(req.usuario, 'faturamento'))) {
+      return res.status(403).json({ message: 'Sem permissão para esta etapa operacional' });
+    }
     const parsed = validateLogisticsOrderPayload(req.body);
     if (!parsed.valid) {
       return res.status(400).json({

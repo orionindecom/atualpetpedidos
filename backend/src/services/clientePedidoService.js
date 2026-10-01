@@ -1,3 +1,4 @@
+import { canAccessClient } from "../utils/permissions.js";
 import Usuario from "../models/Usuario.js";
 import TabelaPreco from "../models/TabelaPreco.js";
 import { cadastroClienteBloqueiaAcesso } from "../utils/userAccess.js";
@@ -11,15 +12,18 @@ export class ClientePedidoError extends Error {
 }
 
 // A identidade do comprador é independente da identidade de quem lança o pedido.
-export const obterClientePedido = async (clienteId) => {
+export const obterClientePedido = async (clienteId, usuario) => {
   if (!isValidObjectId(clienteId)) {
     throw new ClientePedidoError("Selecione um distribuidor válido");
   }
   const cliente = await Usuario.findById(clienteId)
-    .select("_id tipo ativo statusCadastro tabelaPrecoId nomeResponsavel nomeFantasia razaoSocial cnpj email telefone whatsapp")
+    .select("_id tipo ativo statusCadastro tabelaPrecoId nomeResponsavel nomeFantasia razaoSocial cnpj email telefone whatsapp vendedorResponsavelId")
     .maxTimeMS(5000);
   if (!cliente || cliente.tipo !== "cliente") {
     throw new ClientePedidoError("Distribuidor não encontrado", 404);
+  }
+  if (usuario && !canAccessClient(usuario, cliente)) {
+    throw new ClientePedidoError("Cliente fora da sua carteira", 403);
   }
   if (!cliente.ativo || cadastroClienteBloqueiaAcesso(cliente)) {
     throw new ClientePedidoError("O distribuidor precisa estar ativo e aprovado");
