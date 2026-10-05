@@ -7,7 +7,7 @@ export const obterNecessidadeProducao = async (req, res) => {
     // Incluir todos os itens, mesmo sem registro de separação.
     // Não paginar antes de consolidar as faltas.
     const pedidos = await Pedido.find({ status: { $in: STATUS_NECESSIDADE_PRODUCAO } })
-      .select("numeroPedido clienteId nomeFantasiaCliente razaoSocialCliente nomeResponsavel status createdAt dataPedido dataEntrega +historicoStatus itens.produtoId itens.nomeProduto itens.quantidade itens.quantidadeSeparada")
+      .select("numeroPedido clienteId nomeFantasiaCliente razaoSocialCliente nomeResponsavel status createdAt dataPedido dataEntrega retiradoEm +historicoStatus itens.produtoId itens.nomeProduto itens.quantidade itens.quantidadeSeparada")
       .lean().maxTimeMS(5000);
     res.set("Cache-Control", "no-store");
     return res.status(200).json(calcularNecessidadeProducao(pedidos));

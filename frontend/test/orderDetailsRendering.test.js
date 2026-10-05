@@ -5,11 +5,17 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import { buildOrderOperationsForm, buildOrderOperationsPayload, updateOrderSeparationForm } from "../src/utils/orderOperations.js";
+import { formatOrderPickupDate, ORDER_STATUS, formatOrderStatus } from "../src/utils/orderLogistics.js";
+import { summarizeOrders } from "../src/pages/ContaDashboard/orderSummary.js";
+import { orderStatusTone } from "../src/pages/ContaDashboard/orderStatusTone.js";
+import { readFileSync } from "node:fs";
 
 let server;
 let OrderItems;
 let OrderDetailModal;
 let ConferenceItems;
+let OrderPickupDetails;
+let OrderProgress;
 
 before(async () => {
   server = await createServer({
@@ -20,6 +26,8 @@ before(async () => {
   OrderItems = (await server.ssrLoadModule("/src/components/OrderDetails/OrderItems.jsx")).default;
   OrderDetailModal = (await server.ssrLoadModule("/src/components/OrderDetails/OrderDetailModal.jsx")).default;
   ConferenceItems = (await server.ssrLoadModule("/src/components/OrderDetails/ConferenceItems.jsx")).default;
+  OrderPickupDetails = (await server.ssrLoadModule("/src/components/OrderDetails/OrderPickupDetails.jsx")).default;
+  OrderProgress = (await server.ssrLoadModule("/src/components/OrderProgress/OrderProgress.jsx")).default;
 });
 
 after(async () => { await server?.close(); });
@@ -30,6 +38,78 @@ const item = {
 };
 const renderItems = (items, props = {}) => renderToStaticMarkup(createElement(OrderItems, { items, ...props }));
 const shortage = (html) => html.match(/<span>Faltante<\/span><strong>([^<]*)<\/strong>/)?.[1];
+
+test("Meus Pedidos usa data real da retirada, preservada mesmo com updatedAt posterior", () => {
+  const pedido = { status: "retirado", retiradoEm: "2026-10-05T17:30:00Z", updatedAt: "2026-10-06T20:00:00Z" };
+  const html = renderToStaticMarkup(createElement(OrderPickupDetails, { pedido }));
+  assert.match(html, /Retirado em: 05\/10\/2026 às 14:30/);
+  assert.doesNotMatch(html, /06\/10/);
+  assert.match(readFileSync(new URL("../src/pages/MeusPedidos/MeusPedidos.jsx", import.meta.url), "utf8"), /<OrderPickupDetails pedido=\{pedido\} \/>/);
+  assert.equal(formatOrderPickupDate(null), "-");
+  assert.equal(formatOrderPickupDate("invalida"), "-");
+  assert.equal(renderToStaticMarkup(createElement(OrderPickupDetails, { pedido: { status: "entregue" } })), "");
+});
+
+test("retirado possui badge próprio, opção de filtro e indicador de conclusão", () => {
+  assert.ok(ORDER_STATUS.includes("retirado"));
+  assert.equal(formatOrderStatus("retirado"), "Retirado pelo distribuidor");
+  assert.equal(orderStatusTone("retirado"), "retirado");
+  const summary = summarizeOrders([{ status: "retirado" }, { status: "enviado" }, { status: "entregue" }]);
+  assert.equal(summary.concluidos, 2);
+  assert.equal(summary.emAndamento, 0);
+  assert.equal(summary.aguardandoRecebimento, 1);
+  const html = renderToStaticMarkup(createElement(OrderProgress, { status: "retirado" }));
+  assert.match(html, /Retirado pelo distribuidor/);
+  assert.doesNotMatch(html, /Enviado|Faturado|Entregue/);
+});
+
+test("ações de saída ficam disponíveis apenas ao Admin antes do encerramento", () => {
+  const props = { onMarkShipped() {}, onMarkCollected() {} };
+  for (const isAdmin of [false, true]) {
+    const detail = { status: "separado", itens: [item] };
+    const html = renderToStaticMarkup(createElement(OrderDetailModal, { detail, form: buildOrderOperationsForm(detail), isAdmin, ...props }));
+    assert.equal(html.includes("Marcar como enviado"), isAdmin);
+    assert.equal(html.includes("Retirado pelo distribuidor"), isAdmin);
+  }
+  for (const status of ["retirado", "entregue", "cancelado"]) {
+    const detail = { status, itens: [item], retiradoEm: "2026-10-05T17:30:00Z" };
+    const html = renderToStaticMarkup(createElement(OrderDetailModal, { detail, form: buildOrderOperationsForm(detail), isAdmin: true, ...props }));
+    assert.doesNotMatch(html, /Marcar como enviado|onSubmit|Excluir<|Editar pedido/);
+    if (status === "retirado") assert.match(html, /05\/10\/2026 às 14:30/);
+  }
+});
+
+test("barra de ações administrativa ocupa a área rolável e não disputa largura com o título", () => {
+  const detail = { status: "separado", numeroPedido: "AP-05102026-000123", itens: [item] };
+  const html = renderToStaticMarkup(createElement(OrderDetailModal, {
+    detail, form: buildOrderOperationsForm(detail), isAdmin: true,
+    onMarkShipped() {}, onMarkCollected() {},
+  }));
+  const header = html.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1];
+  assert.ok(header);
+  assert.match(header, /AP-05102026-000123/);
+  assert.match(header, /Fechar detalhes do pedido/);
+  assert.equal((header.match(/<button\b/g) || []).length, 1);
+  for (const action of ["Marcar como enviado", "Retirado pelo distribuidor", "Editar pedido", "PDF comercial", "PDF de separação", "Relatório operacional", "Excluir"]) {
+    assert.equal(header.includes(action), false, action);
+    assert.ok(html.slice(html.indexOf("</header>")).includes(action), action);
+  }
+  assert.match(html, /modalContent[^>]*>\s*<div class="[^"]*modalHeaderActions/);
+});
+
+test("faturar pedido legado não reenvia quantidades de uma separação já encerrada", () => {
+  const detail = { status: "separado", itens: [item], __v: 3 };
+  const form = buildOrderOperationsForm(detail);
+  form.status = "faturado";
+  form.numeroNotaFiscal = "NF-1234";
+  form.dataFaturamento = "2026-10-05";
+  const payload = buildOrderOperationsPayload(detail, form);
+  assert.equal(payload.separacaoItens, undefined);
+  assert.equal(payload.numeroNotaFiscal, "NF-1234");
+  assert.equal(payload.dataFaturamento, "2026-10-05");
+  assert.equal(payload.status, "faturado");
+  assert.equal(payload.versaoPedido, 3);
+});
 
 test("Logística não recebe preços no detalhe em nenhuma etapa do pedido", () => {
   for (const status of ["aprovado", "separando", "separado", "faturado", "enviado", "entregue", "cancelado"]) {

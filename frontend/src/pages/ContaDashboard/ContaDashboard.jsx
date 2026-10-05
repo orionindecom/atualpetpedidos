@@ -129,7 +129,7 @@ function DistributorDashboard({ usuario }) {
               <div className={styles.stat}>
                 <span>Concluídos</span>
                 <strong>{resumo.concluidos}</strong>
-                <small>Pedidos entregues.</small>
+                <small>Pedidos entregues ou retirados.</small>
               </div>
             </div>
           </section>
@@ -262,4 +262,3 @@ export default function ContaDashboard({ sales = false }) {
     </>
   );
 }
-

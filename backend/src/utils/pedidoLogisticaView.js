@@ -9,7 +9,7 @@ const OPERATIONAL_FIELDS = [
   "conferenciaObrigatoria", "conferencia", "historicoConferencias", "historicoAlteracoes",
   "fechamentoLogisticoObrigatorio", "fechamentoLogistico", "observacao", "observacaoLogistica",
   "numeroNotaFiscal", "dataFaturamento", "transportadora", "codigoRastreio", "linkRastreio",
-  "dataEnvio", "dataEntrega", "historicoStatus", "ocorrencias", "temDivergencia",
+  "dataEnvio", "dataEntrega", "retiradoEm", "retiradoPor", "historicoStatus", "ocorrencias", "temDivergencia",
   "temItemNaoProcessado", "entregaFinalizada",
 ];
 

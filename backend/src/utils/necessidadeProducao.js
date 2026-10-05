@@ -1,6 +1,8 @@
 import { getItemSeparation, pedidoPossuiEntregaConfirmada } from "./pedidoLogistica.js";
 
 // A necessidade acompanha exclusivamente a etapa atual de separação.
+// Enviado, retirado e demais estados posteriores não mantêm faltas em aberto,
+// mesmo com quantidades de separação antigas, ausentes ou incompletas.
 export const STATUS_NECESSIDADE_PRODUCAO = Object.freeze([
   "separando",
 ]);
@@ -10,6 +12,7 @@ export const calcularNecessidadeProducao = (pedidos = []) => {
   const pedidosPendentes = [];
 
   for (const pedido of pedidos) {
+    // O registro de conclusão também protege pedidos com status inconsistente.
     if (!STATUS_NECESSIDADE_PRODUCAO.includes(pedido.status) || pedidoPossuiEntregaConfirmada(pedido)) continue;
     const itens = (pedido.itens || []).flatMap((item) => {
       const atendimento = getItemSeparation(item);

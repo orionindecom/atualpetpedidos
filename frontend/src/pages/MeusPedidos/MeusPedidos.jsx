@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderProgress from "../../components/OrderProgress/OrderProgress";
+import OrderPickupDetails from "../../components/OrderDetails/OrderPickupDetails";
 import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import {
@@ -20,6 +21,7 @@ const statusClasse = (status = "") => {
   if (s.includes("aprov"))       return "Novo";
   if (s.includes("separ"))       return "Separacao";
   if (s.includes("envi"))        return "Enviado";
+  if (s.includes("retir"))       return "Retirado";
   if (s.includes("entreg"))      return "Entregue";
   if (s.includes("cancel"))      return "Cancelado";
   if (s.includes("aguard"))      return "Aguardando";
@@ -118,6 +120,7 @@ function MeusPedidos() {
                     Status: {formatOrderStatus(pedido.status)}
                   </p>
                   <p>Total: {formatCurrency(pedido.valorTotal)}</p>
+                  <OrderPickupDetails pedido={pedido} />
                 </div>
 
                 <div className={styles.actions}>
@@ -153,7 +156,7 @@ function MeusPedidos() {
                   <section className={styles.trackingPanel} aria-label={`Andamento do pedido ${pedido.numeroPedido}`}>
                     <OrderProgress status={pedido.status} />
 
-                    <div className={styles.shippingData}>
+                    {pedido.status !== "retirado" && <div className={styles.shippingData}>
                       <div><span>Nota fiscal</span><strong>{pedido.numeroNotaFiscal || "Ainda não informada"}</strong></div>
                       <div><span>Transportadora</span><strong>{pedido.transportadora || "Ainda não informada"}</strong></div>
                       <div><span>Código de rastreio</span><strong>{pedido.codigoRastreio || "Ainda não informado"}</strong></div>
@@ -164,7 +167,7 @@ function MeusPedidos() {
                           Acompanhar entrega
                         </a>
                       )}
-                    </div>
+                    </div>}
 
                   </section>
                 )}

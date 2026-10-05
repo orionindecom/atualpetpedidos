@@ -1970,7 +1970,7 @@ test("filtros logisticos validam paginacao, periodo e aguardando acao", () => {
   assert.equal(parsed.valid, true);
   const filter = buildLogisticsOrderFilter(parsed.data);
   assert.deepEqual(filter.status, {
-    $nin: ["entregue", "cancelado", "aguardando_aprovacao"],
+    $nin: ["entregue", "retirado", "cancelado", "aguardando_aprovacao"],
   });
   assert.ok(filter.createdAt.$gte instanceof Date);
   assert.equal(filter.$or.length, 4);

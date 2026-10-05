@@ -1,0 +1,21 @@
+[
+  {
+    "label": "admin-separando-1024",
+    "titleWidth": 0,
+    "titleHeight": 621,
+    "lineHeight": 34.5,
+    "headerHeight": 1719,
+    "contentHeight": 28,
+    "contentScrollHeight": 2196,
+    "actionsWidth": 813,
+    "modalHeight": 720,
+    "modalWidth": 976,
+    "left": 24,
+    "right": 1000,
+    "top": 24,
+    "bottom": 744,
+    "viewportWidth": 1024,
+    "viewportHeight": 768,
+    "horizontalOverflow": 0
+  }
+]

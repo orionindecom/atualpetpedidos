@@ -1,0 +1,31 @@
+edicao-320-740: {"listHeight":10809,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-320-380: {"listHeight":10809,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile admin 320px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-375-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-375-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile admin 375px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-430-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-430-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile admin 430px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-vendedor-320-740: {"listHeight":10809,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-vendedor-320-380: {"listHeight":10809,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile vendedor 320px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-vendedor-375-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-vendedor-375-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile vendedor 375px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-vendedor-430-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-vendedor-430-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile vendedor 430px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-comercial-320-740: {"listHeight":10809,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-comercial-320-380: {"listHeight":10809,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile comercial 320px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-comercial-375-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-comercial-375-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile comercial 375px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-comercial-430-740: {"listHeight":10329,"bodyHeight":593,"resultArea":536.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":740,"horizontalOverflow":0,"viewportHeight":740}
+edicao-comercial-430-380: {"listHeight":10329,"bodyHeight":233,"resultArea":176.5,"searchHeight":48,"searchTop":86.5,"searchBottom":134.5,"footerBottom":380,"horizontalOverflow":0,"viewportHeight":380}
+PASS: edição mobile comercial 430px, nomes completos, 60 resultados, último item, inclusão/remoção, quantidades, salvar/cancelar e visualViewport
+edicao-desktop-1440: lista com 416px de altura
+PASS: edição desktop 1440px preserva lista, scroll e ações
+edicao-desktop-1024: lista com 284px de altura
+PASS: edição desktop 1024px preserva lista, scroll e ações

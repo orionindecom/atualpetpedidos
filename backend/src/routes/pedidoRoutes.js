@@ -17,6 +17,7 @@ import {
 
 import { proteger } from "../middlewares/authMiddleware.js";
 import { somenteAdmin } from "../middlewares/adminMiddleware.js";
+import { marcarPedidoEnviadoAdmin, marcarPedidoRetiradoAdmin } from "../controllers/pedidoSaidaController.js";
 import { listarCatalogoDistribuidor, listarDistribuidoresPedido } from "../controllers/pedidoComercialController.js";
 import {
   somenteCliente,
@@ -28,6 +29,9 @@ import {
 import { validateObjectIdParam } from "../utils/validation.js";
 
 const router = express.Router();
+
+router.patch("/:id/marcar-enviado", proteger, somenteAdmin, adminLimiter, validateObjectIdParam(), marcarPedidoEnviadoAdmin);
+router.patch("/:id/retirar", proteger, somenteAdmin, adminLimiter, validateObjectIdParam(), marcarPedidoRetiradoAdmin);
 
 router.get("/comercial/distribuidores", proteger, exigirPermissao("clientes"), adminLimiter, listarDistribuidoresPedido);
 router.get("/comercial/distribuidores/:id/catalogo", proteger, exigirPermissao("clientes"), adminLimiter, validateObjectIdParam(), listarCatalogoDistribuidor);

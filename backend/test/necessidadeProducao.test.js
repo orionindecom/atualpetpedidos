@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { calcularNecessidadeProducao } from "../src/utils/necessidadeProducao.js";
 import { PEDIDO_STATUS } from "../src/utils/pedidoLogistica.js";
+import Pedido from "../src/models/Pedido.js";
+import { obterNecessidadeProducao } from "../src/controllers/necessidadeProducaoController.js";
 
 const item = (produtoId, quantidade, extra = {}) => ({ produtoId, nomeProduto: `Produto ${produtoId}`, quantidade, ...extra });
 const pedido = (_id, itens, extra = {}) => ({ _id, numeroPedido: `AP-${_id}`, nomeFantasiaCliente: "Distribuidor", status: "aprovado", itens, ...extra });
@@ -80,7 +82,7 @@ test("histórico de separação não inclui pedido que já saiu da etapa", () =>
 });
 
 test("início comprovado no histórico não reabre pedidos cancelados ou posteriores ao faturamento", () => {
-  for (const status of ["aguardando_aprovacao", "faturado", "enviado", "entregue", "cancelado", "desconhecido"]) {
+  for (const status of ["aguardando_aprovacao", "faturado", "enviado", "entregue", "retirado", "cancelado", "desconhecido"]) {
     const result = calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], {
       status, historicoStatus: [{ novoStatus: "separando", alteradoEm: "2026-09-11T10:00:00Z" }],
     })]);
@@ -144,6 +146,77 @@ test("não reabre demanda de pedido entregue com status inconsistente", () => {
   for (const extra of [{ dataEntrega: new Date() }, { historicoStatus: [{ novoStatus: "entregue" }] }]) {
     assert.equal(calcularNecessidadeProducao([pedido("1", [item("A", 10, { quantidadeSeparada: 0 })], { status: "separando", ...extra })]).resumo.quantidadeFaltante, 0);
   }
+});
+
+for (const status of ["retirado", "enviado"]) {
+  test(`${status} elimina toda a demanda mesmo com itens faltantes, pendentes ou sem registro`, () => {
+    const itens = [
+      item("A", 10, { quantidadeSeparada: 4 }),
+      item("B", 20, { quantidadeSeparada: 0, situacaoSeparacao: "pendente" }),
+      item("C", 30),
+    ];
+    const ativo = pedido("saida", itens, { status: "separando" });
+    assert.equal(calcularNecessidadeProducao([ativo]).resumo.quantidadeFaltante, 56);
+    const concluido = { ...ativo, status, historicoStatus: [
+      { novoStatus: "separando", alteradoEm: "2026-10-05T10:00:00Z" },
+      { novoStatus: status, alteradoEm: "2026-10-05T14:00:00Z" },
+    ] };
+    const before = structuredClone(concluido);
+    assert.deepEqual(calcularNecessidadeProducao([concluido]), {
+      produtos: [], pedidos: [], resumo: { quantidadePedidos: 0, quantidadeProdutos: 0, quantidadeFaltante: 0 },
+    });
+    assert.deepEqual(concluido, before);
+  });
+}
+
+test("retirado não soma nem compensa faltas de pedidos ativos do mesmo produto", () => {
+  const result = calcularNecessidadeProducao([
+    pedido("retirado", [item("A", 100, { quantidadeSeparada: 0 }), item("B", 100)], { status: "retirado" }),
+    pedido("ativo", [item("A", 10, { quantidadeSeparada: 4 })], { status: "separando" }),
+  ]);
+  assert.deepEqual(result.resumo, { quantidadePedidos: 1, quantidadeProdutos: 1, quantidadeFaltante: 6 });
+  assert.deepEqual(result.pedidos.map((entry) => entry._id), ["ativo"]);
+  assert.deepEqual(result.produtos.map(({ produtoId, quantidadeFaltante, quantidadePedidos }) => ({ produtoId, quantidadeFaltante, quantidadePedidos })), [
+    { produtoId: "A", quantidadeFaltante: 6, quantidadePedidos: 1 },
+  ]);
+});
+
+test("retiradoEm ou histórico de retirada não reabrem necessidade com status inconsistente", () => {
+  for (const extra of [
+    { retiradoEm: new Date("2026-10-05T14:00:00Z") },
+    { historicoStatus: [{ novoStatus: "retirado", alteradoEm: "2026-10-05T14:00:00Z" }] },
+  ]) {
+    const result = calcularNecessidadeProducao([pedido("retirado", [item("A", 10, { quantidadeSeparada: 0 })], { status: "separando", ...extra })]);
+    assert.deepEqual(result.resumo, { quantidadePedidos: 0, quantidadeProdutos: 0, quantidadeFaltante: 0 });
+    assert.deepEqual(result.pedidos, []);
+    assert.deepEqual(result.produtos, []);
+  }
+});
+
+test("API de produção projeta retiradoEm e exclui a retirada mesmo sem histórico carregado", async (t) => {
+  const original = pedido("retirado", [item("A", 10, { quantidadeSeparada: 0 })], {
+    status: "separando", retiradoEm: new Date("2026-10-05T14:00:00Z"),
+  });
+  t.mock.method(Pedido, "find", (filter) => {
+    assert.deepEqual(filter, { status: { $in: ["separando"] } });
+    let projected;
+    return {
+      select(fields) {
+        projected = Object.fromEntries(Object.entries(original).filter(([field]) => fields.split(" ").includes(field) || field === "itens"));
+        return this;
+      },
+      lean() { return this; },
+      maxTimeMS() { return Promise.resolve([projected]); },
+    };
+  });
+  const response = {
+    set(name, value) { assert.equal(name, "Cache-Control"); assert.equal(value, "no-store"); },
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; },
+  };
+  await obterNecessidadeProducao({}, response);
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body, { produtos: [], pedidos: [], resumo: { quantidadePedidos: 0, quantidadeProdutos: 0, quantidadeFaltante: 0 } });
 });
 
 test("consolidação não corta a demanda na primeira página, não une nomes iguais e não altera documentos", () => {

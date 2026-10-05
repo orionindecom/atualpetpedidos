@@ -3,6 +3,7 @@ import {
   buildStatusHistoryEntry,
   getItemSeparation,
   initializeOrderItemSeparation,
+  pedidoPossuiEntregaConfirmada,
 } from "./pedidoLogistica.js";
 
 export const STATUS_EDITAVEIS_ADMIN = Object.freeze([
@@ -33,6 +34,7 @@ const mapByProduct = (items = []) => new Map(
 );
 
 export const pedidoPodeSerEditadoPeloAdmin = (pedidoOuStatus) => (
+  !pedidoPossuiEntregaConfirmada(typeof pedidoOuStatus === "string" ? { status: pedidoOuStatus } : pedidoOuStatus) &&
   STATUS_EDITAVEIS_ADMIN.includes(
     typeof pedidoOuStatus === "string" ? pedidoOuStatus : pedidoOuStatus?.status
   )

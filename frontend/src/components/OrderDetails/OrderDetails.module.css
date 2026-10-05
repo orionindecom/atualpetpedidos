@@ -6,7 +6,7 @@
   z-index: 1000;
   background: rgba(23, 33, 31, 0.64);
   display: grid;
-  place-items: start center;
+  place-items: center;
 }
 
 .modal {
@@ -29,7 +29,7 @@
   padding: 18px 24px;
   border-bottom: 1px solid var(--border-default);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -59,7 +59,25 @@
   text-transform: none !important;
 }
 
-.modalHeaderActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.modalHeaderActions {
+  width: 100%;
+  min-width: 0;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.modalHeaderActions:empty { display: none; }
+.modalHeaderActions button {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.closeButton { grid-column: 2; grid-row: 1; }
 .modalHeaderActions button,
 .closeButton,
 .approvalPanel button,
@@ -67,7 +85,7 @@
 .conferenceCallout button,
 .conferenceActions button {
   min-height: 42px;
-  padding: 0 14px;
+  padding: 10px 14px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-medium);
   background: transparent;
@@ -318,8 +336,9 @@
     padding: 14px 18px;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: flex-start;
+    gap: 12px;
   }
-  .modalHeaderActions { width: 100%; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .modalHeaderActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .modalHeaderActions button { min-width: 0; width: 100%; padding-inline: 8px; font-size: 11px; }
   .closeButton { flex: 0 0 auto; }
   .modalContent { padding: 0 18px calc(24px + env(safe-area-inset-bottom)); }

@@ -14,6 +14,7 @@ const metricCards = [
   ["separados", "Separados", "Aguardando conferência, fechamento ou faturamento"],
   ["faturados", "Faturados", "Aguardando envio"],
   ["enviados", "Enviados", "Em transporte"],
+  ["retirados", "Retirados", "Retirados pelo distribuidor"],
   ["totalAguardandoAcao", "Aguardando ação", "Fluxo operacional aberto"],
 ];
 

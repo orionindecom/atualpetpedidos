@@ -376,3 +376,6 @@
   }
 
 }
+.card.statusRetirado { border-left-color: #14b8a6; }
+.statusBadgeRetirado { background: #f0fdfa !important; color: #115e59 !important; border-color: #99f6e4 !important; }
+.statusBadgeRetirado::before { background: #14b8a6 !important; }

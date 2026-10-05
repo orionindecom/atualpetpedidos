@@ -1,0 +1,26 @@
+[
+  {
+    "label": "edicao-320-740",
+    "listHeight": 160,
+    "bodyHeight": 160,
+    "resultArea": 160.09375,
+    "searchHeight": 46,
+    "searchTop": 279.90625,
+    "searchBottom": 325.90625,
+    "footerBottom": 714,
+    "horizontalOverflow": 0,
+    "viewportHeight": 740
+  },
+  {
+    "label": "edicao-320-380",
+    "listHeight": 0,
+    "bodyHeight": 0,
+    "resultArea": 0,
+    "searchHeight": 46,
+    "searchTop": 279.90625,
+    "searchBottom": 325.90625,
+    "footerBottom": 553.90625,
+    "horizontalOverflow": 0,
+    "viewportHeight": 380
+  }
+]

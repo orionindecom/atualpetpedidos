@@ -8,6 +8,10 @@ import styles from "./OrderProgress.module.css";
 function OrderProgress({ status }) {
   const progress = getOrderProgress(status);
 
+  if (progress.collected) {
+    return <div className={styles.collected}>✓ Retirado pelo distribuidor</div>;
+  }
+
   if (progress.canceled) {
     return <div className={styles.canceled}>Pedido cancelado</div>;
   }

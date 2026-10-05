@@ -29,6 +29,7 @@ const STATUS_EVENTS = Object.freeze({
   faturado: ["pedido_faturado", "Pedido faturado"],
   enviado: ["pedido_enviado", "Pedido enviado"],
   entregue: ["pedido_entregue", "Entrega confirmada"],
+  retirado: ["pedido_retirado", "Retirado pelo distribuidor"],
   cancelado: ["pedido_cancelado", "Pedido cancelado"],
 });
 
@@ -119,9 +120,9 @@ export const buildOrderAuditTimeline = (pedido, { showPrices = true } = {}) => {
       "Status alterado",
     ];
     addEvent({
-      tipo,
+      tipo: entry.acao === "envio_direto_admin" ? "envio_direto_admin" : tipo,
       data: entry.alteradoEm,
-      titulo,
+      titulo: entry.acao === "envio_direto_admin" ? "Avanço direto para Enviado pelo Admin" : titulo,
       ...userData(entry),
       detalhes: entry.novoStatus === "separado"
         ? entry.observacao || separationSummary(source.itens)
@@ -178,6 +179,15 @@ export const buildOrderAuditTimeline = (pedido, { showPrices = true } = {}) => {
     title: "Entrega confirmada",
     details: "Data de entrega registrada.",
   });
+  if (source.retiradoEm && !statusHistory.some((entry) => entry.novoStatus === "retirado")) {
+    addEvent({
+      tipo: "pedido_retirado",
+      data: source.retiradoEm,
+      titulo: "Retirado pelo distribuidor",
+      statusNovo: "retirado",
+      ...userData(source.retiradoPor),
+    });
+  }
 
   for (const entry of source.historicoAlteracoes || []) {
     if (!showPrices && !entry.itens?.length) continue;

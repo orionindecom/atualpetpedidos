@@ -35,6 +35,7 @@ const STATUS_LABELS = Object.freeze({
   faturado: "Faturado",
   enviado: "Enviado",
   entregue: "Entregue",
+  retirado: "Retirado pelo distribuidor",
   cancelado: "Cancelado",
 });
 
@@ -78,6 +79,10 @@ export const buildOrderAuditPdfData = (pedido) => {
     dataPedido: formatDateTime(source.createdAt || source.dataPedido),
     status: deliveryFinalized ? "entregue" : source.status,
     statusLabel: statusLabel(deliveryFinalized ? "entregue" : source.status),
+    retirada: source.retiradoEm ? {
+      data: formatDateTime(source.retiradoEm),
+      responsavel: source.retiradoPor?.usuarioNome || "Admin",
+    } : null,
     aprovacao: source.aprovacao
       ? {
         data: formatDateTime(source.aprovacao.aprovadoEm),
@@ -191,6 +196,10 @@ export const gerarPdfRelatorioPedido = (pedido, res) => {
   field("Responsável", data.responsavel);
   field("Criado em", data.dataPedido);
   field("Estado final no momento da emissão", data.statusLabel);
+  if (data.retirada) {
+    field("Retirado em", data.retirada.data);
+    field("Marcado como retirado por", data.retirada.responsavel);
+  }
 
   sectionTitle("APROVAÇÃO");
   if (data.aprovacao) {

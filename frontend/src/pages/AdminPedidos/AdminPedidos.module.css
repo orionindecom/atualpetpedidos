@@ -173,6 +173,20 @@
   color: #6b7280;
 }
 
+.modalBody {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editSearch { flex: 0 0 auto; }
+.resultSummary { margin: 0; color: #6b7280; font-size: 13px; }
+.productName { min-width: 0; cursor: pointer; overflow-wrap: anywhere; white-space: normal; }
+.quantityField { min-width: 0; }
+.quantityField > span { margin: 0 0 4px; }
+
 .modalInfo strong,
 .modalInfo span {
   overflow-wrap: anywhere;
@@ -192,7 +206,7 @@
 
 .produtoModal {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: minmax(0, 1fr) 110px;
   gap: 16px;
   align-items: center;
   padding: 14px;
@@ -241,19 +255,75 @@
   }
 
   .modalOverlay {
-    padding: 8px;
+    padding: 0;
+    inset: var(--edit-viewport-top, 0px) 0 auto;
+    height: 100vh;
+    height: var(--edit-viewport-height, 100dvh);
   }
 
   .modal {
     width: 100%;
-    max-height: calc(100vh - 16px);
-    max-height: calc(100dvh - 16px);
-    padding: 18px;
-    border-radius: 12px;
+    height: 100%;
+    max-height: 100%;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .modalHeader {
+    margin: 0;
+    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+    border-bottom: 1px solid #e5e7eb;
+    gap: 12px;
+  }
+
+  .modalHeader h2 { margin: 0 0 4px; font-size: 20px; }
+  .modalHeader p { margin: 0; font-size: 13px; }
+  .modalHeader button { flex: 0 0 auto; min-height: 44px; }
+
+  .modalBody {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-top: 80px;
+    padding: 0 max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+  }
+
+  .editSearch {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 8px 0;
+    background: #ffffff;
+  }
+
+  .editSearch form { margin: 0; padding: 0; border: 0; }
+  .editSearch form > div:first-child { display: flex; }
+  .editSearch input { min-height: 48px; font-size: 16px; }
+  .editSearch button { min-height: 48px; padding-inline: 8px; }
+  .editSearch label { flex: 1; }
+
+  .listaProdutosModal {
+    flex: 0 0 auto;
+    overflow: visible;
+    padding: 0;
   }
 
   .produtoModal {
     grid-template-columns: 1fr;
+    flex: 0 0 auto;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .productName { display: block; min-height: 44px; line-height: 1.5; }
+  .quantityField { display: grid; grid-template-columns: auto minmax(80px, 120px); align-items: center; justify-content: space-between; gap: 12px; }
+  .quantityField > span { margin: 0; }
+  .produtoModal input { min-height: 48px; font-size: 16px; scroll-margin-top: 80px; }
+
+  .modalFooter button {
+    min-width: 0;
+    min-height: 48px;
+    flex: 1;
+    padding: 8px;
   }
 
   .modalInfo {
@@ -262,8 +332,9 @@
   }
 
   .modalFooter {
-    margin-inline: -18px;
-    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    margin: 0;
+    padding: 10px max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: #ffffff;
   }
 }
 
@@ -275,10 +346,11 @@
 
   .modalFooter {
     align-items: stretch;
-    flex-direction: column-reverse;
+    flex-direction: row;
   }
 
   .modalFooter button {
     width: 100%;
   }
 }
+.statusBadge[data-status="retirado"] { background: #ccfbf1; color: #115e59; }

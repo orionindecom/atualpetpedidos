@@ -32,3 +32,5 @@
 .badge[data-tone="entregue"]::before { background: #22c55e; }
 .badge[data-tone="cancelado"] { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
 .badge[data-tone="cancelado"]::before { background: #ef4444; }
+.badge[data-tone="retirado"] { background: #f0fdfa; color: #115e59; border-color: #99f6e4; }
+.badge[data-tone="retirado"]::before { background: #14b8a6; }

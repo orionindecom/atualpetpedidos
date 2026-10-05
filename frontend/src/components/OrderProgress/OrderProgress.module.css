@@ -111,3 +111,11 @@
     font-size: 12px;
   }
 }
+.collected {
+  padding: 12px 16px;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: #115e59;
+  font-weight: 600;
+}

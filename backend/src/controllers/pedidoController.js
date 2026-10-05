@@ -379,6 +379,10 @@ export const atualizarStatusPedido = async (req, res) => {
       });
     }
 
+    if (status === "retirado") {
+      return res.status(409).json({ message: "Use a ação administrativa de retirada do pedido" });
+    }
+
     if (status === "entregue") {
       return res.status(409).json({
         message: "O status Entregue deve ser confirmado pelo cliente",

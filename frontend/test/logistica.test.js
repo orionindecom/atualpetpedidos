@@ -606,7 +606,7 @@ test("layout do detalhe distribui acoes e itens do cliente no mobile", () => {
 
 test("status no card administrativo e somente leitura", () => {
   const admin = readSource("../src/pages/AdminPedidos/AdminPedidos.jsx");
-  assert.match(admin, /data-status=\{pedido\.entregaFinalizada \? "entregue" : pedido\.status\}/);
-  assert.match(admin, /formatarStatus\(pedido\.entregaFinalizada \? "entregue" : pedido\.status\)/);
+  assert.match(admin, /data-status=\{pedido\.status === "retirado" \? "retirado" : pedido\.entregaFinalizada \? "entregue" : pedido\.status\}/);
+  assert.match(admin, /formatarStatus\(pedido\.status === "retirado" \? "retirado" : pedido\.entregaFinalizada \? "entregue" : pedido\.status\)/);
   assert.doesNotMatch(admin, /\/pedidos\/\$\{pedidoId\}\/status/);
 });

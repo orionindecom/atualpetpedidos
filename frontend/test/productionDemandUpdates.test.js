@@ -60,3 +60,18 @@ test("armazenamento bloqueado não impede a resposta da operação nem atualiza�
   assert.equal(refreshes, 1);
   unsubscribe();
 });
+
+for (const action of ["retirar", "marcar-enviado"]) {
+  test(`ação ${action} atualiza Necessidade de Produção imediatamente e sinaliza as outras abas`, () => {
+    const browser = browserFixture();
+    let refreshes = 0;
+    const unsubscribe = subscribeProductionDemandUpdates(() => refreshes++, browser);
+    notifyProductionDemandUpdate({ method: "patch", url: `/pedidos/123/${action}` }, browser);
+    assert.equal(refreshes, 1);
+    const storage = new Event("storage");
+    storage.key = browser.lastWrite.key;
+    browser.dispatchEvent(storage);
+    assert.equal(refreshes, 2);
+    unsubscribe();
+  });
+}

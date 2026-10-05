@@ -7,6 +7,7 @@ import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
 import { useModalDialog } from "../../hooks/useModalDialog";
+import { useDialogVisualViewport } from "../../hooks/useDialogVisualViewport";
 import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import styles from "./AdminPedidos.module.css";
@@ -48,6 +49,7 @@ function AdminPedidos() {
   const [downloadingCommercialPdf, setDownloadingCommercialPdf] = useState(false);
   const [downloadingReportPdf, setDownloadingReportPdf] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
+  const [adminActionBusy, setAdminActionBusy] = useState(false);
   const { dialog, toast } = useFeedback();
   const [detailFeedback, setDetailFeedback] = useState(null);
 
@@ -240,6 +242,35 @@ function AdminPedidos() {
     }
   };
 
+  const registrarSaidaAdmin = async (destino) => {
+    if (!isAdmin || adminActionBusy) return;
+    setAdminActionBusy(true);
+    setDetailFeedback(null);
+    try {
+      await dialog.confirm({
+        variant: "warning",
+        title: destino === "enviado" ? "Marcar como enviado?" : "Retirado pelo distribuidor?",
+        message: destino === "enviado"
+          ? "Ao confirmar, o pedido será marcado diretamente como Enviado. As etapas intermediárias serão ignoradas e o pedido deixará de gerar pendências na Necessidade de Produção."
+          : "Ao confirmar a retirada, o pedido será considerado retirado pelo distribuidor e concluído. Suas pendências na Necessidade de Produção serão encerradas.",
+        details: [{ label: "Pedido", value: detail.numeroPedido }],
+        confirmLabel: destino === "enviado" ? "Marcar como enviado" : "Confirmar retirada",
+        busyLabel: "Registrando saída...",
+        errorFallback: "Não foi possível registrar a saída do pedido.",
+        action: async () => {
+          const response = await api.patch(`/pedidos/${detail._id}/${destino === "enviado" ? "marcar-enviado" : "retirar"}`);
+          setDetail(response.data.pedido);
+          setTransitions(response.data.transicoesPermitidas || []);
+          setOperationsForm(buildOrderOperationsForm(response.data.pedido));
+          atualizarPedidoNaLista(response.data.pedido);
+          setDetailFeedback({ type: "success", message: response.data.message });
+        },
+      });
+    } finally {
+      setAdminActionBusy(false);
+    }
+  };
+
   const baixarPdfSeparacao = async () => {
     setDownloadingSeparationPdf(true);
     try {
@@ -311,6 +342,17 @@ function AdminPedidos() {
     open: Boolean(modalPedido),
     onClose: fecharModal,
   });
+  useDialogVisualViewport(editOrderDialogRef, Boolean(modalPedido));
+  useEffect(() => {
+    if (!modalPedido || !buscaProduto || !window.matchMedia("(max-width: 768px)").matches) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const search = editOrderDialogRef.current?.querySelector(`.${styles.editSearch}`);
+      if (!search) return;
+      const body = search.parentElement;
+      body.scrollTop += search.getBoundingClientRect().top - body.getBoundingClientRect().top;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [buscaProduto, modalPedido, editOrderDialogRef]);
 
   const salvarModalPedido = async () => {
     const itens = Object.entries(quantidadesModal)
@@ -440,9 +482,9 @@ function AdminPedidos() {
 
                 <span
                   className={styles.statusBadge}
-                  data-status={pedido.entregaFinalizada ? "entregue" : pedido.status}
+                  data-status={pedido.status === "retirado" ? "retirado" : pedido.entregaFinalizada ? "entregue" : pedido.status}
                 >
-                  {formatarStatus(pedido.entregaFinalizada ? "entregue" : pedido.status)}
+                  {formatarStatus(pedido.status === "retirado" ? "retirado" : pedido.entregaFinalizada ? "entregue" : pedido.status)}
                 </span>
 
                 <strong>Total: {moeda(pedido.valorTotal)}</strong>
@@ -480,6 +522,9 @@ function AdminPedidos() {
             downloadingCommercialPdf={downloadingCommercialPdf}
             downloadingReportPdf={downloadingReportPdf}
             deleting={deletingOrder}
+            adminActionBusy={adminActionBusy}
+            onMarkShipped={() => registrarSaidaAdmin("enviado")}
+            onMarkCollected={() => registrarSaidaAdmin("retirado")}
             feedback={detailFeedback}
             onClose={fecharDetalhes}
             onSubmit={salvarOperacao}
@@ -518,43 +563,59 @@ function AdminPedidos() {
                 <button type="button" aria-label="Fechar edição do pedido" onClick={fecharModal}>Fechar</button>
               </div>
 
-              <div className={styles.modalInfo}>
-                <strong>{modalPedido.nomeFantasiaCliente || "-"}</strong>
-                <span>Total de itens: {quantidadeTotalModal}</span>
-              </div>
+              <div className={styles.modalBody}>
+                <div className={styles.modalInfo}>
+                  <strong>{modalPedido.nomeFantasiaCliente || "-"}</strong>
+                  <span>Total de itens: {quantidadeTotalModal}</span>
+                </div>
 
-              <FilterToolbar
-                layout="stacked"
-                searchLabel="Buscar produtos do pedido"
-                searchPlaceholder="Buscar por produto..."
-                searchValue={buscaProduto}
-                onSearchChange={(event) => setBuscaProduto(event.target.value)}
-                onSubmit={(event) => event.preventDefault()}
-                onClear={() => setBuscaProduto("")}
-              />
+                <div className={styles.editSearch} onFocusCapture={(event) => {
+                  if (!window.matchMedia("(max-width: 768px)").matches) return;
+                  const search = event.currentTarget;
+                  const body = search.parentElement;
+                  window.requestAnimationFrame(() => {
+                    if (body.isConnected) body.scrollTop += search.getBoundingClientRect().top - body.getBoundingClientRect().top;
+                  });
+                }}>
+                  <FilterToolbar
+                    layout="stacked"
+                    searchLabel="Buscar produtos do pedido"
+                    searchPlaceholder="Buscar por produto..."
+                    searchValue={buscaProduto}
+                    onSearchChange={(event) => setBuscaProduto(event.target.value)}
+                    onSubmit={(event) => event.preventDefault()}
+                    onClear={() => setBuscaProduto("")}
+                  />
+                </div>
 
-              <div className={styles.listaProdutosModal}>
-                {produtosFiltradosModal.map((produto) => (
-                  <div className={styles.produtoModal} key={produto._id}>
-                    <div>
-                      <strong>{produto.nome}</strong>
-                      <span>
-                        {produto.linha} • {produto.categoria}
-                      </span>
+                <div className={styles.listaProdutosModal}>
+                  <p className={styles.resultSummary} role="status">
+                    {produtosFiltradosModal.length} produtos encontrados. Informe a quantidade para incluir; use 0 para remover.
+                  </p>
+                  {produtosFiltradosModal.map((produto) => (
+                    <div className={styles.produtoModal} key={produto._id}>
+                      <label className={styles.productName} htmlFor={`edit-order-product-${produto._id}`}>
+                        <strong>{produto.nome}</strong>
+                        <span>{produto.linha} • {produto.categoria}</span>
+                      </label>
+
+                      <label className={styles.quantityField}>
+                        <span>Quantidade</span>
+                        <input
+                          id={`edit-order-product-${produto._id}`}
+                          type="number"
+                          inputMode="numeric"
+                          step="1"
+                          aria-label={`Quantidade de ${produto.nome}`}
+                          min="0"
+                          value={quantidadesModal[produto._id] ?? ""}
+                          placeholder="0"
+                          onChange={(e) => alterarQuantidadeModal(produto._id, e.target.value)}
+                        />
+                      </label>
                     </div>
-
-                    <input
-                      type="number"
-                      aria-label={`Quantidade de ${produto.nome}`}
-                      min="0"
-                      value={quantidadesModal[produto._id] ?? ""}
-                      placeholder="0"
-                      onChange={(e) =>
-                        alterarQuantidadeModal(produto._id, e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               <div className={styles.modalFooter}>

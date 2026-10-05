@@ -32,6 +32,7 @@ function Dashboard() {
       faturado: "Faturado",
       enviado: "Enviado",
       entregue: "Entregue",
+      retirado: "Retirado pelo distribuidor",
       cancelado: "Cancelado",
     };
 

@@ -13,6 +13,7 @@ import {
 } from "../../utils/orderOperations";
 import { useModalDialog } from "../../hooks/useModalDialog";
 import OrderItems from "./OrderItems";
+import OrderPickupDetails from "./OrderPickupDetails";
 import ConferenceItems from "./ConferenceItems";
 import styles from "./OrderDetails.module.css";
 
@@ -48,6 +49,7 @@ function OrderDetailModal({
   downloadingCommercialPdf = false,
   downloadingReportPdf = false,
   deleting = false,
+  adminActionBusy = false,
   feedback,
   activeOperator,
   onClose,
@@ -64,6 +66,8 @@ function OrderDetailModal({
   onDownloadReportPdf,
   onEditOrder,
   onDeleteOrder,
+  onMarkShipped,
+  onMarkCollected,
 }) {
   const timeline = detail.historicoPedido || [];
   const flowStage = getOrderFlowStage(detail);
@@ -125,7 +129,28 @@ function OrderDetailModal({
               </span>
             )}
           </div>
+          <button
+            type="button"
+            className={styles.closeButton}
+            aria-label="Fechar detalhes do pedido"
+            onClick={onClose}
+          >
+            Fechar
+          </button>
+        </header>
+
+        <div className={styles.modalContent}>
           <div className={styles.modalHeaderActions}>
+            {isAdmin && !terminal && detail.status !== "enviado" && onMarkShipped && (
+              <button type="button" disabled={adminActionBusy || saving || conferenceBusy || approving} onClick={onMarkShipped}>
+                Marcar como enviado
+              </button>
+            )}
+            {isAdmin && !terminal && ["separado", "faturado"].includes(detail.status) && onMarkCollected && (
+              <button type="button" disabled={adminActionBusy || saving || conferenceBusy || approving} onClick={onMarkCollected}>
+                Retirado pelo distribuidor
+              </button>
+            )}
             {canEdit && !terminal && ["aguardando_aprovacao", "aprovado", "novo", "em_analise", "separando", "separado"].includes(detail.status) && (
               <button type="button" onClick={onEditOrder}>Editar pedido</button>
             )}
@@ -167,17 +192,6 @@ function OrderDetailModal({
               </button>
             )}
           </div>
-          <button
-            type="button"
-            className={styles.closeButton}
-            aria-label="Fechar detalhes do pedido"
-            onClick={onClose}
-          >
-            Fechar
-          </button>
-        </header>
-
-        <div className={styles.modalContent}>
           {feedback && (
             <div className={styles.feedback} data-type={feedback.type} role="status">
               {feedback.message}
@@ -208,6 +222,7 @@ function OrderDetailModal({
           <section className={styles.section}>
             <h3>Andamento</h3>
             <OrderProgress status={detail.status} />
+            <OrderPickupDetails pedido={detail} showUser />
             {detail.aprovacao?.aprovadoEm && (
               <p className={styles.approvalMeta}>
                 Aprovado em {formatOrderDateTime(detail.aprovacao.aprovadoEm)} por {detail.aprovacao.usuarioNome || "Administrador"}.

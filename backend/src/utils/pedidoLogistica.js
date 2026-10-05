@@ -11,14 +11,16 @@ export const PEDIDO_STATUS = Object.freeze([
   "faturado",
   "enviado",
   "entregue",
+  "retirado",
   "cancelado",
 ]);
 
-export const STATUS_CONCLUIDOS = Object.freeze(["entregue", "cancelado"]);
+export const STATUS_CONCLUIDOS = Object.freeze(["entregue", "retirado", "cancelado"]);
 export const STATUS_APOS_CONFERENCIA = Object.freeze([
   "faturado",
   "enviado",
   "entregue",
+  "retirado",
 ]);
 
 const TRANSICOES_LOGISTICA = Object.freeze({
@@ -31,6 +33,7 @@ const TRANSICOES_LOGISTICA = Object.freeze({
   faturado: ["enviado"],
   enviado: [],
   entregue: [],
+  retirado: [],
   cancelado: [],
 });
 
@@ -44,6 +47,7 @@ const TRANSICOES_ADMIN = Object.freeze({
   faturado: ["enviado", "cancelado"],
   enviado: ["cancelado"],
   entregue: [],
+  retirado: [],
   cancelado: [],
 });
 
@@ -190,8 +194,10 @@ export const fechamentoLogisticoConcluido = (pedido) => {
 
 export const pedidoPossuiEntregaConfirmada = (pedido) => (
   pedido?.status === "entregue" ||
+  pedido?.status === "retirado" ||
+  Boolean(pedido?.retiradoEm) ||
   Boolean(pedido?.dataEntrega) ||
-  (pedido?.historicoStatus || []).some((entry) => entry.novoStatus === "entregue")
+  (pedido?.historicoStatus || []).some((entry) => ["entregue", "retirado"].includes(entry.novoStatus))
 );
 
 export const transicoesPermitidasParaPedido = (
@@ -978,6 +984,7 @@ export const sanitizeClientOrder = (pedido) => {
   delete source.observacaoLogistica;
   delete source.aprovacao;
   delete source.criadoPor;
+  delete source.retiradoPor;
   source.origem ||= "cliente";
   delete source.conferencia;
   delete source.conferenciaObrigatoria;

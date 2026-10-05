@@ -51,16 +51,16 @@ export const isLogisticsClosingComplete = (pedido = {}) => {
 export const getOrderFlowStage = (pedido = {}) => {
   const conferenceFinished = isConferenceFinishedForCurrentOrder(pedido);
   const logisticsClosingFinished = isLogisticsClosingComplete(pedido);
-  const terminal = pedido.status === "entregue" ||
+  const terminal = pedido.status === "entregue" || pedido.status === "retirado" ||
     pedido.status === "cancelado" ||
     pedido.entregaFinalizada === true;
 
   if (terminal) return {
     key: pedido.status === "cancelado" ? "canceled" : "delivered",
-    title: pedido.status === "cancelado" ? "Pedido cancelado" : "Pedido entregue — estado final",
+    title: pedido.status === "cancelado" ? "Pedido cancelado" : pedido.status === "retirado" ? "Retirado pelo distribuidor" : "Pedido entregue — estado final",
     description: "As ações operacionais estão encerradas; histórico e documentos permanecem disponíveis.",
     showConference: Boolean(pedido.conferencia),
-    showShippingSummary: pedido.status !== "cancelado",
+    showShippingSummary: !["cancelado", "retirado"].includes(pedido.status),
     terminal: true,
   };
 
@@ -223,6 +223,7 @@ export const buildOrderOperationsPayload = (pedido, form) => {
   const conferenciaProtegeSeparacao = isConferenceFinishedForCurrentOrder(pedido);
   if (
     !conferenciaProtegeSeparacao &&
+    getOrderFlowStage(pedido).showSeparationEditor === true &&
     ["separando", "separado"].includes(pedido.status) &&
     form.status !== "cancelado"
   ) {

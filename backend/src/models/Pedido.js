@@ -109,6 +109,7 @@ const historicoStatusSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500,
     },
+    acao: { type: String, enum: ["envio_direto_admin", "retirada_admin"] },
   },
   { _id: false }
 );
@@ -598,6 +599,7 @@ const pedidoSchema = new mongoose.Schema(
         "faturado",
         "enviado",
         "entregue",
+        "retirado",
         "cancelado",
       ],
       default: "aguardando_aprovacao",
@@ -681,6 +683,21 @@ const pedidoSchema = new mongoose.Schema(
     dataEnvio: Date,
 
     dataEntrega: Date,
+
+    retiradoEm: {
+      type: Date,
+      required: function () { return this.status === "retirado"; },
+    },
+
+    retiradoPor: {
+      type: new mongoose.Schema({
+        usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
+        usuarioNome: { type: String, trim: true, maxlength: 120 },
+        usuarioTipo: { type: String, enum: ["admin"], required: true },
+      }, { _id: false }),
+      default: undefined,
+      required: function () { return this.status === "retirado"; },
+    },
 
     observacaoLogistica: {
       type: String,

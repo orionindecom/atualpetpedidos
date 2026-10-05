@@ -8,6 +8,7 @@ export const ORDER_STATUS = Object.freeze([
   "faturado",
   "enviado",
   "entregue",
+  "retirado",
   "cancelado",
 ]);
 
@@ -21,6 +22,7 @@ export const ORDER_STATUS_LABELS = Object.freeze({
   faturado: "Faturado",
   enviado: "Enviado",
   entregue: "Entregue",
+  retirado: "Retirado pelo distribuidor",
   cancelado: "Cancelado",
 });
 
@@ -37,6 +39,7 @@ export const ORDER_PROGRESS_STEPS = Object.freeze([
 export const formatOrderStatus = (status) => ORDER_STATUS_LABELS[status] || status || "-";
 
 export const getOrderProgress = (status) => {
+  if (status === "retirado") return { canceled: false, collected: true, currentIndex: -1 };
   if (status === "cancelado") return { canceled: true, currentIndex: -1 };
   if (["novo", "em_analise"].includes(status)) {
     return { canceled: false, currentIndex: 1 };
@@ -65,3 +68,11 @@ export const formatCurrency = (value) => Number(value || 0).toLocaleString("pt-B
   style: "currency",
   currency: "BRL",
 });
+
+export const formatOrderPickupDate = (value, fallback = "-") => {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  const options = { timeZone: "America/Sao_Paulo" };
+  return `${date.toLocaleDateString("pt-BR", options)} às ${date.toLocaleTimeString("pt-BR", { ...options, hour: "2-digit", minute: "2-digit" })}`;
+};

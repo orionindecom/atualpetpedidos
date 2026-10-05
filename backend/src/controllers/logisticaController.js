@@ -622,6 +622,7 @@ export const obterDashboardLogistica = async (req, res) => {
         separados: porStatus.separado || 0,
         faturados: porStatus.faturado || 0,
         enviados: porStatus.enviado || 0,
+        retirados: porStatus.retirado || 0,
         totalAguardandoAcao,
       },
       pedidosMaisAntigos,
