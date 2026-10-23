@@ -9,34 +9,19 @@ const formatarDataPedido = (data) => {
 };
 
 export const gerarNumeroPedido = async () => {
-  const hoje = new Date();
+  const prefixo = `AP-${formatarDataPedido(new Date())}-`;
 
-  const inicioDia = new Date(
-    hoje.getFullYear(),
-    hoje.getMonth(),
-    hoje.getDate(),
-    0,
-    0,
-    0
-  );
+  // O sequencial parte do maior número já emitido no dia, e não da contagem
+  // de pedidos: excluir um pedido reduz a contagem e geraria número repetido.
+  const ultimoPedido = await Pedido.findOne({
+    numeroPedido: { $regex: `^${prefixo}\\d+$` },
+  })
+    .sort({ numeroPedido: -1 })
+    .select("numeroPedido")
+    .lean();
 
-  const fimDia = new Date(
-    hoje.getFullYear(),
-    hoje.getMonth(),
-    hoje.getDate(),
-    23,
-    59,
-    59
-  );
+  const ultimoSequencial = Number(ultimoPedido?.numeroPedido.slice(prefixo.length)) || 0;
+  const sequencial = String(ultimoSequencial + 1).padStart(4, "0");
 
-  const totalPedidosHoje = await Pedido.countDocuments({
-    createdAt: {
-      $gte: inicioDia,
-      $lte: fimDia,
-    },
-  });
-
-  const sequencial = String(totalPedidosHoje + 1).padStart(4, "0");
-
-  return `AP-${formatarDataPedido(hoje)}-${sequencial}`;
+  return `${prefixo}${sequencial}`;
 };

@@ -215,6 +215,15 @@ export const criarPedido = async (req, res) => {
     if (error instanceof ClientePedidoError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
+    console.error("[pedidos] Falha em criar pedido", {
+      name: error?.name,
+      code: error?.code,
+      keyPattern: error?.keyPattern ? Object.keys(error.keyPattern) : undefined,
+      validationPaths: error?.errors ? Object.keys(error.errors) : undefined,
+      usuarioTipo: req.usuario?.tipo,
+      origem: isSalesUser(req.usuario) ? "comercial" : "cliente",
+      quantidadeItens: Array.isArray(req.body?.itens) ? req.body.itens.length : undefined,
+    });
     return sendServerError(res);
   }
 };
