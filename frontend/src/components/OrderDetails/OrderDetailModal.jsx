@@ -68,6 +68,7 @@ function OrderDetailModal({
   onDeleteOrder,
   onMarkShipped,
   onMarkCollected,
+  campaignSlot = null,
 }) {
   const timeline = detail.historicoPedido || [];
   const flowStage = getOrderFlowStage(detail);
@@ -254,6 +255,7 @@ function OrderDetailModal({
               {detail.origem === "comercial" && <div><span>Lançado por</span><strong>{detail.criadoPor?.usuarioNome || "Comercial"}</strong></div>}
             </div>
             {detail.observacao && <p className={styles.orderNote}>{detail.observacao}</p>}
+            {campaignSlot}
           </section>
 
           <section className={styles.section}>

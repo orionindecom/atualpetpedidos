@@ -13,12 +13,14 @@
     "user:create-comercial": "node src/scripts/criarComercial.js",
     "user:create-marketing": "node src/scripts/criarMarketing.js",
     "user:create-logistica": "node src/scripts/criarLogistica.js",
-    "smoke:catalog": "node src/scripts/catalogPaginationSmokeTest.js"
+    "smoke:catalog": "node src/scripts/catalogPaginationSmokeTest.js",
+    "homolog:natal": "node src/scripts/homologacaoNatal2026.js"
   },
   "engines": {
     "node": ">=22.12 <25"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.14"
   },
   "dependencies": {

@@ -5,6 +5,7 @@ import styles from "./MeusPedidos.module.css";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderProgress from "../../components/OrderProgress/OrderProgress";
 import OrderPickupDetails from "../../components/OrderDetails/OrderPickupDetails";
+import { NatalBeneficiosPedido } from "../../components/NatalBeneficios/NatalBeneficios";
 import { useFeedback } from "../../components/Feedback/feedbackContext";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import {
@@ -155,6 +156,7 @@ function MeusPedidos() {
                 {pedidoExpandido === pedido._id && (
                   <section className={styles.trackingPanel} aria-label={`Andamento do pedido ${pedido.numeroPedido}`}>
                     <OrderProgress status={pedido.status} />
+                    <NatalBeneficiosPedido pedidoId={pedido._id} versao={pedido.updatedAt} />
 
                     {pedido.status !== "retirado" && <div className={styles.shippingData}>
                       <div><span>Nota fiscal</span><strong>{pedido.numeroNotaFiscal || "Ainda não informada"}</strong></div>

@@ -22,6 +22,19 @@ import {
   applyAdminOrderEdit,
   pedidoPodeSerEditadoPeloAdmin,
 } from "../utils/pedidoEdicaoAdmin.js";
+import mongoose from "mongoose";
+import NatalLote from "../models/NatalLote.js";
+import { natalBancoDisponivel, NatalError } from "../services/natalBaseService.js";
+import {
+  invalidarLotePedido,
+  sincronizarPedidoNatalSeguro,
+} from "../services/natalLoteService.js";
+import {
+  aplicarRevisaoBeneficios,
+  previaRevisao,
+  reducaoExigeRevisao,
+  validarDecisaoRevisao,
+} from "../services/natalRevisaoService.js";
 import {
   isOptionalString,
   isValidObjectId,
@@ -435,6 +448,9 @@ export const atualizarStatusPedido = async (req, res) => {
     }
 
     await pedido.save();
+    if (pedido.status === "cancelado") {
+      await sincronizarPedidoNatalSeguro({ pedido, usuario: req.usuario, origem: "cancelamento" });
+    }
 
     return res.status(200).json({
       message: "Status atualizado",
@@ -487,6 +503,8 @@ export const aprovarPedidoAdmin = async (req, res) => {
     ).select("+historicoStatus +observacaoLogistica +ocorrencias");
 
     if (pedido) {
+      // Cupons do Natal Premiado são liberados na aprovação, sem aguardar faturamento.
+      await sincronizarPedidoNatalSeguro({ pedido, usuario: req.usuario, origem: "aprovacao" });
       return res.status(200).json({
         message: "Pedido aprovado e liberado para a Logística",
         pedido: enrichInternalOrderDetail(pedido),
@@ -525,7 +543,7 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    const pedido = await Pedido.findById(req.params.id)
+    let pedido = await Pedido.findById(req.params.id)
       .select("+historicoStatus +ocorrencias +historicoAlteracoes +historicoConferencias");
 
     if (!pedido) {
@@ -567,17 +585,109 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    const result = applyAdminOrderEdit({
-      pedido,
-      itensPedido,
-      valorTotal,
-      observacao: observacao?.trim() ?? pedido.observacao,
-      usuario: req.usuario,
-    });
+    // Natal Premiado 2026: toda redução de valor de pedido participante exige a
+    // decisão administrativa de manter ou adequar os benefícios (não só no modal).
+    const valorAnterior = Number(pedido.valorTotal || 0);
+    const loteNatal = natalBancoDisponivel() ? await NatalLote.findOne({ pedidoId: pedido._id }) : null;
+    const exigeRevisao = reducaoExigeRevisao({ lote: loteNatal, valorAnterior, valorNovo: valorTotal });
+    let decisaoNatal = null;
+    if (exigeRevisao) {
+      if (!req.body.revisaoBeneficios) {
+        return res.status(409).json({
+          codigo: "revisao_beneficios_obrigatoria",
+          message: "O valor deste pedido participante do Natal Premiado foi reduzido. Decida se os benefícios serão mantidos ou adequados ao novo valor.",
+          revisao: await previaRevisao({ lote: loteNatal, valorAnterior, valorNovo: valorTotal }),
+        });
+      }
+      try {
+        decisaoNatal = validarDecisaoRevisao(req.body.revisaoBeneficios, req.usuario);
+      } catch (error) {
+        if (error instanceof NatalError) return res.status(error.statusCode).json({ message: error.message, codigo: error.code });
+        throw error;
+      }
+    }
 
-    await pedido.save();
+    let result;
+    let revisaoNatal = null;
+    if (exigeRevisao) {
+      // Edição e revisão formam uma única operação: ou ambas são gravadas, ou nenhuma.
+      // Conflitos transitórios (ex.: aprovação simultânea no mesmo lote) repetem a
+      // operação a partir do estado gravado, que não mudou porque nada foi confirmado.
+      const MAX_TENTATIVAS_REVISAO = 8;
+      let pedidoAlvo = pedido;
+      let loteAlvo = loteNatal;
+      for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_REVISAO; tentativa += 1) {
+        if (tentativa > 1) {
+          pedidoAlvo = await Pedido.findById(req.params.id)
+            .select("+historicoStatus +ocorrencias +historicoAlteracoes +historicoConferencias");
+          loteAlvo = await NatalLote.findById(loteNatal._id);
+          if (!pedidoAlvo || !loteAlvo || Number(pedidoAlvo.__v || 0) !== Number(versaoPedido)) {
+            return res.status(409).json({
+              message: "Este pedido foi atualizado por outra pessoa durante a revisão. Nada foi salvo; reabra a edição e tente novamente.",
+            });
+          }
+        }
+        result = applyAdminOrderEdit({
+          pedido: pedidoAlvo,
+          itensPedido,
+          valorTotal,
+          observacao: observacao?.trim() ?? pedidoAlvo.observacao,
+          usuario: req.usuario,
+        });
+        const session = await mongoose.startSession();
+        try {
+          session.startTransaction();
+          await pedidoAlvo.save({ session });
+          revisaoNatal = await aplicarRevisaoBeneficios({
+            lote: loteAlvo,
+            valorAnterior,
+            valorNovo: valorTotal,
+            ...decisaoNatal,
+            usuario: req.usuario,
+            pedidoStatus: pedidoAlvo.status,
+            session,
+          });
+          await session.commitTransaction();
+          pedido = pedidoAlvo;
+          break;
+        } catch (error) {
+          await session.abortTransaction().catch(() => {});
+          const transitorio = error?.code === 112 || error?.hasErrorLabel?.("TransientTransactionError");
+          if (transitorio && tentativa < MAX_TENTATIVAS_REVISAO) {
+            await new Promise((resolve) => { setTimeout(resolve, 15 + Math.floor(Math.random() * 40) * tentativa); });
+            continue;
+          }
+          if (error instanceof NatalError) return res.status(error.statusCode).json({ message: error.message, codigo: error.code });
+          if (error?.name === "VersionError" || transitorio) {
+            return res.status(409).json({
+              message: "Este pedido foi atualizado por outra pessoa durante a revisão. Nada foi salvo; reabra a edição e tente novamente.",
+            });
+          }
+          throw error;
+        } finally {
+          await session.endSession();
+        }
+      }
+    } else {
+      result = applyAdminOrderEdit({
+        pedido,
+        itensPedido,
+        valorTotal,
+        observacao: observacao?.trim() ?? pedido.observacao,
+        usuario: req.usuario,
+      });
+      await pedido.save();
+      await sincronizarPedidoNatalSeguro({ pedido, usuario: req.usuario, origem: "edicao" });
+    }
 
     return res.status(200).json({
+      ...(revisaoNatal ? {
+        revisaoBeneficios: {
+          decisao: revisaoNatal.revisao.decisao,
+          cupons: revisaoNatal.revisao.faixaResultante.cupons,
+          participacoesInvalidadas: revisaoNatal.invalidadas,
+        },
+      } : {}),
       message: result.separationReopened
         ? "Pedido atualizado. A separação foi reaberta para adequação às quantidades atuais"
         : result.physicalOrderChanged
@@ -613,6 +723,9 @@ export const excluirPedidoAdmin = async (req, res) => {
     }
 
     await Pedido.findByIdAndDelete(req.params.id);
+    // O lote e as participações permanecem gravados para auditoria, mas deixam de valer.
+    await invalidarLotePedido({ pedidoId: pedido._id, usuario: req.usuario, motivo: "Pedido excluído" })
+      .catch((error) => console.error("[natal-2026] Falha ao invalidar lote de pedido excluído", { name: error?.name }));
 
     return res.status(200).json({
       message: "Pedido excluído com sucesso",

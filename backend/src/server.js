@@ -32,6 +32,7 @@ import operadorLogisticaRoutes from "./routes/operadorLogisticaRoutes.js";
 import pedidoMetricasRoutes from "./routes/pedidoMetricasRoutes.js";
 import adminTreinamentoRoutes from "./routes/adminTreinamentoRoutes.js";
 import treinamentoRoutes from "./routes/treinamentoRoutes.js";
+import natalRoutes, { natalPublicRoutes } from "./routes/natalRoutes.js";
 
 dotenv.config({ quiet: true });
 
@@ -54,6 +55,7 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Operador-Contexto"],
+    exposedHeaders: ["Content-Disposition", "X-Total-Cupons"],
     credentials: true,
     optionsSuccessStatus: 204,
   })
@@ -112,6 +114,8 @@ app.use("/api/admin/metricas-pedidos", pedidoMetricasRoutes);
 app.use("/api/admin/treinamentos", adminTreinamentoRoutes);
 app.use("/api/marketing/treinamentos", adminTreinamentoRoutes);
 app.use("/api/treinamentos", treinamentoRoutes);
+app.use("/api/public/natal-2026", natalPublicRoutes);
+app.use("/api/natal-2026", natalRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API AtualPet rodando" });

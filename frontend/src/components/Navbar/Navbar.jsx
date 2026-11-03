@@ -41,6 +41,7 @@ const adminLinks = [
   },
   { to: "/admin/banners", label: "Banners", group: "Conteúdo" },
   { to: "/admin/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+  { to: "/natal-2026/gestao", label: "Natal Premiado 2026", group: "Campanhas" },
 ];
 
 // Vendedor e Comercial compartilham o menu; cada item aparece conforme as permissões efetivas.
@@ -54,6 +55,7 @@ const comercialLinks = [
   { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
   { to: "/admin/treinamentos", label: "Acompanhamento", group: "Conteúdo" },
   { to: "/materiais-marketing", label: "Materiais", group: "Conteúdo" },
+  { to: "/natal-2026/gestao", label: "Natal Premiado 2026", group: "Campanhas", roles: ["comercial"] },
 ];
 
 // Acessos concedidos individualmente a perfis que normalmente não os possuem.
@@ -92,6 +94,7 @@ const clienteLinks = [
     group: "Conteúdo",
   },
   { to: "/treinamentos", label: "Treinamentos", group: "Conteúdo" },
+  { to: "/natal-2026", label: "Natal Premiado 2026", group: "Campanhas" },
 ];
 
 const groomerLinks = [
@@ -133,6 +136,8 @@ function Navbar() {
             : clienteLinks;
   const extraLinks = isAdmin ? [] : permissionLinks.filter((link) => !link.skip?.includes(usuario?.tipo));
   const links = groupLinks([...baseLinks, ...extraLinks]
+    // Itens com "roles" ficam restritos a esses perfis (ex.: campanha só para o Comercial).
+    .filter((link) => !link.roles || link.roles.includes(usuario?.tipo))
     .filter((link, index, all) => all.findIndex((item) => item.to === link.to) === index && canOpenRoute(usuario, link.to, [usuario?.tipo]))
     .map((link) => (link.globalLabel && hasGlobalScope(usuario) ? { ...link, label: link.globalLabel } : link)));
   // Grupos recolhíveis atuam sobre os links já filtrados por permissão.

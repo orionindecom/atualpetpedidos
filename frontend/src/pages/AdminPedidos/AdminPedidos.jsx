@@ -6,6 +6,8 @@ import api from "../../api/axios";
 import { FilterToolbar } from "../../components/ListControls/ListControls";
 import Navbar from "../../components/Navbar/Navbar";
 import OrderDetailModal from "../../components/OrderDetails/OrderDetailModal";
+import { NatalBeneficiosPedido } from "../../components/NatalBeneficios/NatalBeneficios";
+import RevisaoBeneficiosModal from "../../components/NatalBeneficios/RevisaoBeneficiosModal";
 import { useModalDialog } from "../../hooks/useModalDialog";
 import { useDialogVisualViewport } from "../../hooks/useDialogVisualViewport";
 import { useFeedback } from "../../components/Feedback/feedbackContext";
@@ -36,6 +38,7 @@ function AdminPedidos() {
   const [statusFiltro, setStatusFiltro] = useState("");
 
   const [modalPedido, setModalPedido] = useState(null);
+  const [revisaoNatal, setRevisaoNatal] = useState(null);
   const [quantidadesModal, setQuantidadesModal] = useState({});
   const [buscaProduto, setBuscaProduto] = useState("");
   const [detail, setDetail] = useState(null);
@@ -335,6 +338,7 @@ function AdminPedidos() {
 
   const fecharModal = () => {
     setModalPedido(null);
+    setRevisaoNatal(null);
     setQuantidadesModal({});
     setBuscaProduto("");
   };
@@ -354,7 +358,7 @@ function AdminPedidos() {
     return () => window.cancelAnimationFrame(frame);
   }, [buscaProduto, modalPedido, editOrderDialogRef]);
 
-  const salvarModalPedido = async () => {
+  const salvarModalPedido = async (revisaoBeneficios) => {
     const itens = Object.entries(quantidadesModal)
       .filter(([, quantidade]) => Number(quantidade) > 0)
       .map(([produtoId, quantidade]) => ({
@@ -369,20 +373,37 @@ function AdminPedidos() {
       return;
     }
 
+    if (revisaoBeneficios) {
+      setRevisaoNatal((atual) => ({ ...atual, salvando: true, erro: "" }));
+    }
     try {
       const response = await api.put(`/pedidos/${modalPedido._id}`, {
         itens,
         observacao: modalPedido.observacao || "",
         versaoPedido: Number(modalPedido.__v || 0),
+        ...(revisaoBeneficios ? { revisaoBeneficios } : {}),
       });
       atualizarPedidoNaLista(response.data.pedido);
+      setRevisaoNatal(null);
 
+      const revisao = response.data.revisaoBeneficios;
       toast.success("Pedido atualizado", {
-        description: `As alterações do pedido ${modalPedido.numeroPedido} foram salvas.`,
+        description: revisao
+          ? `Benefícios do Natal Premiado ${revisao.decisao === "manter" ? "mantidos" : "adequados"}: ${revisao.cupons} cupons${revisao.participacoesInvalidadas ? `, ${revisao.participacoesInvalidadas} participação(ões) invalidada(s)` : ""}.`
+          : `As alterações do pedido ${modalPedido.numeroPedido} foram salvas.`,
       });
 
       fecharModal();
     } catch (error) {
+      // Redução de pedido participante: o backend exige a decisão sobre os benefícios.
+      if (error.response?.data?.codigo === "revisao_beneficios_obrigatoria") {
+        setRevisaoNatal({ revisao: error.response.data.revisao, salvando: false, erro: "" });
+        return;
+      }
+      if (revisaoBeneficios) {
+        setRevisaoNatal((atual) => (atual ? { ...atual, salvando: false, erro: getApiErrorMessage(error, "Não foi possível salvar. Nada foi alterado.") } : atual));
+        return;
+      }
       console.error(error);
       toast.error("Não foi possível atualizar o pedido", {
         description: getApiErrorMessage(error, "Tente novamente em instantes."),
@@ -539,6 +560,7 @@ function AdminPedidos() {
             onDownloadReportPdf={baixarRelatorioPedido}
             onEditOrder={editarPedidoDetalhado}
             onDeleteOrder={() => excluirPedido(detail._id)}
+            campaignSlot={<NatalBeneficiosPedido pedidoId={detail._id} versao={`${detail.__v}-${detail.status}-${detail.valorTotal}`} mostrarLink={hasGlobalScope(usuario)} />}
           />
         )}
 
@@ -627,13 +649,23 @@ function AdminPedidos() {
                   Cancelar
                 </button>
 
-                <button type="button" onClick={salvarModalPedido}>
+                <button type="button" onClick={() => salvarModalPedido()}>
                   Salvar Alterações
                 </button>
               </div>
 
             </section>
           </div>
+        )}
+
+        {modalPedido && revisaoNatal && (
+          <RevisaoBeneficiosModal
+            revisao={revisaoNatal.revisao}
+            salvando={revisaoNatal.salvando}
+            erro={revisaoNatal.erro}
+            onCancelar={() => setRevisaoNatal(null)}
+            onConfirmar={(decisao) => salvarModalPedido(decisao)}
+          />
         )}
       </div>
     </>

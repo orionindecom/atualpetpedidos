@@ -1,0 +1,191 @@
+/* Benefícios do Natal Premiado nas telas internas: usa somente os tokens da Central. */
+
+.card {
+  margin: 16px 0 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border-default);
+  border-left: 4px solid var(--brand-accent);
+  border-radius: var(--radius-large);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+.card[data-tipo="conquistado"] {
+  border-left-color: var(--success);
+}
+
+.card[data-tipo="invalidado"],
+.card[data-tipo="sem_beneficios"] {
+  border-left-color: var(--border-strong);
+  background: var(--surface-secondary);
+}
+
+.header {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.header strong {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--brand-accent-soft);
+  color: var(--brand-accent-ink);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge[data-tipo="conquistado"] {
+  background: #e7f5ee;
+  color: #1f6b52;
+}
+
+.badge[data-tipo="invalidado"],
+.badge[data-tipo="sem_beneficios"] {
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+}
+
+.lista {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.texto,
+.nota,
+.proxima,
+.alerta {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.texto {
+  font-size: 13px;
+}
+
+.nota {
+  color: var(--text-muted);
+}
+
+.proxima {
+  color: var(--brand-primary-ink);
+}
+
+.alerta {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.saldo {
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.saldo div {
+  padding: 8px;
+  border-radius: var(--radius-medium);
+  background: var(--surface-secondary);
+}
+
+.saldo dt {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.saldo dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.link {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.link label {
+  display: grid;
+  gap: 4px;
+}
+
+.link label span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.link input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.linkAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.botao,
+.botaoSecundario {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-medium);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao {
+  border: 1px solid var(--brand-accent);
+  background: var(--brand-accent);
+  color: var(--text-on-brand);
+}
+
+.botaoSecundario {
+  border: 1px solid var(--brand-primary-strong);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+@media (max-width: 520px) {
+  .saldo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .botao,
+  .botaoSecundario {
+    flex: 1 1 140px;
+  }
+}

@@ -135,6 +135,29 @@ export const pinOperadorLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Natal Premiado 2026: rotas públicas (sem login) usadas pelos vendedores externos.
+export const natalConsultaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: "Muitas consultas. Aguarde alguns minutos e tente novamente.",
+  keyPrefix: "natal-consulta",
+});
+
+export const natalEnvioLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 40,
+  message: "Muitos cadastros enviados a partir desta conexão. Aguarde e tente novamente.",
+  keyPrefix: "natal-envio",
+});
+
+export const natalEnvioLoteLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 400,
+  message: "Este link recebeu muitos cadastros em pouco tempo. Aguarde e tente novamente.",
+  keyPrefix: "natal-envio-lote",
+  keyGenerator: (req) => `lote:${String(req.params?.codigo || "").slice(0, 64)}`,
+});
+
 export const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 30,

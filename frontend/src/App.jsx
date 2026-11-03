@@ -29,6 +29,9 @@ import AdminOperadoresLogistica from "./pages/AdminOperadoresLogistica/AdminOper
 import AdminMetricasPedidos from "./pages/AdminMetricasPedidos/AdminMetricasPedidos";
 import NecessidadeProducao from "./pages/NecessidadeProducao/NecessidadeProducao";
 import NovoPedidoComercial from "./pages/NovoPedidoComercial/NovoPedidoComercial";
+import NatalParticipar from "./pages/NatalParticipar/NatalParticipar";
+import NatalDistribuidor from "./pages/NatalDistribuidor/NatalDistribuidor";
+import NatalGestao from "./pages/NatalGestao/NatalGestao";
 import {
   HomeRedirect,
   NotFoundRoute,
@@ -262,6 +265,24 @@ function App() {
           element={(
             <RoleRoute role="comercial">
               <NovoPedidoComercial />
+            </RoleRoute>
+          )}
+        />
+        {/* Natal Premiado 2026: formulário público (sem login) e painéis internos. */}
+        <Route path="/natal-2026/participar/:codigo" element={<NatalParticipar />} />
+        <Route
+          path="/natal-2026"
+          element={(
+            <RoleRoute role="cliente">
+              <NatalDistribuidor />
+            </RoleRoute>
+          )}
+        />
+        <Route
+          path="/natal-2026/gestao"
+          element={(
+            <RoleRoute roles={["admin", "comercial"]}>
+              <NatalGestao />
             </RoleRoute>
           )}
         />

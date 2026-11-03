@@ -12,6 +12,7 @@ import { useModalDialog } from "../../hooks/useModalDialog";
 import { useFeedback } from "../../components/Feedback/feedbackContext";
 import modalStyles from "../../components/OrderDetails/OrderDetails.module.css";
 import DistributorBanners from "../../components/DistributorBanners/DistributorBanners";
+import { NatalBeneficiosPrevia } from "../../components/NatalBeneficios/NatalBeneficios";
 import { abrirOuBaixarPdfPedido } from "../../utils/pdfPedido";
 import { normalizeCatalogResponse } from "../../utils/catalogResponse";
 import {
@@ -549,6 +550,8 @@ function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
                                     <strong>{moeda(totalPedido)}</strong>
                                 </div>
 
+                                <NatalBeneficiosPrevia valorTotal={totalPedido} />
+
                                 <button
                                     className={styles.botao}
                                     onClick={iniciarFinalizacao}
@@ -611,6 +614,7 @@ function Catalogo({ distribuidor = null, onTrocarDistribuidor }) {
                                 </div>)}
                             </div>
                             <div className={styles.totalResumo}><span>Total</span><strong>{moeda(totalPedido)}</strong></div>
+                            <NatalBeneficiosPrevia valorTotal={totalPedido} />
                             <label className={modalStyles.conferenceObservation}>Observação (opcional)
                                 <textarea maxLength={1000} value={observacao} disabled={gerandoPedido} onChange={(event) => setObservacao(event.target.value)} />
                             </label>

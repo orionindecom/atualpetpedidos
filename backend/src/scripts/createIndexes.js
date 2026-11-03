@@ -31,9 +31,14 @@ const run = async () => {
     import("../models/BannerMarketing.js"),
     import("../models/Treinamento.js"),
     import("../models/ProgressoTreinamento.js"),
+    import("../models/NatalLote.js"),
+    import("../models/NatalParticipacao.js"),
+    import("../models/NatalCupom.js"),
+    import("../models/NatalAuditoria.js"),
   ]);
+  const { NatalExportacao } = await import("../models/NatalCampanhaEstado.js");
 
-  for (const { default: model } of models) {
+  for (const model of [...models.map((module) => module.default), NatalExportacao]) {
     await model.createIndexes();
     console.log(`${model.modelName}: índices verificados`);
   }

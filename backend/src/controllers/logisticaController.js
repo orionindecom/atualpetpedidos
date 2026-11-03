@@ -22,6 +22,7 @@ import {
   validateLogisticsOrderPayload,
 } from "../utils/pedidoLogistica.js";
 import { sendServerError } from "../utils/validation.js";
+import { sincronizarPedidoNatalSeguro } from "../services/natalLoteService.js";
 import { sanitizeLogisticsOrder } from "../utils/pedidoLogisticaView.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -815,6 +816,9 @@ export const atualizarPedidoLogistica = async (req, res) => {
     }
 
     await pedido.save();
+    if (pedido.status === "cancelado") {
+      await sincronizarPedidoNatalSeguro({ pedido, usuario: req.usuario, origem: "cancelamento" });
+    }
 
     return res.status(200).json({
       message: "Dados logísticos atualizados",
