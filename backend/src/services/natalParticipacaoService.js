@@ -1,10 +1,9 @@
 import crypto from "node:crypto";
-import mongoose from "mongoose";
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
+import NatalConta from "../models/NatalConta.js";
 import NatalCupom from "../models/NatalCupom.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalParticipacao from "../models/NatalParticipacao.js";
-import Pedido from "../models/Pedido.js";
 import { buildAutorNatal } from "../models/natalSchemas.js";
 import {
   formatarNumeroCupom,
@@ -13,15 +12,19 @@ import {
   situacaoCadastros,
 } from "../utils/natalCampanha.js";
 import {
+  executarTransacaoNatal,
   garantirIndicesNatal,
   gerarProtocolo,
   hashIp,
   NatalError,
+  obterModoCumulativo,
+  RepetirTransacaoNatal,
   registrarAuditoriaNatal,
+  travarModoLegado,
   verificarListaAberta,
 } from "./natalBaseService.js";
 import { getComprovanteStorage } from "./natalComprovanteService.js";
-import { invalidarLotePedido } from "./natalLoteService.js";
+import { garantirConta, incrementarContadores } from "./natalContaService.js";
 
 const MAX_TENTATIVAS_PROTOCOLO = 5;
 
@@ -36,15 +39,45 @@ const validarMotivo = (motivo, rotulo = "o motivo") => {
   return texto;
 };
 
-const motivoBloqueioLote = (lote, config, now) => {
+// Camada de compatibilidade: resolve um link antigo ou próprio somente com leituras.
+// Nenhum identificador público muda e o saldo vem sempre de uma única fonte.
+const carregarLink = async (codigo) => {
+  const lote = await NatalLote.findOne({ codigoPublico: codigo });
+  const conta = lote
+    ? await NatalConta.findOne({ campanha: NATAL_2026.slug, clienteId: lote.clienteId })
+    : await NatalConta.findOne({ codigoPublico: codigo });
+  return lote || conta ? { lote, conta } : null;
+};
+
+// Com o modelo ativo o saldo é o da conta, compartilhado por todos os links. Antes
+// disso cada link antigo consome o próprio lote, como sempre consumiu.
+const usaSaldoDaConta = ({ lote, conta }, modo) => Boolean(conta && (modo === "ativo" || !lote));
+
+const lerSaldo = (link, modo) => {
+  if (usaSaldoDaConta(link, modo)) {
+    return {
+      total: Number(link.conta.cupons?.total || 0),
+      aprovados: Number(link.conta.contadores?.aprovados || 0),
+      pendentes: Number(link.conta.contadores?.pendentes || 0),
+    };
+  }
+  return {
+    total: Number(link.lote.cuponsConcedidos || 0),
+    aprovados: Number(link.lote.contadores?.aprovados || 0),
+    pendentes: Number(link.lote.contadores?.pendentes || 0),
+  };
+};
+
+const motivoBloqueioLink = (link, modo, config, now) => {
   const situacao = situacaoCadastros(config, now);
   if (situacao === "encerrada") return "encerrada";
   if (situacao === "nao_iniciada") return "nao_iniciada";
-  if (lote.status !== "ativo") return "lote_invalidado";
-  if (Number(lote.cuponsConcedidos) <= 0) return "sem_beneficios";
-  if (Number(lote.contadores?.aprovados || 0) >= Number(lote.cuponsConcedidos)) return "esgotado";
-  const disponivel = Number(lote.cuponsConcedidos) - Number(lote.contadores?.aprovados || 0);
-  if (Number(lote.contadores?.pendentes || 0) >= disponivel + config.folgaFilaPendentes) return "fila_cheia";
+  if (modo === "migrando") return "manutencao";
+  if (link.lote && link.lote.status !== "ativo") return "lote_invalidado";
+  const { total, aprovados, pendentes } = lerSaldo(link, modo);
+  if (total <= 0) return "sem_beneficios";
+  if (aprovados >= total) return "esgotado";
+  if (pendentes >= total - aprovados + config.folgaFilaPendentes) return "fila_cheia";
   return null;
 };
 
@@ -55,38 +88,17 @@ export const MENSAGENS_BLOQUEIO = Object.freeze({
   sem_beneficios: "Este link está sem cupons disponíveis no momento. Procure o distribuidor responsável.",
   esgotado: "Todos os cupons deste link já foram utilizados. Procure o distribuidor responsável.",
   fila_cheia: "Este link atingiu o limite de cadastros em análise. Aguarde a validação ou procure o distribuidor.",
+  manutencao: "Os cadastros estão em uma pausa rápida para atualização. Tente novamente em alguns minutos.",
 });
 
-// Pedido cancelado fora dos fluxos instrumentados ainda bloqueia o lote aqui.
-const garantirPedidoValido = async (lote) => {
-  const pedido = await Pedido.findById(lote.pedidoId).select("status").lean();
-  if (!pedido || pedido.status === "cancelado") {
-    await invalidarLotePedido({
-      pedidoId: lote.pedidoId,
-      motivo: pedido ? "Pedido cancelado" : "Pedido excluído",
-    });
-    throw new NatalError(409, MENSAGENS_BLOQUEIO.lote_invalidado, "lote_invalidado");
-  }
-};
-
+// Somente leitura: abrir o link nunca cria conta nem altera saldo.
 export const obterLotePublico = async (codigo, { config = NATAL_2026, now = new Date() } = {}) => {
-  await garantirIndicesNatal();
   if (typeof codigo !== "string" || !/^[A-Za-z0-9_-]{16,64}$/.test(codigo)) return null;
-  const lote = await NatalLote.findOne({ codigoPublico: codigo })
-    .select("pedidoId distribuidorNome status cuponsConcedidos contadores")
-    .lean();
-  if (!lote) return null;
-  let motivo = motivoBloqueioLote(lote, config, now);
-  if (!motivo) {
-    try {
-      await garantirPedidoValido(lote);
-    } catch (error) {
-      if (!(error instanceof NatalError)) throw error;
-      motivo = "lote_invalidado";
-    }
-  }
+  const link = await carregarLink(codigo);
+  if (!link) return null;
+  const motivo = motivoBloqueioLink(link, await obterModoCumulativo(), config, now);
   return {
-    distribuidorNome: lote.distribuidorNome,
+    distribuidorNome: link.lote?.distribuidorNome || link.conta.distribuidorNome,
     aceitandoCadastros: !motivo,
     motivo,
     mensagem: motivo ? MENSAGENS_BLOQUEIO[motivo] : null,
@@ -132,24 +144,29 @@ export const registrarParticipacaoPublica = async ({
   now = new Date(),
 }) => {
   await garantirIndicesNatal();
-  const lote = await NatalLote.findOne({ codigoPublico: codigo });
-  if (!lote) throw new NatalError(404, "Link de cadastro não encontrado.", "nao_encontrado");
-  const bloqueio = motivoBloqueioLote(lote, config, now);
-  if (bloqueio) throw new NatalError(409, MENSAGENS_BLOQUEIO[bloqueio], bloqueio);
-  await garantirPedidoValido(lote);
+  const link = await carregarLink(codigo);
+  if (!link) throw new NatalError(404, "Link de cadastro não encontrado.", "nao_encontrado");
+  const modo = await obterModoCumulativo();
+  if (modo === "ativo" && !link.conta) link.conta = await garantirConta({ clienteId: link.lote.clienteId });
+  const { lote, conta } = link;
+  const clienteId = lote?.clienteId || conta.clienteId;
+  const bloqueio = motivoBloqueioLink(link, modo, config, now);
+  if (bloqueio) throw new NatalError(modo === "migrando" ? 503 : 409, MENSAGENS_BLOQUEIO[bloqueio], bloqueio);
 
-  // Reserva atômica de uma posição na fila de análise do lote.
-  const reservado = await NatalLote.findOneAndUpdate(
+  // Reserva atômica de uma posição na fila de análise do saldo em uso.
+  const naConta = usaSaldoDaConta(link, modo);
+  const totalCampo = naConta ? "$cupons.total" : "$cuponsConcedidos";
+  const reservado = await (naConta ? NatalConta : NatalLote).findOneAndUpdate(
     {
-      _id: lote._id,
-      status: "ativo",
+      _id: naConta ? conta._id : lote._id,
+      ...(naConta ? {} : { status: "ativo" }),
       $expr: {
         $and: [
-          { $lt: ["$contadores.aprovados", "$cuponsConcedidos"] },
+          { $lt: ["$contadores.aprovados", totalCampo] },
           {
             $lt: [
               "$contadores.pendentes",
-              { $add: [{ $subtract: ["$cuponsConcedidos", "$contadores.aprovados"] }, config.folgaFilaPendentes] },
+              { $add: [{ $subtract: [totalCampo, "$contadores.aprovados"] }, config.folgaFilaPendentes] },
             ],
           },
         ],
@@ -159,12 +176,15 @@ export const registrarParticipacaoPublica = async ({
     { returnDocument: "after" }
   );
   if (!reservado) {
-    const atual = await NatalLote.findById(lote._id).lean();
-    const motivo = motivoBloqueioLote(atual, config, now) || "fila_cheia";
+    const atual = await carregarLink(codigo);
+    const motivo = motivoBloqueioLink(atual, modo, config, now) || "fila_cheia";
     throw new NatalError(409, MENSAGENS_BLOQUEIO[motivo], motivo);
   }
+  // O outro registro acompanha o contador, para o saldo seguir certo em qualquer modo.
+  if (naConta && lote) await NatalLote.updateOne({ _id: lote._id }, { $inc: { "contadores.pendentes": 1 } });
+  if (!naConta && conta) await NatalConta.updateOne({ _id: conta._id }, { $inc: { "contadores.pendentes": 1 } });
 
-  const liberarReserva = () => NatalLote.updateOne({ _id: lote._id }, { $inc: { "contadores.pendentes": -1 } });
+  const liberarReserva = () => incrementarContadores({ clienteId, loteId: lote?._id, incrementos: { pendentes: -1 } });
   const storage = getComprovanteStorage();
   let armazenado;
   try {
@@ -181,11 +201,11 @@ export const registrarParticipacaoPublica = async ({
     for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PROTOCOLO; tentativa += 1) {
       try {
         participacao = await NatalParticipacao.create({
-          loteId: lote._id,
-          pedidoId: lote.pedidoId,
-          numeroPedido: lote.numeroPedido,
-          clienteId: lote.clienteId,
-          distribuidorNome: lote.distribuidorNome,
+          loteId: lote?._id,
+          pedidoId: lote?.pedidoId,
+          numeroPedido: lote?.numeroPedido,
+          clienteId,
+          distribuidorNome: lote?.distribuidorNome || conta.distribuidorNome,
           protocolo: gerarProtocolo(),
           vendedorNome: dados.vendedorNome,
           petshop: {
@@ -232,8 +252,9 @@ export const registrarParticipacaoPublica = async ({
       acao: "participacao_recebida",
       autor,
       now,
-      loteId: lote._id,
-      pedidoId: lote.pedidoId,
+      clienteId,
+      loteId: lote?._id,
+      pedidoId: lote?.pedidoId,
       participacaoId: participacao._id,
       detalhes: { protocolo: participacao.protocolo, alertas: alertas.length },
     });
@@ -259,17 +280,6 @@ export const obterParticipacaoAutorizada = carregarParticipacaoAutorizada;
 
 const gerarNumeroCupom = (config) => crypto.randomInt(config.numeracao.minimo, config.numeracao.maximo + 1);
 
-const MAX_TENTATIVAS_APROVACAO = 8;
-
-const erroTransitorio = (error) => Boolean(
-  error?.hasErrorLabel?.("TransientTransactionError") ||
-  error?.errorLabels?.includes?.("TransientTransactionError") ||
-  error?.code === 112 ||
-  error?.codeName === "WriteConflict"
-);
-
-class RepetirAprovacao extends Error {}
-
 // Número aleatório ainda não usado (inclusive por cupons cancelados ou invalidados).
 const sortearNumeroLivre = async (config, session) => {
   for (let tentativa = 1; tentativa <= config.numeracao.tentativas; tentativa += 1) {
@@ -279,9 +289,9 @@ const sortearNumeroLivre = async (config, session) => {
   throw new NatalError(503, "Não foi possível gerar um número de cupom único. Amplie o intervalo de numeração.", "numeracao_esgotada");
 };
 
-// Aprovação em uma única transação: reserva da vaga no lote (nunca ultrapassa o
-// concedido), mudança de status e emissão do número aleatório único. Conflitos com
-// outras aprovações ou com uma revisão de faixa simultânea repetem a operação inteira.
+// Aprovação em uma única transação: reserva da vaga no saldo do distribuidor (nunca
+// ultrapassa o concedido), mudança de status e emissão do número aleatório único.
+// Conflitos com outras aprovações ou com uma revisão repetem a operação inteira.
 export const aprovarParticipacao = async ({ id, usuario, justificativa, config = NATAL_2026, now = new Date() }) => {
   if (!isGestorCampanha(usuario)) throw new NatalError(403, "Somente o Comercial ou o Administrador aprovam participações.", "sem_permissao");
   await garantirIndicesNatal();
@@ -290,18 +300,26 @@ export const aprovarParticipacao = async ({ id, usuario, justificativa, config =
   if (participacao.status !== "pendente") {
     throw new NatalError(409, "Somente cadastros pendentes podem ser aprovados.", "status_invalido");
   }
-  const loteAtual = await NatalLote.findById(participacao.loteId);
-  if (!loteAtual || loteAtual.status !== "ativo") throw new NatalError(409, "O lote desta participação não está ativo.", "lote_invalidado");
-  await garantirPedidoValido(loteAtual);
+  const modo = await obterModoCumulativo();
+  if (modo === "migrando") throw new NatalError(503, "Aprovações em pausa rápida para atualização. Tente novamente em alguns minutos.", "manutencao");
+  const clienteId = participacao.clienteId;
+  const { loteId } = participacao;
+  const loteAtual = loteId ? await NatalLote.findById(loteId).lean() : null;
+  if (loteId && (!loteAtual || loteAtual.status !== "ativo")) throw new NatalError(409, "O lote desta participação não está ativo.", "lote_invalidado");
+  const contaAtual = modo === "ativo"
+    ? await garantirConta({ clienteId })
+    : await NatalConta.findOne({ campanha: NATAL_2026.slug, clienteId }).lean();
+  const naConta = usaSaldoDaConta({ lote: loteAtual, conta: contaAtual }, modo);
+  const saldoAtual = lerSaldo({ lote: loteAtual, conta: contaAtual }, modo);
 
   // Ordem de recebimento: com vagas escassas, cadastros anteriores têm prioridade.
   const anterioresPendentes = await NatalParticipacao.countDocuments({
-    loteId: loteAtual._id,
+    ...(naConta ? { clienteId } : { loteId }),
     status: "pendente",
     recebidoEm: { $lt: participacao.recebidoEm },
   });
-  const disponivelAgora = Number(loteAtual.cuponsConcedidos) - Number(loteAtual.contadores?.aprovados || 0);
-  if (disponivelAgora <= 0) throw new NatalError(409, "Não há saldo disponível neste lote.", "sem_saldo");
+  const disponivelAgora = saldoAtual.total - saldoAtual.aprovados;
+  if (disponivelAgora <= 0) throw new NatalError(409, "Não há saldo disponível para este distribuidor.", "sem_saldo");
   if (disponivelAgora <= anterioresPendentes) {
     throw new NatalError(
       409,
@@ -311,86 +329,76 @@ export const aprovarParticipacao = async ({ id, usuario, justificativa, config =
   }
 
   const autor = buildAutorNatal(usuario);
-  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_APROVACAO; tentativa += 1) {
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
-      const lote = await NatalLote.findOne({ _id: participacao.loteId, status: "ativo" }).session(session);
-      if (!lote) throw new NatalError(409, "O lote desta participação não está ativo.", "lote_invalidado");
-      const aprovadosLote = Number(lote.contadores?.aprovados || 0);
-      if (aprovadosLote >= Number(lote.cuponsConcedidos)) throw new NatalError(409, "Não há saldo disponível neste lote.", "sem_saldo");
+  const resultado = await executarTransacaoNatal(async (session) => {
+    if (modo !== "ativo") await travarModoLegado(session);
+    const Saldo = naConta ? NatalConta : NatalLote;
+    const atual = await Saldo.findById(naConta ? contaAtual._id : loteId).session(session);
+    const { aprovados, total } = lerSaldo(naConta ? { conta: atual } : { lote: atual }, naConta ? "ativo" : modo);
+    if (aprovados >= total) throw new NatalError(409, "Não há saldo disponível para este distribuidor.", "sem_saldo");
 
-      const reserva = await NatalLote.updateOne(
-        { _id: lote._id, status: "ativo", cuponsConcedidos: lote.cuponsConcedidos, "contadores.aprovados": aprovadosLote },
-        { $inc: { "contadores.aprovados": 1, "contadores.pendentes": -1 } },
-        { session }
-      );
-      if (!reserva.modifiedCount) throw new RepetirAprovacao();
+    const reserva = await Saldo.updateOne(
+      { _id: atual._id, [naConta ? "cupons.total" : "cuponsConcedidos"]: total, "contadores.aprovados": aprovados },
+      { $inc: { "contadores.aprovados": 1, "contadores.pendentes": -1 } },
+      { session }
+    );
+    if (!reserva.modifiedCount) throw new RepetirTransacaoNatal();
+    const espelho = { $inc: { "contadores.aprovados": 1, "contadores.pendentes": -1 } };
+    if (naConta && loteId) await NatalLote.updateOne({ _id: loteId }, espelho, { session });
+    if (!naConta && contaAtual) await NatalConta.updateOne({ _id: contaAtual._id }, espelho, { session });
 
-      const aprovada = await NatalParticipacao.findOneAndUpdate(
-        { _id: participacao._id, status: "pendente" },
-        { $set: { status: "aprovado", decisao: { em: now, autor, motivo: fechamento.justificativa } } },
-        { returnDocument: "after", session }
-      );
-      if (!aprovada) throw new NatalError(409, "Esta participação foi analisada por outra pessoa. Atualize a lista.", "concorrencia");
+    const aprovada = await NatalParticipacao.findOneAndUpdate(
+      { _id: participacao._id, status: "pendente" },
+      { $set: { status: "aprovado", decisao: { em: now, autor, motivo: fechamento.justificativa } } },
+      { returnDocument: "after", session }
+    );
+    if (!aprovada) throw new NatalError(409, "Esta participação foi analisada por outra pessoa. Atualize a lista.", "concorrencia");
 
-      const numero = await sortearNumeroLivre(config, session);
-      const codigo = formatarNumeroCupom(numero, config.numeracao.digitos);
-      await NatalCupom.create([{
-        numero,
-        codigo,
-        participacaoId: aprovada._id,
-        loteId: lote._id,
-        pedidoId: lote.pedidoId,
-        clienteId: lote.clienteId,
-        status: "valido",
-        emitidoEm: now,
-        emitidoPor: autor,
-      }], { session });
+    const numero = await sortearNumeroLivre(config, session);
+    const codigo = formatarNumeroCupom(numero, config.numeracao.digitos);
+    await NatalCupom.create([{
+      numero,
+      codigo,
+      participacaoId: aprovada._id,
+      loteId,
+      pedidoId: participacao.pedidoId,
+      clienteId,
+      status: "valido",
+      emitidoEm: now,
+      emitidoPor: autor,
+    }], { session });
 
-      const final = await NatalParticipacao.findOneAndUpdate(
-        { _id: aprovada._id },
-        {
-          $set: { cupom: { numero, codigo, emitidoEm: now } },
-          $push: {
-            historico: {
-              acao: "aprovado",
-              em: now,
-              autor,
-              detalhes: `Cupom ${codigo} emitido`,
-              ...(fechamento.aposFechamento ? { motivo: fechamento.justificativa } : {}),
-            },
+    const final = await NatalParticipacao.findOneAndUpdate(
+      { _id: aprovada._id },
+      {
+        $set: { cupom: { numero, codigo, emitidoEm: now } },
+        $push: {
+          historico: {
+            acao: "aprovado",
+            em: now,
+            autor,
+            detalhes: `Cupom ${codigo} emitido`,
+            ...(fechamento.aposFechamento ? { motivo: fechamento.justificativa } : {}),
           },
         },
-        { returnDocument: "after", session }
-      );
-      await session.commitTransaction();
+      },
+      { returnDocument: "after", session }
+    );
+    return { final, numero, codigo };
+  });
 
-      await registrarAuditoriaNatal({
-        acao: "participacao_aprovada",
-        autor,
-        now,
-        loteId: lote._id,
-        pedidoId: lote.pedidoId,
-        participacaoId: aprovada._id,
-        cupomNumero: numero,
-        aposFechamento: fechamento.aposFechamento,
-        detalhes: { protocolo: aprovada.protocolo, cupom: codigo, justificativa: fechamento.justificativa },
-      });
-      return final;
-    } catch (error) {
-      await session.abortTransaction().catch(() => {});
-      const repetir = error instanceof RepetirAprovacao || erroTransitorio(error) || isDuplicateKey(error, "numero");
-      if (!repetir) throw error;
-      if (tentativa === MAX_TENTATIVAS_APROVACAO) {
-        throw new NatalError(409, "O lote está sendo alterado por outra operação. Tente aprovar novamente.", "concorrencia");
-      }
-      await new Promise((resolve) => { setTimeout(resolve, 10 + Math.floor(Math.random() * 30) * tentativa); });
-    } finally {
-      await session.endSession();
-    }
-  }
-  throw new NatalError(409, "Não foi possível aprovar agora. Tente novamente.", "concorrencia");
+  await registrarAuditoriaNatal({
+    acao: "participacao_aprovada",
+    autor,
+    now,
+    clienteId,
+    loteId: participacao.loteId,
+    pedidoId: participacao.pedidoId,
+    participacaoId: participacao._id,
+    cupomNumero: resultado.numero,
+    aposFechamento: fechamento.aposFechamento,
+    detalhes: { protocolo: participacao.protocolo, cupom: resultado.codigo, justificativa: fechamento.justificativa },
+  });
+  return resultado.final;
 };
 
 export const rejeitarParticipacao = async ({ id, usuario, motivo, justificativa, now = new Date() }) => {
@@ -411,14 +419,12 @@ export const rejeitarParticipacao = async ({ id, usuario, motivo, justificativa,
   );
   if (!rejeitada) throw new NatalError(409, "Somente cadastros pendentes podem ser rejeitados.", "status_invalido");
 
-  await NatalLote.updateOne(
-    { _id: rejeitada.loteId },
-    { $inc: { "contadores.pendentes": -1, "contadores.rejeitados": 1 } }
-  );
+  await incrementarContadores({ clienteId: rejeitada.clienteId, loteId: rejeitada.loteId, incrementos: { pendentes: -1, rejeitados: 1 } });
   await registrarAuditoriaNatal({
     acao: "participacao_rejeitada",
     autor,
     now,
+    clienteId: rejeitada.clienteId,
     loteId: rejeitada.loteId,
     pedidoId: rejeitada.pedidoId,
     participacaoId: rejeitada._id,
@@ -428,7 +434,7 @@ export const rejeitarParticipacao = async ({ id, usuario, motivo, justificativa,
   return rejeitada;
 };
 
-// Cancelamento pelo distribuidor dono do lote ou pela gestão. A vaga volta ao
+// Cancelamento pelo distribuidor dono ou pela gestão. A vaga volta ao
 // saldo só se a participação estava aprovada; o número do cupom nunca é reutilizado.
 export const cancelarParticipacao = async ({ id, usuario, motivo, justificativa, now = new Date() }) => {
   await garantirIndicesNatal();
@@ -458,14 +464,11 @@ export const cancelarParticipacao = async ({ id, usuario, motivo, justificativa,
     throw new NatalError(409, "Esta participação já foi cancelada ou não pode mais ser cancelada.", "status_invalido");
   }
 
-  await NatalLote.updateOne(
-    { _id: cancelada.loteId },
-    {
-      $inc: statusAnterior === "aprovado"
-        ? { "contadores.aprovados": -1, "contadores.cancelados": 1 }
-        : { "contadores.pendentes": -1, "contadores.cancelados": 1 },
-    }
-  );
+  await incrementarContadores({
+    clienteId: cancelada.clienteId,
+    loteId: cancelada.loteId,
+    incrementos: statusAnterior === "aprovado" ? { aprovados: -1, cancelados: 1 } : { pendentes: -1, cancelados: 1 },
+  });
 
   let cupomCancelado = null;
   if (statusAnterior === "aprovado") {
@@ -480,6 +483,7 @@ export const cancelarParticipacao = async ({ id, usuario, motivo, justificativa,
     acao: "participacao_cancelada",
     autor,
     now,
+    clienteId: cancelada.clienteId,
     loteId: cancelada.loteId,
     pedidoId: cancelada.pedidoId,
     participacaoId: cancelada._id,

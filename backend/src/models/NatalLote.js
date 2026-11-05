@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
-import { autorNatalSchema, beneficiosNatalSchema } from "./natalSchemas.js";
+import { autorNatalSchema, beneficiosNatalSchema, contadoresNatalSchema, revisaoNatalSchema } from "./natalSchemas.js";
 
-// Lote de cupons de um pedido aprovado. Um único lote por pedido; o link
-// público é identificado somente pelo código aleatório.
+// Registro de um link público criado no modelo antigo (um lote por pedido aprovado).
+// O código nunca muda. Desde o modelo cumulativo o saldo pertence à NatalConta do
+// distribuidor e novos lotes não são criados; cuponsConcedidos fica como foto do
+// que o pedido liberou, reconhecida na conta como cupons legados.
 
 const historicoFaixaSchema = new mongoose.Schema(
   {
@@ -25,51 +27,6 @@ const historicoFaixaSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const contadoresSchema = new mongoose.Schema(
-  {
-    aprovados: { type: Number, default: 0 },
-    pendentes: { type: Number, default: 0 },
-    rejeitados: { type: Number, default: 0 },
-    cancelados: { type: Number, default: 0 },
-    invalidados: { type: Number, default: 0 },
-    invalidadosRevisao: { type: Number, default: 0 },
-  },
-  { _id: false }
-);
-
-// Decisão administrativa tomada ao reduzir o valor de um pedido participante.
-const revisaoSchema = new mongoose.Schema(
-  {
-    em: { type: Date, required: true },
-    autor: { type: autorNatalSchema, required: true },
-    decisao: { type: String, enum: ["manter", "adequar"], required: true },
-    justificativa: { type: String, trim: true, required: true, maxlength: 1000 },
-    valorAnterior: { type: Number, required: true },
-    valorNovo: { type: Number, required: true },
-    faixaAnterior: { type: beneficiosNatalSchema, required: true },
-    faixaDoNovoValor: { type: beneficiosNatalSchema, required: true },
-    faixaResultante: { type: beneficiosNatalSchema, required: true },
-    aprovadasAntes: { type: Number, default: 0 },
-    pendentesNoMomento: { type: Number, default: 0 },
-    participacoesInvalidadas: {
-      type: [new mongoose.Schema(
-        {
-          participacaoId: { type: mongoose.Schema.Types.ObjectId, required: true },
-          protocolo: String,
-          cupomNumero: Number,
-          cupomCodigo: String,
-          recebidoEm: Date,
-        },
-        { _id: false }
-      )],
-      default: [],
-    },
-    // Bonificações já entregues não são desfeitas automaticamente: só sinalizadas.
-    ajusteBonificacaoPendente: { type: Boolean, default: false },
-  },
-  { _id: true }
-);
-
 const natalLoteSchema = new mongoose.Schema(
   {
     campanha: { type: String, required: true, default: "natal-2026", immutable: true },
@@ -85,9 +42,9 @@ const natalLoteSchema = new mongoose.Schema(
     valorAtual: { type: Number, required: true, min: 0 },
     faixaMaxima: { type: beneficiosNatalSchema, required: true },
     cuponsConcedidos: { type: Number, required: true, min: 0 },
-    contadores: { type: contadoresSchema, default: () => ({}) },
+    contadores: { type: contadoresNatalSchema, default: () => ({}) },
     historicoFaixas: { type: [historicoFaixaSchema], default: [] },
-    revisoes: { type: [revisaoSchema], default: [] },
+    revisoes: { type: [revisaoNatalSchema], default: [] },
     // Redução de valor detectada sem decisão administrativa (fora da edição instrumentada).
     revisaoPendente: {
       type: new mongoose.Schema(

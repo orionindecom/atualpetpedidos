@@ -23,16 +23,12 @@ import {
   pedidoPodeSerEditadoPeloAdmin,
 } from "../utils/pedidoEdicaoAdmin.js";
 import mongoose from "mongoose";
-import NatalLote from "../models/NatalLote.js";
 import { natalBancoDisponivel, NatalError } from "../services/natalBaseService.js";
-import {
-  invalidarLotePedido,
-  sincronizarPedidoNatalSeguro,
-} from "../services/natalLoteService.js";
+import { recalcularConta } from "../services/natalContaService.js";
+import { sincronizarPedidoNatalSeguro } from "../services/natalLoteService.js";
 import {
   aplicarRevisaoBeneficios,
-  previaRevisao,
-  reducaoExigeRevisao,
+  avaliarReducaoPedido,
   validarDecisaoRevisao,
 } from "../services/natalRevisaoService.js";
 import {
@@ -585,18 +581,20 @@ export const atualizarPedidoAdmin = async (req, res) => {
       });
     }
 
-    // Natal Premiado 2026: toda redução de valor de pedido participante exige a
-    // decisão administrativa de manter ou adequar os benefícios (não só no modal).
+    // Natal Premiado 2026: redução que atinge benefícios já concedidos exige a decisão
+    // administrativa de manter ou adequar, sempre gravada junto com a edição.
     const valorAnterior = Number(pedido.valorTotal || 0);
-    const loteNatal = natalBancoDisponivel() ? await NatalLote.findOne({ pedidoId: pedido._id }) : null;
-    const exigeRevisao = reducaoExigeRevisao({ lote: loteNatal, valorAnterior, valorNovo: valorTotal });
+    const avaliacaoNatal = natalBancoDisponivel()
+      ? await avaliarReducaoPedido({ pedido, valorNovo: valorTotal })
+      : { exige: false };
+    const exigeRevisao = avaliacaoNatal.exige;
     let decisaoNatal = null;
     if (exigeRevisao) {
       if (!req.body.revisaoBeneficios) {
         return res.status(409).json({
           codigo: "revisao_beneficios_obrigatoria",
-          message: "O valor deste pedido participante do Natal Premiado foi reduzido. Decida se os benefícios serão mantidos ou adequados ao novo valor.",
-          revisao: await previaRevisao({ lote: loteNatal, valorAnterior, valorNovo: valorTotal }),
+          message: "A redução deste pedido atinge benefícios já concedidos no Natal Premiado. Decida se eles serão mantidos ou adequados ao novo valor.",
+          revisao: avaliacaoNatal.previa,
         });
       }
       try {
@@ -611,17 +609,15 @@ export const atualizarPedidoAdmin = async (req, res) => {
     let revisaoNatal = null;
     if (exigeRevisao) {
       // Edição e revisão formam uma única operação: ou ambas são gravadas, ou nenhuma.
-      // Conflitos transitórios (ex.: aprovação simultânea no mesmo lote) repetem a
+      // Conflitos transitórios (ex.: aprovação simultânea no mesmo saldo) repetem a
       // operação a partir do estado gravado, que não mudou porque nada foi confirmado.
       const MAX_TENTATIVAS_REVISAO = 8;
       let pedidoAlvo = pedido;
-      let loteAlvo = loteNatal;
       for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_REVISAO; tentativa += 1) {
         if (tentativa > 1) {
           pedidoAlvo = await Pedido.findById(req.params.id)
             .select("+historicoStatus +ocorrencias +historicoAlteracoes +historicoConferencias");
-          loteAlvo = await NatalLote.findById(loteNatal._id);
-          if (!pedidoAlvo || !loteAlvo || Number(pedidoAlvo.__v || 0) !== Number(versaoPedido)) {
+          if (!pedidoAlvo || Number(pedidoAlvo.__v || 0) !== Number(versaoPedido)) {
             return res.status(409).json({
               message: "Este pedido foi atualizado por outra pessoa durante a revisão. Nada foi salvo; reabra a edição e tente novamente.",
             });
@@ -639,12 +635,12 @@ export const atualizarPedidoAdmin = async (req, res) => {
           session.startTransaction();
           await pedidoAlvo.save({ session });
           revisaoNatal = await aplicarRevisaoBeneficios({
-            lote: loteAlvo,
+            clienteId: pedidoAlvo.clienteId,
+            pedidoRef: { pedidoId: pedidoAlvo._id, numeroPedido: pedidoAlvo.numeroPedido },
             valorAnterior,
             valorNovo: valorTotal,
             ...decisaoNatal,
             usuario: req.usuario,
-            pedidoStatus: pedidoAlvo.status,
             session,
           });
           await session.commitTransaction();
@@ -723,9 +719,15 @@ export const excluirPedidoAdmin = async (req, res) => {
     }
 
     await Pedido.findByIdAndDelete(req.params.id);
-    // O lote e as participações permanecem gravados para auditoria, mas deixam de valer.
-    await invalidarLotePedido({ pedidoId: pedido._id, usuario: req.usuario, motivo: "Pedido excluído" })
-      .catch((error) => console.error("[natal-2026] Falha ao invalidar lote de pedido excluído", { name: error?.name }));
+    // Lote e participações permanecem. Se a exclusão atingir benefícios concedidos,
+    // a conta fica com revisão pendente para decisão administrativa.
+    if (natalBancoDisponivel()) {
+      await recalcularConta({
+        clienteId: pedido.clienteId,
+        usuario: req.usuario,
+        origem: { tipo: "exclusao", numeroPedido: pedido.numeroPedido },
+      }).catch((error) => console.error("[natal-2026] Falha ao recalcular conta após exclusão", { name: error?.name }));
+    }
 
     return res.status(200).json({
       message: "Pedido excluído com sucesso",

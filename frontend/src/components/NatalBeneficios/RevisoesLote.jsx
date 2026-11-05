@@ -15,7 +15,7 @@ function RevisoesLote({ revisoes = [], revisaoPendente, gestor = false }) {
       {revisaoPendente && (
         <p className={styles.alertaTexto} role="note">
           Redução de {formatMoney(revisaoPendente.valorAnterior)} para {formatMoney(revisaoPendente.valorNovo)} sem decisão administrativa
-          {gestor ? ". Os benefícios foram mantidos até a revisão: edite o pedido para registrar a decisão." : ". Os benefícios atuais seguem válidos até a revisão da Atual Pet."}
+          {gestor ? ". Os benefícios foram mantidos até a revisão: registre a decisão na aba Distribuidores." : ". Os benefícios atuais seguem válidos até a revisão da Atual Pet."}
         </p>
       )}
       <div className={styles.revisoes}>
@@ -24,7 +24,7 @@ function RevisoesLote({ revisoes = [], revisaoPendente, gestor = false }) {
             <strong>
               {revisao.decisao === "manter" ? "Benefícios mantidos" : "Benefícios adequados ao novo valor"} · {formatDateTimeBR(revisao.em)}
             </strong>
-            <span>Pedido: {formatMoney(revisao.valorAnterior)} → {formatMoney(revisao.valorNovo)}</span>
+            <span>{revisao.numeroPedido ? `Pedido ${revisao.numeroPedido}` : "Valor"}: {formatMoney(revisao.valorAnterior)} → {formatMoney(revisao.valorNovo)}</span>
             <span>Antes: {resumoFaixa(revisao.faixaAnterior)}</span>
             <span>Depois: {resumoFaixa(revisao.faixaResultante)}</span>
             {revisao.totalInvalidadas > 0 && <span>{revisao.totalInvalidadas} participação(ões) aprovada(s) invalidada(s) por revisão de faixa.</span>}

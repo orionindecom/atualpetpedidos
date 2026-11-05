@@ -8,9 +8,18 @@ const descreverFaixa = (faixa) => (faixa && faixa.cupons > 0
   ? `A partir de ${formatMoney(faixa.valorMinimo)}`
   : "Sem faixa (abaixo de R$ 12.000,00)");
 
-// Decisão obrigatória quando o valor de um pedido participante é reduzido.
-// Os dados vêm do backend (resposta 409 da edição); cancelar não salva nada.
-function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfirmar, onCancelar }) {
+// Decisão obrigatória quando uma redução atinge benefícios já concedidos. Os dados vêm
+// do backend (resposta 409 da edição ou revisão pendente); cancelar não salva nada.
+function RevisaoBeneficiosModal({
+  revisao,
+  salvando = false,
+  erro = "",
+  mensagem = "O valor deste pedido foi reduzido. Deseja manter os benefícios anteriormente conquistados ou adequá-los ao novo valor?",
+  rotuloValor = "Valor do pedido",
+  rotuloConfirmar = "Confirmar decisão e salvar pedido",
+  onConfirmar,
+  onCancelar,
+}) {
   const [decisao, setDecisao] = useState("");
   const [justificativa, setJustificativa] = useState("");
   const dialogRef = useModalDialog({ onClose: onCancelar, closeDisabled: salvando });
@@ -18,17 +27,20 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
   const depois = revisao.beneficiosDoNovoValor;
   const adequar = revisao.impactoAdequar;
   const manter = revisao.impactoManter;
+  const bonificacoes = revisao.bonificacoes;
   const semMudanca = depois.cupons >= antes.cupons &&
-    depois.marketingPercentual === antes.marketingPercentual &&
-    depois.produtosPercentual === antes.produtosPercentual;
+    (!bonificacoes || (bonificacoes.produtos.devidoDepois >= bonificacoes.produtos.concedido &&
+      bonificacoes.marketing.devidoDepois >= bonificacoes.marketing.concedido));
   const justificativaValida = justificativa.trim().length >= 10;
 
   const linhas = [
-    ["Valor do pedido", formatMoney(revisao.valorAnterior), formatMoney(revisao.valorNovo)],
-    ["Faixa da campanha", descreverFaixa(antes), descreverFaixa(depois)],
-    ["Cupons", antes.cupons, depois.cupons],
-    ["Bonificação MKT", `${antes.marketingPercentual}%`, `${depois.marketingPercentual}%`],
-    ["Bonificação produtos", `${antes.produtosPercentual}%`, `${depois.produtosPercentual}%`],
+    [rotuloValor, formatMoney(revisao.valorAnterior), formatMoney(revisao.valorNovo)],
+    ["Faixa do ciclo", descreverFaixa(antes), descreverFaixa(depois)],
+    ["Cupons do distribuidor", antes.cupons, depois.cupons],
+    ...(bonificacoes ? [
+      ["Bonificação MKT", formatMoney(bonificacoes.marketing.concedido), formatMoney(bonificacoes.marketing.devidoDepois)],
+      ["Bonificação produtos", formatMoney(bonificacoes.produtos.concedido), formatMoney(bonificacoes.produtos.devidoDepois)],
+    ] : []),
   ];
 
   return (
@@ -36,14 +48,14 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
       <section ref={dialogRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="natal-revisao-titulo" tabIndex="-1">
         <header className={styles.modalHeader}>
           <div>
-            <span>Natal Premiado 2026 · Pedido {revisao.numeroPedido}</span>
+            <span>Natal Premiado 2026 · {revisao.numeroPedido ? `Pedido ${revisao.numeroPedido}` : revisao.distribuidorNome}</span>
             <h2 id="natal-revisao-titulo">Revisão dos benefícios da campanha</h2>
           </div>
           <button type="button" className={ui.secondaryButton} onClick={onCancelar} disabled={salvando}>Fechar</button>
         </header>
         <div className={styles.modalContent}>
           <p className={styles.revisaoMensagem}>
-            O valor deste pedido foi reduzido. Deseja manter os benefícios anteriormente conquistados ou adequá-los ao novo valor?
+            {mensagem}
           </p>
 
           <div className={styles.rolagem}>
@@ -61,7 +73,7 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
             </table>
           </div>
           <p className={styles.muted}>
-            Situação atual do lote: {revisao.aprovadas} participação(ões) aprovada(s) e {revisao.pendentes} pendente(s).
+            Situação atual do distribuidor: {revisao.aprovadas} participação(ões) aprovada(s) e {revisao.pendentes} pendente(s).
           </p>
 
           <fieldset className={styles.opcoesRevisao} disabled={salvando}>
@@ -71,7 +83,7 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
               <span>
                 <strong>Manter os benefícios conquistados</strong>
                 <small>
-                  Continuam {manter.cupons} cupons, {antes.marketingPercentual}% em material de marketing e {antes.produtosPercentual}% em produtos.
+                  Continuam {manter.cupons} cupons e as bonificações já concedidas.
                   Nenhuma participação é invalidada. Saldo disponível: {manter.saldoDisponivel}.
                 </small>
               </span>
@@ -81,10 +93,10 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
               <span>
                 <strong>Adequar os benefícios ao novo valor</strong>
                 {semMudanca ? (
-                  <small>O novo valor continua na mesma faixa: os benefícios não mudam.</small>
+                  <small>O novo valor mantém o direito atual: os benefícios não mudam.</small>
                 ) : (
                   <small>
-                    Passam a {adequar.cupons} cupons, {depois.marketingPercentual}% em material de marketing e {depois.produtosPercentual}% em produtos.
+                    Passam a {adequar.cupons} cupons e as bonificações ao valor devido.
                     {adequar.invalidadas > 0
                       ? ` ${adequar.invalidadas} participação(ões) aprovada(s) mais recente(s) será(ão) invalidada(s), com seus cupons.`
                       : " Nenhuma participação aprovada precisa ser invalidada."}
@@ -137,7 +149,7 @@ function RevisaoBeneficiosModal({ revisao, salvando = false, erro = "", onConfir
               disabled={salvando || !decisao || !justificativaValida}
               onClick={() => onConfirmar({ decisao, justificativa: justificativa.trim(), cuponsEsperados: revisao.cuponsEsperados })}
             >
-              {salvando ? "Salvando…" : "Confirmar decisão e salvar pedido"}
+              {salvando ? "Salvando…" : rotuloConfirmar}
             </button>
           </div>
         </div>

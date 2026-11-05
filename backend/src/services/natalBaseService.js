@@ -1,9 +1,15 @@
 import crypto from "node:crypto";
 import mongoose from "mongoose";
 import NatalAuditoria from "../models/NatalAuditoria.js";
+import NatalBonificacao from "../models/NatalBonificacao.js";
+import NatalCompraExterna from "../models/NatalCompraExterna.js";
+import NatalConta from "../models/NatalConta.js";
 import NatalCupom from "../models/NatalCupom.js";
 import NatalLote from "../models/NatalLote.js";
+import NatalMigracaoExecucao from "../models/NatalMigracaoExecucao.js";
+import NatalMovimentoCupom from "../models/NatalMovimentoCupom.js";
 import NatalParticipacao from "../models/NatalParticipacao.js";
+import NatalSubstituicaoCompra from "../models/NatalSubstituicaoCompra.js";
 import { NatalCampanhaEstado, NatalExportacao } from "../models/NatalCampanhaEstado.js";
 import { buildAutorNatal } from "../models/natalSchemas.js";
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
@@ -33,6 +39,12 @@ export const garantirIndicesNatal = () => {
       NatalCupom.createIndexes(),
       NatalAuditoria.createIndexes(),
       NatalExportacao.createIndexes(),
+      NatalConta.createIndexes(),
+      NatalMovimentoCupom.createIndexes(),
+      NatalBonificacao.createIndexes(),
+      NatalCompraExterna.createIndexes(),
+      NatalMigracaoExecucao.createIndexes(),
+      NatalSubstituicaoCompra.createIndexes(),
     ]).catch((error) => {
       indicesPromise = null;
       throw error;
@@ -42,6 +54,64 @@ export const garantirIndicesNatal = () => {
 };
 
 export const resetIndicesNatalParaTestes = () => { indicesPromise = null; };
+
+const MAX_TENTATIVAS_TRANSACAO = 12;
+
+const erroRepetivel = (error) => Boolean(
+  error?.hasErrorLabel?.("TransientTransactionError") ||
+  error?.errorLabels?.includes?.("TransientTransactionError") ||
+  error?.code === 112 ||
+  error?.code === 11000 ||
+  error?.codeName === "WriteConflict"
+);
+
+// Pedido explícito para repetir a transação a partir do estado gravado.
+export class RepetirTransacaoNatal extends Error {}
+
+// Executa "operacao" numa transação. Conflitos com operações simultâneas repetem
+// tudo do início; como nada foi confirmado, nenhuma repetição concede em dobro.
+export const executarTransacaoNatal = async (operacao) => {
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_TRANSACAO; tentativa += 1) {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      const resultado = await operacao(session);
+      await session.commitTransaction();
+      return resultado;
+    } catch (error) {
+      await session.abortTransaction().catch(() => {});
+      if (!(error instanceof RepetirTransacaoNatal) && !erroRepetivel(error)) throw error;
+      if (tentativa === MAX_TENTATIVAS_TRANSACAO) {
+        throw new NatalError(409, "O saldo do distribuidor está sendo alterado por outra operação. Tente novamente.", "concorrencia");
+      }
+      await new Promise((resolve) => { setTimeout(resolve, 10 + Math.floor(Math.random() * 30) * tentativa); });
+    } finally {
+      await session.endSession();
+    }
+  }
+  throw new NatalError(409, "Não foi possível concluir agora. Tente novamente.", "concorrencia");
+};
+
+// Modo vigente da campanha. A troca é sempre explícita (natalMigracaoService):
+// nenhum acesso, painel ou pedido muda o modo.
+export const obterModoCumulativo = async (session) => {
+  const estado = await NatalCampanhaEstado.findById(NATAL_2026.slug).select("modoCumulativo").session(session || null).lean();
+  return estado?.modoCumulativo || "legado";
+};
+
+export const exigirCumulativoAtivo = async () => {
+  if (await obterModoCumulativo() !== "ativo") {
+    throw new NatalError(409, "O controle cumulativo ainda não foi ativado.", "cumulativo_inativo");
+  }
+};
+
+// Dentro de uma transação do modelo legado: conflita com a passagem para "migrando",
+// de modo que uma operação antiga nunca termina depois da troca de modo.
+export const travarModoLegado = (session) => NatalCampanhaEstado.updateOne(
+  { _id: NATAL_2026.slug, modoCumulativo: { $nin: ["migrando", "ativo"] } },
+  { $inc: { operacoesLegado: 1 } },
+  { upsert: true, session }
+);
 
 const ALFABETO_PROTOCOLO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 

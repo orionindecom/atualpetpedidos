@@ -10,3 +10,10 @@ frontend/.env.*
 !frontend/.env.example
 dist/
 build/
+
+# Saídas da migração do Natal Premiado: contêm dados reais
+backup-natal-2026/
+backend/dry-run.json
+backend/simulacao.json
+backend/etapa*.json
+backend/reversao.json

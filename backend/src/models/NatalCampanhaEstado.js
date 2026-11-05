@@ -22,6 +22,13 @@ const natalCampanhaEstadoSchema = new mongoose.Schema(
     fechadaEm: Date,
     fechadaPor: { type: autorNatalSchema, default: undefined },
     historico: { type: [eventoFechamentoSchema], default: [] },
+    // legado: cada link usa o saldo do próprio lote e nada novo é concedido.
+    // migrando: cadastros e aprovações param enquanto as contas são conferidas.
+    // ativo: saldo único por distribuidor e benefícios cumulativos.
+    modoCumulativo: { type: String, enum: ["legado", "migrando", "ativo"], default: "legado" },
+    modoAlteradoEm: Date,
+    // Incrementado por operações do modelo legado: conflita com a troca de modo.
+    operacoesLegado: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

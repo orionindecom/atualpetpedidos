@@ -1,14 +1,22 @@
 import express from "express";
 import {
+  ajustarCuponsHandler,
   alterarFechamentoHandler,
+  aplicarSubstituicaoHandler,
   aprovarParticipacaoHandler,
   auditoriaGestao,
   beneficiosMeusPedidos,
   beneficiosPedido,
+  buscarClientesGestao,
   buscarCupomHandler,
+  cancelarCompraExternaHandler,
   cancelarParticipacaoHandler,
+  comprasExternasGestao,
+  comprovanteCompraExterna,
   comprovanteParticipacao,
+  detalheDistribuidorGestao,
   detalheParticipacao,
+  distribuidoresGestao,
   enviarParticipacaoPublica,
   exportacoesGestao,
   exportarCupons,
@@ -19,9 +27,16 @@ import {
   painelGestao,
   participacoesDistribuidor,
   participacoesGestao,
+  previaRevisaoHandler,
+  previaSubstituicaoHandler,
   reconciliarHandler,
+  registrarCompraExternaHandler,
+  registrarEntregaHandler,
+  rejeitarCompraExternaHandler,
   rejeitarParticipacaoHandler,
+  resolverRevisaoHandler,
   resumoDistribuidor,
+  validarCompraExternaHandler,
   validarIdParticipacao,
 } from "../controllers/natalController.js";
 import { proteger } from "../middlewares/authMiddleware.js";
@@ -66,12 +81,27 @@ router.post("/participacoes/:id/rejeitar", exigirGestor, validarIdParticipacao, 
 
 router.get("/gestao/painel", exigirGestor, painelGestao);
 router.get("/gestao/lotes", exigirGestor, lotesGestao);
+router.get("/gestao/distribuidores", exigirGestor, distribuidoresGestao);
+router.get("/gestao/distribuidores-busca", exigirGestor, buscarClientesGestao);
+router.get("/gestao/distribuidores/:id", exigirGestor, validateObjectIdParam(), detalheDistribuidorGestao);
+router.post("/gestao/distribuidores/:id/ajustes-cupons", exigirGestor, validateObjectIdParam(), ajustarCuponsHandler);
+router.get("/gestao/distribuidores/:id/revisao", exigirGestor, validateObjectIdParam(), previaRevisaoHandler);
+router.post("/gestao/distribuidores/:id/revisao", exigirGestor, validateObjectIdParam(), resolverRevisaoHandler);
+router.post("/gestao/distribuidores/:id/compras-externas", exigirGestor, receberComprovante, registrarCompraExternaHandler);
+router.get("/gestao/compras-externas", exigirGestor, comprasExternasGestao);
+router.post("/gestao/compras-externas/:id/validar", exigirGestor, validateObjectIdParam(), validarCompraExternaHandler);
+router.post("/gestao/compras-externas/:id/rejeitar", exigirGestor, validateObjectIdParam(), rejeitarCompraExternaHandler);
+router.post("/gestao/compras-externas/:id/cancelar", exigirGestor, validateObjectIdParam(), cancelarCompraExternaHandler);
+router.get("/gestao/compras-externas/:id/comprovante", exigirGestor, validateObjectIdParam(), comprovanteCompraExterna);
+router.post("/gestao/bonificacoes/:id/entregas", exigirGestor, validateObjectIdParam(), registrarEntregaHandler);
 router.get("/gestao/participacoes", exigirGestor, participacoesGestao);
 router.get("/gestao/cupons/:numero", exigirGestor, buscarCupomHandler);
 router.get("/gestao/auditoria", exigirGestor, auditoriaGestao);
 router.get("/gestao/exportacoes", exigirGestor, exportacoesGestao);
 router.get("/gestao/exportacoes/pdf-urna", exigirGestor, exportarCupons("pdf_urna"));
 router.get("/gestao/exportacoes/lista-numerica", exigirGestor, exportarCupons("csv_numerica"));
+router.post("/gestao/pedidos/:id/substituicao/previa", exigirAdmin, validateObjectIdParam(), previaSubstituicaoHandler);
+router.post("/gestao/pedidos/:id/substituicao", exigirAdmin, validateObjectIdParam(), aplicarSubstituicaoHandler);
 router.post("/gestao/fechamento", exigirAdmin, alterarFechamentoHandler);
 router.post("/gestao/reconciliar", exigirAdmin, reconciliarHandler);
 

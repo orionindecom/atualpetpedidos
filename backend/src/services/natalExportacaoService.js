@@ -10,21 +10,22 @@ import { NatalExportacao } from "../models/NatalCampanhaEstado.js";
 import { buildAutorNatal } from "../models/natalSchemas.js";
 import { formatCadastroDocument } from "../utils/cadastroValidation.js";
 import { dataBrasilia } from "../utils/natalCampanha.js";
-import { garantirIndicesNatal, obterEstadoCampanha, registrarAuditoriaNatal } from "./natalBaseService.js";
+import { obterEstadoCampanha, registrarAuditoriaNatal } from "./natalBaseService.js";
 
 const LOGO_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), "../assets/logo-natal-2026.png");
 
-// Somente cupons válidos de participações aprovadas em lotes ativos entram no
-// sorteio; pendentes, rejeitados, cancelados, invalidados e saldo não usado ficam de fora.
+// Somente cupons válidos de participações aprovadas entram no sorteio; pendentes,
+// rejeitados, cancelados, invalidados e saldo não usado ficam de fora. Cupons de
+// link antigo seguem exigindo lote ativo; os de link próprio não têm lote nem pedido.
 export const listarCuponsValidosParaSorteio = async () => {
-  await garantirIndicesNatal();
   const cupons = await NatalCupom.find({ status: "valido" }).sort({ numero: 1 }).lean();
   if (cupons.length === 0) return [];
+  const idsLotes = [...new Set(cupons.filter((cupom) => cupom.loteId).map((cupom) => String(cupom.loteId)))];
   const [participacoes, lotes] = await Promise.all([
     NatalParticipacao.find({ _id: { $in: cupons.map((cupom) => cupom.participacaoId) }, status: "aprovado" })
       .select("_id protocolo vendedorNome petshop decisao numeroPedido distribuidorNome status")
       .lean(),
-    NatalLote.find({ _id: { $in: [...new Set(cupons.map((cupom) => String(cupom.loteId)))] }, status: "ativo" })
+    NatalLote.find({ _id: { $in: idsLotes }, status: "ativo" })
       .select("_id distribuidorNome numeroPedido")
       .lean(),
   ]);
@@ -33,16 +34,16 @@ export const listarCuponsValidosParaSorteio = async () => {
 
   return cupons.flatMap((cupom) => {
     const participacao = participacoesPorId.get(String(cupom.participacaoId));
-    const lote = lotesPorId.get(String(cupom.loteId));
-    if (!participacao || !lote) return [];
+    const lote = cupom.loteId ? lotesPorId.get(String(cupom.loteId)) : null;
+    if (!participacao || (cupom.loteId && !lote)) return [];
     return [{
       numero: cupom.numero,
       codigo: cupom.codigo,
       petshop: participacao.petshop.nomeFantasia,
       razaoSocial: participacao.petshop.razaoSocial,
       documento: participacao.petshop.documento || participacao.petshop.cnpj,
-      distribuidor: lote.distribuidorNome,
-      pedido: lote.numeroPedido,
+      distribuidor: lote?.distribuidorNome || participacao.distribuidorNome,
+      pedido: lote?.numeroPedido || participacao.numeroPedido || "",
       protocolo: participacao.protocolo,
       vendedor: participacao.vendedorNome,
       aprovadoEm: cupom.emitidoEm,

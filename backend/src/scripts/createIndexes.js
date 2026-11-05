@@ -35,6 +35,12 @@ const run = async () => {
     import("../models/NatalParticipacao.js"),
     import("../models/NatalCupom.js"),
     import("../models/NatalAuditoria.js"),
+    import("../models/NatalConta.js"),
+    import("../models/NatalMovimentoCupom.js"),
+    import("../models/NatalBonificacao.js"),
+    import("../models/NatalCompraExterna.js"),
+    import("../models/NatalMigracaoExecucao.js"),
+    import("../models/NatalSubstituicaoCompra.js"),
   ]);
   const { NatalExportacao } = await import("../models/NatalCampanhaEstado.js");
 

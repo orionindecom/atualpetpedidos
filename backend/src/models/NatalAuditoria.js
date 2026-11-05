@@ -24,6 +24,18 @@ export const ACOES_AUDITORIA_NATAL = Object.freeze([
   "lista_reaberta",
   "exportacao_gerada",
   "contadores_reconciliados",
+  "conta_criada",
+  "cupons_liberados",
+  "cupons_ajustados",
+  "bonificacao_calculada",
+  "bonificacao_entrega_registrada",
+  "compra_externa_registrada",
+  "compra_externa_validada",
+  "compra_externa_rejeitada",
+  "compra_externa_cancelada",
+  "revisao_pendente",
+  "migracao_cumulativa",
+  "compra_origem_substituida",
 ]);
 
 const natalAuditoriaSchema = new mongoose.Schema(
@@ -32,6 +44,7 @@ const natalAuditoriaSchema = new mongoose.Schema(
     acao: { type: String, enum: ACOES_AUDITORIA_NATAL, required: true, immutable: true },
     em: { type: Date, required: true, immutable: true },
     autor: { type: autorNatalSchema, required: true, immutable: true },
+    clienteId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", immutable: true },
     loteId: { type: mongoose.Schema.Types.ObjectId, ref: "NatalLote", immutable: true },
     pedidoId: { type: mongoose.Schema.Types.ObjectId, ref: "Pedido", immutable: true },
     participacaoId: { type: mongoose.Schema.Types.ObjectId, ref: "NatalParticipacao", immutable: true },
@@ -58,6 +71,7 @@ natalAuditoriaSchema.pre("save", function bloquearRegravacao() {
 });
 
 natalAuditoriaSchema.index({ em: -1 });
+natalAuditoriaSchema.index({ clienteId: 1, em: -1 });
 natalAuditoriaSchema.index({ loteId: 1, em: -1 });
 natalAuditoriaSchema.index({ participacaoId: 1, em: -1 });
 natalAuditoriaSchema.index({ acao: 1, em: -1 });

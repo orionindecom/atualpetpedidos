@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
 import NatalAuditoria from "../models/NatalAuditoria.js";
+import NatalConta from "../models/NatalConta.js";
 import NatalCupom from "../models/NatalCupom.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalParticipacao from "../models/NatalParticipacao.js";
@@ -15,7 +16,9 @@ import {
   obterEstadoCampanha,
   registrarAuditoriaNatal,
 } from "./natalBaseService.js";
+import { recalcularContadoresConta } from "./natalContaService.js";
 import { recalcularContadoresLote } from "./natalLoteService.js";
+import { detectarPendenciasSincronizacao, listarDistribuidores } from "./natalDistribuidorService.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const textoBusca = (value, max = 80) => (typeof value === "string" ? value.trim().slice(0, max) : "");
@@ -165,7 +168,6 @@ export const construirFiltroParticipacoes = (query = {}, { clienteId } = {}) => 
 };
 
 export const listarParticipacoes = async (query = {}, { clienteId, gestor = false } = {}) => {
-  await garantirIndicesNatal();
   const filtro = construirFiltroParticipacoes(query, { clienteId });
   const limite = Math.min(Math.max(Number.parseInt(query.limite, 10) || 30, 1), 100);
   const pagina = Math.max(Number.parseInt(query.pagina, 10) || 1, 1);
@@ -190,7 +192,6 @@ export const listarParticipacoes = async (query = {}, { clienteId, gestor = fals
 };
 
 export const listarLotes = async (query = {}, { clienteId, gestor = !clienteId } = {}) => {
-  await garantirIndicesNatal();
   const filtro = {};
   if (clienteId) filtro.clienteId = clienteId;
   if (["ativo", "invalidado"].includes(query.status)) filtro.status = query.status;
@@ -206,67 +207,41 @@ export const listarLotes = async (query = {}, { clienteId, gestor = !clienteId }
 };
 
 export const obterPainelGestao = async () => {
-  await garantirIndicesNatal();
-  const [lotes, participacoes, cupons, estado] = await Promise.all([
-    NatalLote.find({}).select("clienteId distribuidorNome status cuponsConcedidos contadores revisaoPendente").lean().maxTimeMS(8000),
+  const [lotes, participacoes, cupons, estado, porDistribuidor, pendenciasSincronizacao] = await Promise.all([
+    NatalLote.find({}).select("clienteId status").lean().maxTimeMS(8000),
     NatalParticipacao.aggregate([{ $group: { _id: "$status", total: { $sum: 1 } } }]),
     NatalCupom.aggregate([{ $group: { _id: "$status", total: { $sum: 1 } } }]),
     obterEstadoCampanha(),
+    listarDistribuidores(),
+    detectarPendenciasSincronizacao(),
   ]);
   const porStatus = Object.fromEntries(participacoes.map((item) => [item._id, item.total]));
   const cuponsPorStatus = Object.fromEntries(cupons.map((item) => [item._id, item.total]));
-  const ativos = lotes.filter((lote) => lote.status === "ativo");
-
-  const distribuidores = new Map();
-  for (const lote of lotes) {
-    const chave = String(lote.clienteId);
-    const atual = distribuidores.get(chave) || {
-      clienteId: lote.clienteId,
-      distribuidorNome: lote.distribuidorNome,
-      lotesAtivos: 0,
-      lotesInvalidados: 0,
-      cuponsConcedidos: 0,
-      aprovados: 0,
-      pendentes: 0,
-      rejeitados: 0,
-      cancelados: 0,
-      disponiveis: 0,
-    };
-    const saldo = saldoLote(lote);
-    if (lote.status === "ativo") {
-      atual.lotesAtivos += 1;
-      atual.cuponsConcedidos += saldo.concedidos;
-      atual.disponiveis += saldo.disponivel;
-    } else {
-      atual.lotesInvalidados += 1;
-    }
-    atual.aprovados += saldo.aprovados;
-    atual.pendentes += saldo.pendentes;
-    atual.rejeitados += saldo.rejeitados;
-    atual.cancelados += saldo.cancelados;
-    distribuidores.set(chave, atual);
-  }
+  const somar = (campo) => porDistribuidor.reduce((total, linha) => total + Number(linha.cupons[campo] || 0), 0);
 
   return {
     indicadores: {
-      distribuidoresParticipantes: new Set(ativos.map((lote) => String(lote.clienteId))).size,
-      pedidosElegiveis: ativos.length,
-      lotesInvalidados: lotes.length - ativos.length,
-      cuponsConcedidos: ativos.reduce((total, lote) => total + Number(lote.cuponsConcedidos || 0), 0),
+      distribuidoresParticipantes: porDistribuidor.filter((linha) => linha.compras.total > 0 || linha.cupons.total > 0).length,
+      comprasAcumuladas: porDistribuidor.reduce((total, linha) => total + linha.compras.total, 0),
+      linksAntigos: lotes.length,
+      lotesInvalidados: lotes.filter((lote) => lote.status !== "ativo").length,
+      cuponsConcedidos: somar("total"),
       participacoesAprovadas: porStatus.aprovado || 0,
       participacoesPendentes: porStatus.pendente || 0,
       participacoesRejeitadas: porStatus.rejeitado || 0,
       participacoesCanceladas: porStatus.cancelado || 0,
       participacoesInvalidadas: porStatus.invalidado_pedido || 0,
       participacoesInvalidadasRevisao: porStatus.invalidado_revisao || 0,
-      lotesComRevisaoPendente: lotes.filter((lote) => lote.revisaoPendente).length,
-      cuponsDisponiveis: ativos.reduce((total, lote) => total + saldoLote(lote).disponivel, 0),
+      contasComRevisaoPendente: porDistribuidor.filter((linha) => linha.revisaoPendente).length,
+      cuponsDisponiveis: somar("disponiveis"),
       cuponsValidos: cuponsPorStatus.valido || 0,
       cuponsCancelados: cuponsPorStatus.cancelado || 0,
       cuponsInvalidados: cuponsPorStatus.invalidado || 0,
     },
-    porDistribuidor: [...distribuidores.values()].sort((a, b) => b.cuponsConcedidos - a.cuponsConcedidos),
+    porDistribuidor,
+    pendenciasSincronizacao,
     estado: {
+      modoCumulativo: estado.modoCumulativo || "legado",
       listaFechada: Boolean(estado.listaFechada),
       fechadaEm: estado.fechadaEm,
       fechadaPorNome: estado.fechadaPor?.usuarioNome,
@@ -288,7 +263,6 @@ export const obterPainelGestao = async () => {
 };
 
 export const buscarCupom = async (numeroTexto) => {
-  await garantirIndicesNatal();
   const digitos = normalizeDigits(numeroTexto).slice(0, 9);
   if (!digitos) throw new NatalError(400, "Informe o número do cupom.");
   const cupom = await NatalCupom.findOne({ numero: Number(digitos) }).lean();
@@ -354,6 +328,7 @@ export const alterarFechamentoLista = async ({ acao, justificativa, usuario, now
 export const listarAuditoria = async (query = {}) => {
   const filtro = {};
   if (isValidObjectId(query.loteId)) filtro.loteId = query.loteId;
+  if (isValidObjectId(query.clienteId)) filtro.clienteId = query.clienteId;
   if (isValidObjectId(query.participacaoId)) filtro.participacaoId = query.participacaoId;
   const limite = Math.min(Math.max(Number.parseInt(query.limite, 10) || 50, 1), 200);
   const itens = await NatalAuditoria.find(filtro).sort({ em: -1 }).limit(limite).lean().maxTimeMS(8000);
@@ -363,6 +338,7 @@ export const listarAuditoria = async (query = {}) => {
     em: item.em,
     autorNome: item.autor?.usuarioNome,
     autorTipo: item.autor?.usuarioTipo,
+    clienteId: item.clienteId,
     loteId: item.loteId,
     participacaoId: item.participacaoId,
     cupomNumero: item.cupomNumero,
@@ -388,7 +364,11 @@ export const listarExportacoes = async () => {
 // Recalcula os contadores de todos os lotes a partir das participações gravadas.
 export const reconciliarContadores = async ({ usuario, now = new Date() }) => {
   if (usuario?.tipo !== "admin") throw new NatalError(403, "Somente o Administrador executa a reconciliação.");
-  const lotes = await NatalLote.find({}).select("_id contadores").lean();
+  const [lotes, contas] = await Promise.all([
+    NatalLote.find({}).select("_id contadores").lean(),
+    NatalConta.find({ campanha: NATAL_2026.slug }).select("clienteId").lean(),
+  ]);
+  for (const conta of contas) await recalcularContadoresConta(conta.clienteId);
   let ajustados = 0;
   for (const lote of lotes) {
     const contadores = await recalcularContadoresLote(lote._id);

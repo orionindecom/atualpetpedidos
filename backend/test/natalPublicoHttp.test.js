@@ -16,7 +16,8 @@ const { criarStorageMemoria, setComprovanteStorage } = await import("../src/serv
 const { sincronizarPedidoNatal } = await import("../src/services/natalLoteService.js");
 const { default: Pedido } = await import("../src/models/Pedido.js");
 const { default: NatalParticipacao } = await import("../src/models/NatalParticipacao.js");
-const { default: NatalLote } = await import("../src/models/NatalLote.js");
+const { default: NatalConta } = await import("../src/models/NatalConta.js");
+const { NatalCampanhaEstado } = await import("../src/models/NatalCampanhaEstado.js");
 
 let replSet;
 let server;
@@ -27,6 +28,7 @@ before(async () => {
   replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(replSet.getUri(), { dbName: "natal-http" });
   setComprovanteStorage(storage);
+  await NatalCampanhaEstado.create({ _id: "natal-2026", modoCumulativo: "ativo" });
   const app = express();
   app.use("/api/public/natal-2026", natalPublicRoutes);
   await new Promise((resolve) => { server = app.listen(0, "127.0.0.1", resolve); });
@@ -75,31 +77,31 @@ test("14 e 30. envio público sem login (multipart, como no celular) fica penden
     valorTotal: 30000,
     status: "aprovado",
   });
-  const { lote } = await sincronizarPedidoNatal({ pedido, usuario: null, origem: "aprovacao" });
-  assert.equal(lote.cuponsConcedidos, 300);
+  const { conta } = await sincronizarPedidoNatal({ pedido, usuario: null, origem: "aprovacao" });
+  assert.equal(conta.cupons.total, 300);
 
-  const info = await fetch(`${base}/lotes/${lote.codigoPublico}`).then((r) => r.json());
+  const info = await fetch(`${base}/lotes/${conta.codigoPublico}`).then((r) => r.json());
   assert.equal(info.aceitandoCadastros, true);
   assert.equal(info.distribuidorNome, "Distribuidora Norte");
 
-  const semArquivo = await fetch(`${base}/lotes/${lote.codigoPublico}/participacoes`, { method: "POST", body: formulario() });
+  const semArquivo = await fetch(`${base}/lotes/${conta.codigoPublico}/participacoes`, { method: "POST", body: formulario() });
   assert.equal(semArquivo.status, 400);
   assert.ok((await semArquivo.json()).errors.comprovante);
 
   const camposInvalidos = formulario({ documento: "12.345.678/0001-00", instagram: "" });
   camposInvalidos.append("comprovante", png(), "nota.png");
-  const invalido = await fetch(`${base}/lotes/${lote.codigoPublico}/participacoes`, { method: "POST", body: camposInvalidos });
+  const invalido = await fetch(`${base}/lotes/${conta.codigoPublico}/participacoes`, { method: "POST", body: camposInvalidos });
   assert.equal(invalido.status, 400);
   const erros = (await invalido.json()).errors;
   assert.ok(erros.documento && erros.instagram);
 
   const rapido = formulario({ iniciadoEm: String(Date.now()) });
   rapido.append("comprovante", png(), "nota.png");
-  assert.equal((await fetch(`${base}/lotes/${lote.codigoPublico}/participacoes`, { method: "POST", body: rapido })).status, 400);
+  assert.equal((await fetch(`${base}/lotes/${conta.codigoPublico}/participacoes`, { method: "POST", body: rapido })).status, 400);
 
   const form = formulario();
   form.append("comprovante", png(), "IMG_0001.png");
-  const envio = await fetch(`${base}/lotes/${lote.codigoPublico}/participacoes`, { method: "POST", body: form });
+  const envio = await fetch(`${base}/lotes/${conta.codigoPublico}/participacoes`, { method: "POST", body: form });
   const corpo = await envio.json();
   assert.equal(envio.status, 201, corpo.message);
   assert.equal(corpo.message, MENSAGEM_CADASTRO_RECEBIDO);
@@ -112,6 +114,6 @@ test("14 e 30. envio público sem login (multipart, como no celular) fica penden
   assert.equal(salvo.compra.valor, 1250.9);
   assert.equal(String(salvo.clienteId), String(pedido.clienteId));
   assert.notEqual(salvo.origem.ipHash, "127.0.0.1", "IP não é guardado em texto puro");
-  assert.equal((await NatalLote.findById(lote._id)).contadores.pendentes, 1);
+  assert.equal((await NatalConta.findById(conta._id)).contadores.pendentes, 1);
   assert.equal(storage.arquivos.size, 1);
 });

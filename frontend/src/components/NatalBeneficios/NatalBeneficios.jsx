@@ -5,6 +5,7 @@ import {
   buildParticipacaoLink,
   buildWhatsappShareUrl,
   carregarConfigNatal,
+  cuponsParaValor,
   faixaParaValor,
   formatMoney,
   proximaFaixaParaValor,
@@ -14,7 +15,7 @@ import styles from "./NatalBeneficios.module.css";
 
 // Bloco de benefícios do Natal Premiado nas telas internas (identidade da Central).
 // Os bônus aparecem separados dos totais financeiros do pedido.
-export function NatalBeneficiosCard({ beneficios, tipo = "previa", proxima, valorAtual, children, titulo = "Natal Premiado 2026 — Benefícios do seu pedido" }) {
+export function NatalBeneficiosCard({ beneficios, tipo = "previa", proxima, valorAtual, children, titulo = "Natal Premiado 2026 — Benefícios da campanha" }) {
   if (!beneficios && !proxima) return null;
   const faltam = proxima ? Math.max(Number(proxima.valorMinimo) - Number(valorAtual || 0), 0) : 0;
   return (
@@ -32,10 +33,10 @@ export function NatalBeneficiosCard({ beneficios, tipo = "previa", proxima, valo
           <li><strong>{beneficios.produtosPercentual}%</strong> de bonificação em produtos.</li>
         </ul>
       ) : (
-        <p className={styles.texto}>Pedidos a partir de {formatMoney(proxima.valorMinimo)} participam da campanha.</p>
+        <p className={styles.texto}>As compras acumulam: a partir de {formatMoney(proxima.valorMinimo)} no ciclo você libera benefícios.</p>
       )}
       {tipo === "previa" && beneficios && (
-        <p className={styles.nota}>Benefícios confirmados somente após a aprovação do pedido.</p>
+        <p className={styles.nota}>Prévia deste valor isolado. As compras acumulam entre pedidos e os benefícios são confirmados após a aprovação.</p>
       )}
       {proxima && faltam > 0 && (
         <p className={styles.proxima}>
@@ -60,10 +61,11 @@ export function NatalBeneficiosPrevia({ valorTotal }) {
     return () => { ativo = false; };
   }, []);
   if (!dentroDoPeriodo(config) || !(Number(valorTotal) > 0)) return null;
+  const faixa = faixaParaValor(config.faixas, valorTotal);
   return (
     <NatalBeneficiosCard
       tipo="previa"
-      beneficios={faixaParaValor(config.faixas, valorTotal)}
+      beneficios={faixa ? { ...faixa, cupons: cuponsParaValor(config.faixas, config.cicloValor, valorTotal) } : null}
       proxima={proximaFaixaParaValor(config.faixas, valorTotal)}
       valorAtual={valorTotal}
     />
@@ -84,8 +86,8 @@ export function LinkParticipacao({ codigo, distribuidorNome, compacto = false })
   return (
     <div className={styles.link} data-compacto={compacto || undefined}>
       <label>
-        <span>Link exclusivo de cadastro</span>
-        <input readOnly value={link} onFocus={(event) => event.target.select()} aria-label="Link exclusivo de cadastro" />
+        <span>Link de cadastro</span>
+        <input readOnly value={link} onFocus={(event) => event.target.select()} aria-label="Link de cadastro" />
       </label>
       <div className={styles.linkAcoes}>
         <button type="button" className={styles.botao} onClick={copiar}>Copiar link</button>
@@ -97,8 +99,7 @@ export function LinkParticipacao({ codigo, distribuidorNome, compacto = false })
   );
 }
 
-// Benefícios de um pedido existente: prévia enquanto aguarda aprovação,
-// benefícios conquistados (lote) depois de aprovado.
+// Benefícios ligados a um pedido: o saldo é do distribuidor, somando todas as compras.
 export function NatalBeneficiosPedido({ pedidoId, versao, mostrarLink = true }) {
   const [dados, setDados] = useState(null);
   useEffect(() => {
@@ -110,29 +111,33 @@ export function NatalBeneficiosPedido({ pedidoId, versao, mostrarLink = true }) 
   }, [pedidoId, versao]);
 
   if (!dados) return null;
-  const { lote, campanha } = dados;
-  if (lote) {
-    const invalidado = lote.status !== "ativo";
+  const { lote, conta, campanha } = dados;
+  if (conta && (lote || dados.aprovado)) {
+    const link = conta.links?.find((item) => item.status === "ativo");
     return (
-      <NatalBeneficiosCard tipo={invalidado ? "invalidado" : lote.cuponsConcedidos > 0 ? "conquistado" : "sem_beneficios"} beneficios={lote.faixaMaxima}>
+      <NatalBeneficiosCard
+        tipo={conta.cupons.total > 0 ? "conquistado" : "sem_beneficios"}
+        beneficios={{ ...conta.compras.faixaAtual, cupons: conta.cupons.total }}
+        titulo="Natal Premiado 2026 — Benefícios do distribuidor"
+      >
         <dl className={styles.saldo}>
-          <div><dt>Cupons concedidos</dt><dd>{lote.cuponsConcedidos}</dd></div>
-          <div><dt>Aprovados</dt><dd>{lote.saldo.aprovados}</dd></div>
-          <div><dt>Pendentes</dt><dd>{lote.saldo.pendentes}</dd></div>
-          <div><dt>Disponíveis</dt><dd>{lote.saldo.disponivel}</dd></div>
+          <div><dt>Compras acumuladas</dt><dd>{formatMoney(conta.compras.total)}</dd></div>
+          <div><dt>Cupons concedidos</dt><dd>{conta.cupons.total}</dd></div>
+          <div><dt>Utilizados</dt><dd>{conta.cupons.utilizados}</dd></div>
+          <div><dt>Disponíveis</dt><dd>{conta.cupons.disponiveis}</dd></div>
         </dl>
-        {lote.valorAtual !== lote.valorAprovadoInicial && (
-          <p className={styles.nota}>
-            Aprovado com {formatMoney(lote.valorAprovadoInicial)}; valor atual {formatMoney(lote.valorAtual)}.
-          </p>
+        {dados.cancelado && <p className={styles.nota}>Este pedido foi cancelado e não conta para o acumulado.</p>}
+        {conta.compras.proximaFaixa && (
+          <p className={styles.nota}>Ciclo {conta.compras.cicloAtual}: faltam {formatMoney(conta.compras.restanteProximaFaixa)} para {conta.compras.proximaFaixa.cupons} cupons no ciclo.</p>
         )}
-        <RevisoesLote
-          revisoes={lote.revisoes}
-          revisaoPendente={lote.revisaoPendente}
-          gestor={(lote.revisoes || []).some((revisao) => revisao.justificativa)}
-        />
-        {invalidado && <p className={styles.alerta}>Lote invalidado: {lote.invalidacao?.motivo || "pedido cancelado"}. O link não aceita novos cadastros.</p>}
-        {!invalidado && mostrarLink && lote.codigoPublico && <LinkParticipacao codigo={lote.codigoPublico} distribuidorNome={lote.distribuidorNome} compacto />}
+        {lote && (
+          <RevisoesLote
+            revisoes={lote.revisoes}
+            revisaoPendente={lote.revisaoPendente}
+            gestor={(lote.revisoes || []).some((revisao) => revisao.justificativa)}
+          />
+        )}
+        {mostrarLink && link && <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={conta.distribuidorNome} compacto />}
       </NatalBeneficiosCard>
     );
   }
@@ -141,7 +146,7 @@ export function NatalBeneficiosPedido({ pedidoId, versao, mostrarLink = true }) 
   return (
     <NatalBeneficiosCard
       tipo="previa"
-      beneficios={dados.previa}
+      beneficios={dados.previa ? { ...dados.previa, cupons: cuponsParaValor(campanha.faixas, campanha.cicloValor, dados.valorPedido) } : null}
       proxima={dados.aguardandoAprovacao ? proximaFaixaParaValor(campanha.faixas, dados.valorPedido) : null}
       valorAtual={dados.valorPedido}
     />

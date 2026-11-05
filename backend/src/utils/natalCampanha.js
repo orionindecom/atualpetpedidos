@@ -86,14 +86,34 @@ export const pedidoDentroDoPeriodo = (pedido, config = NATAL_2026) => {
   return criado >= config.inicio && criado <= config.fimCadastros;
 };
 
-// Todo status posterior à aprovação (exceto cancelado) mantém o pedido aprovado.
+// Marco de liberação dos benefícios: o pedido conta para o acumulado a partir da
+// aprovação. Todo status posterior (exceto cancelado) mantém o pedido aprovado e
+// nunca concede nada além do que já foi calculado.
+export const STATUS_FORA_DA_CAMPANHA = Object.freeze(["aguardando_aprovacao", "cancelado"]);
+
 export const pedidoAprovadoParaCampanha = (pedido) => Boolean(
-  pedido && !["aguardando_aprovacao", "cancelado"].includes(pedido.status)
+  pedido && !STATUS_FORA_DA_CAMPANHA.includes(pedido.status)
 );
 
 export const formatarNumeroCupom = (numero, digitos = NATAL_2026.numeracao.digitos) => (
   String(numero).padStart(digitos, "0")
 );
+
+// Saldo compartilhado do distribuidor. Vale para todos os links dele.
+export const saldoConta = (conta) => {
+  const concedidos = Number(conta?.cupons?.total || 0);
+  const aprovados = Number(conta?.contadores?.aprovados || 0);
+  return {
+    concedidos,
+    aprovados,
+    pendentes: Number(conta?.contadores?.pendentes || 0),
+    rejeitados: Number(conta?.contadores?.rejeitados || 0),
+    cancelados: Number(conta?.contadores?.cancelados || 0),
+    invalidados: Number(conta?.contadores?.invalidados || 0),
+    invalidadosRevisao: Number(conta?.contadores?.invalidadosRevisao || 0),
+    disponivel: Math.max(concedidos - aprovados, 0),
+  };
+};
 
 export const saldoLote = (lote) => {
   const concedidos = Number(lote?.cuponsConcedidos || 0);
@@ -220,5 +240,6 @@ export const resumoConfigPublica = (config = NATAL_2026) => ({
   fimCadastros: config.fimCadastros.toISOString(),
   sorteio: config.sorteio.toISOString(),
   faixas: config.faixas.map(beneficiosDaFaixa),
+  cicloValor: config.cicloValor,
   comprovanteMaxBytes: config.comprovante.maxBytes,
 });

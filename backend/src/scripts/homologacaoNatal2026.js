@@ -124,6 +124,65 @@ const pedido = await Pedido.create({
   observacao: "Pedido fictício de homologação do Natal Premiado 2026",
 });
 
+// Cenários do modelo cumulativo: link antigo já divulgado e distribuidor com pedido aprovado.
+const { default: NatalLote } = await import("../models/NatalLote.js");
+const { gerarCodigoPublico } = await import("../services/natalBaseService.js");
+const { ativarCumulativo, concederBeneficios, executarMigracao } = await import("../services/natalMigracaoService.js");
+const dadosPedido = (cliente, valorTotal, status, extra = {}) => ({
+  numeroPedido: `HOMOLOG-${valorTotal}-${status}`,
+  clienteId: cliente._id,
+  origem: "cliente",
+  nomeResponsavel: cliente.nomeResponsavel,
+  nomeFantasiaCliente: cliente.nomeFantasia,
+  razaoSocialCliente: cliente.razaoSocial,
+  cnpjCliente: cliente.cnpj,
+  emailCliente: cliente.email,
+  whatsappCliente: cliente.whatsapp,
+  tabelaPrecoId: tabela._id,
+  nomeTabela: tabela.nome,
+  dia: agora.getDate(),
+  mes: agora.getMonth() + 1,
+  ano: agora.getFullYear(),
+  itens: [{ produtoId: produtos[0]._id, nomeProduto: produtos[0].nome, quantidade: valorTotal / 1000, valorUnitario: 1000, subtotal: valorTotal }],
+  valorTotal,
+  status,
+  observacao: "Pedido fictício de homologação do Natal Premiado 2026",
+  ...extra,
+});
+const distribuidorCumulativo = await criarConta("cliente", {
+  nome: "Marina Cumulativa",
+  email: "cumulativo.natal@homologacao.local",
+  senha: CONTAS_HOMOLOGACAO.distribuidor.senha,
+}, {
+  nomeFantasia: "Distribuidora Ciclos",
+  razaoSocial: "Distribuidora Ciclos LTDA",
+  cnpj: "11444777000161",
+  telefone: "11987654322",
+  whatsapp: "11987654322",
+  cidade: "São Paulo",
+  estado: "SP",
+  tabelaPrecoId: tabela._id,
+});
+const pedidoLegado = await Pedido.create(dadosPedido(distribuidor, 20000, "aprovado"));
+const faixaLegado = NATAL_2026.faixas[1];
+await NatalLote.create({
+  pedidoId: pedidoLegado._id,
+  numeroPedido: pedidoLegado.numeroPedido,
+  clienteId: distribuidor._id,
+  distribuidorNome: distribuidor.nomeFantasia,
+  codigoPublico: gerarCodigoPublico(),
+  pedidoAprovadoEm: agora,
+  valorAprovadoInicial: 20000,
+  valorAtual: 20000,
+  faixaMaxima: { ...faixaLegado },
+  cuponsConcedidos: faixaLegado.cupons,
+  criadoPor: { usuarioTipo: "sistema" },
+});
+await Pedido.create(dadosPedido(distribuidorCumulativo, 52000, "aprovado"));
+await executarMigracao({ operador: "Homologação" });
+await concederBeneficios({ operador: "Homologação" });
+await ativarCumulativo({ operador: "Homologação" });
+
 await import("../server.js");
 
 console.log([

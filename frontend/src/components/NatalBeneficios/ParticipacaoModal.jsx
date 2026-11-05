@@ -167,7 +167,7 @@ function ParticipacaoModal({ participacaoId, gestor = false, usuarioTipo, onClos
 
               <dl className={styles.detalhes}>
                 <div><dt>Distribuidor</dt><dd>{dados.distribuidorNome}</dd></div>
-                <div><dt>Pedido</dt><dd>{dados.numeroPedido}</dd></div>
+                <div><dt>Pedido</dt><dd>{dados.numeroPedido || "Link do distribuidor"}</dd></div>
                 <div><dt>Vendedor</dt><dd>{dados.vendedorNome}</dd></div>
                 <div><dt>Recebido em</dt><dd>{formatDateTimeBR(dados.recebidoEm)}</dd></div>
                 <div><dt>Razão social</dt><dd>{dados.petshop.razaoSocial}</dd></div>

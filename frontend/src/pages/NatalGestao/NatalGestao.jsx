@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api from "../../api/axios";
 import EmptyState from "../../components/AdminUi/EmptyState";
 import ui from "../../components/AdminUi/AdminUi.module.css";
+import GestaoDistribuidores from "../../components/NatalBeneficios/GestaoDistribuidores";
 import { LinkParticipacao } from "../../components/NatalBeneficios/NatalBeneficios";
 import ParticipacaoModal from "../../components/NatalBeneficios/ParticipacaoModal";
 import RevisoesLote from "../../components/NatalBeneficios/RevisoesLote";
@@ -12,6 +13,7 @@ import PageHeader from "../../components/PageHeader/PageHeader";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import { getAuthSession } from "../../utils/authSession";
 import {
+  descreverPendenciaSincronizacao,
   FAIXA_EVENTO_LABELS,
   formatDocumentoBR,
   formatDateBR,
@@ -23,8 +25,9 @@ import {
 
 const ABAS = [
   ["geral", "Visão geral"],
+  ["distribuidores", "Distribuidores"],
   ["participacoes", "Participações"],
-  ["lotes", "Lotes"],
+  ["lotes", "Links de pedidos"],
   ["sorteio", "Sorteio"],
 ];
 
@@ -48,13 +51,31 @@ const baixarArquivo = async (endpoint, nomePadrao) => {
   return Number(response.headers["x-total-cupons"] || 0);
 };
 
-function VisaoGeral({ painel }) {
+// Aparece só com divergência real entre o saldo gravado e os registros da campanha.
+function AlertaSincronizacao({ pendencias, isAdmin, reconciliando, onReconciliar }) {
+  if (!pendencias?.length) return null;
+  return (
+    <div className={ui.feedback} data-type="warning" role="status">
+      <span>
+        {pendencias.length === 1 ? "1 distribuidor precisa" : `${pendencias.length} distribuidores precisam`} de reconciliação de saldos: {pendencias.map(descreverPendenciaSincronizacao).join("; ")}.
+        {!isAdmin && " Peça ao Administrador para reconciliar."}
+      </span>
+      {isAdmin && (
+        <button type="button" disabled={reconciliando} onClick={onReconciliar}>
+          {reconciliando ? "Reconciliando…" : "Reconciliar saldos"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function VisaoGeral({ painel, onAbrirDistribuidores }) {
   const i = painel.indicadores;
   return (
     <>
       <div className={styles.kpis}>
         <div className={styles.kpi}><span>Distribuidores participantes</span><strong>{i.distribuidoresParticipantes}</strong></div>
-        <div className={styles.kpi}><span>Pedidos elegíveis</span><strong>{i.pedidosElegiveis}</strong></div>
+        <div className={styles.kpi}><span>Compras acumuladas</span><strong>{formatMoney(i.comprasAcumuladas)}</strong></div>
         <div className={styles.kpi}><span>Cupons concedidos</span><strong>{i.cuponsConcedidos}</strong></div>
         <div className={styles.kpi} data-tone="success"><span>Participações aprovadas</span><strong>{i.participacoesAprovadas}</strong></div>
         <div className={styles.kpi} data-tone="accent"><span>Participações pendentes</span><strong>{i.participacoesPendentes}</strong></div>
@@ -64,35 +85,39 @@ function VisaoGeral({ painel }) {
         <div className={styles.kpi}><span>Cupons invalidados</span><strong>{i.cuponsInvalidados + i.cuponsCancelados}</strong></div>
         <div className={styles.kpi}><span>Invalidadas por revisão de faixa</span><strong>{i.participacoesInvalidadasRevisao}</strong></div>
       </div>
-      {i.lotesComRevisaoPendente > 0 && (
+      {i.contasComRevisaoPendente > 0 && (
         <div className={ui.feedback} data-type="warning" role="note">
-          {i.lotesComRevisaoPendente} lote(s) com redução de valor sem decisão administrativa. Veja a aba Lotes.
+          {i.contasComRevisaoPendente} distribuidor(es) com redução sem decisão administrativa. Veja a aba Distribuidores.
         </div>
       )}
       <p className={styles.muted}>
-        Cupons válidos para o sorteio: <strong>{i.cuponsValidos}</strong>. Invalidados (pedido cancelado ou revisão de faixa): {i.cuponsInvalidados}; cancelados: {i.cuponsCancelados}; lotes invalidados: {i.lotesInvalidados}.
+        Cupons válidos para o sorteio: <strong>{i.cuponsValidos}</strong>. Invalidados (pedido cancelado ou revisão de faixa): {i.cuponsInvalidados}; cancelados: {i.cuponsCancelados}; links de pedidos invalidados: {i.lotesInvalidados}.
       </p>
       <section className={styles.secao} style={{ marginTop: 20 }}>
-        <div className={styles.secaoTitulo}><h2>Resultado por distribuidor</h2></div>
+        <div className={styles.secaoTitulo}>
+          <h2>Resultado por distribuidor</h2>
+          <button type="button" className={ui.ghostButton} onClick={onAbrirDistribuidores}>Ver detalhes</button>
+        </div>
         {painel.porDistribuidor.length === 0 ? (
-          <EmptyState headingLevel={3} title="Nenhum distribuidor participante" description="Os lotes aparecem aqui assim que pedidos elegíveis são aprovados." />
+          <EmptyState headingLevel={3} title="Nenhum distribuidor participante" description="Distribuidores aparecem aqui quando têm pedidos aprovados, compras externas ou links da campanha." />
         ) : (
           <div className={styles.rolagem}>
             <table className={styles.tabelaSimples}>
               <thead>
-                <tr><th>Distribuidor</th><th>Lotes ativos</th><th>Cupons</th><th>Aprovados</th><th>Pendentes</th><th>Rejeitados</th><th>Cancelados</th><th>Disponíveis</th></tr>
+                <tr><th>Distribuidor</th><th>Compras</th><th>Ciclos</th><th>Cupons</th><th>Aprovados</th><th>Pendentes</th><th>Rejeitados</th><th>Cancelados</th><th>Disponíveis</th></tr>
               </thead>
               <tbody>
                 {painel.porDistribuidor.map((linha) => (
                   <tr key={linha.clienteId}>
-                    <td>{linha.distribuidorNome}{linha.lotesInvalidados > 0 && <small> · {linha.lotesInvalidados} invalidado(s)</small>}</td>
-                    <td>{linha.lotesAtivos}</td>
-                    <td>{linha.cuponsConcedidos}</td>
-                    <td>{linha.aprovados}</td>
-                    <td>{linha.pendentes}</td>
-                    <td>{linha.rejeitados}</td>
-                    <td>{linha.cancelados}</td>
-                    <td>{linha.disponiveis}</td>
+                    <td>{linha.distribuidorNome}</td>
+                    <td>{formatMoney(linha.compras.total)}</td>
+                    <td>{linha.compras.ciclosConcluidos}</td>
+                    <td>{linha.cupons.total}</td>
+                    <td>{linha.cupons.utilizados}</td>
+                    <td>{linha.cupons.pendentes}</td>
+                    <td>{linha.cupons.rejeitados}</td>
+                    <td>{linha.cupons.cancelados}</td>
+                    <td>{linha.cupons.disponiveis}</td>
                   </tr>
                 ))}
               </tbody>
@@ -189,7 +214,7 @@ function Participacoes({ usuario, onAlterado, filtroInicial }) {
               </div>
               <div>
                 <strong>{item.distribuidorNome}</strong>
-                <small>Pedido {item.numeroPedido} · vendedor {item.vendedorNome}</small>
+                <small>{item.numeroPedido ? `Pedido ${item.numeroPedido}` : "Link do distribuidor"} · vendedor {item.vendedorNome}</small>
               </div>
               <div>
                 <small>Compra {formatDateBR(item.compra.data)} · {formatMoney(item.compra.valor)}</small>
@@ -248,7 +273,7 @@ function Lotes({ onVerParticipacoes }) {
       <div className={styles.filtros}>
         <label>Pedido ou distribuidor<input type="search" value={busca} onChange={(event) => setBusca(event.target.value)} /></label>
         <label>
-          Status do lote
+          Status do link
           <select value={status} onChange={(event) => setStatus(event.target.value)}>
             <option value="">Todos</option>
             <option value="ativo">Ativos</option>
@@ -256,9 +281,10 @@ function Lotes({ onVerParticipacoes }) {
           </select>
         </label>
       </div>
+      <p className={styles.muted}>Links gerados por pedido antes do modelo cumulativo. Continuam válidos e usam o saldo único do distribuidor.</p>
       {erro && <div className={ui.feedback} data-type="error" role="alert">{erro}</div>}
-      {!lotes && !erro && <p className={styles.muted} role="status">Carregando lotes…</p>}
-      {lotes && lotes.length === 0 && <EmptyState headingLevel={3} title="Nenhum lote encontrado" description="Lotes são criados automaticamente na aprovação de pedidos elegíveis." />}
+      {!lotes && !erro && <p className={styles.muted} role="status">Carregando links…</p>}
+      {lotes && lotes.length === 0 && <EmptyState headingLevel={3} title="Nenhum link encontrado" description="Novos distribuidores recebem um link próprio na aba Distribuidores." />}
       <div className={styles.lotes}>
         {(lotes || []).map((lote) => (
           <article key={lote._id} className={styles.lote} data-status={lote.status}>
@@ -272,18 +298,14 @@ function Lotes({ onVerParticipacoes }) {
             <dl className={styles.numeros}>
               <div><dt>Valor aprovado</dt><dd>{formatMoney(lote.valorAprovadoInicial)}</dd></div>
               <div><dt>Valor atual</dt><dd>{formatMoney(lote.valorAtual)}</dd></div>
-              <div><dt>Faixa atual</dt><dd>{lote.cuponsConcedidos > 0 ? formatMoney(lote.faixaMaxima.valorMinimo) : "Sem faixa"}</dd></div>
-              <div><dt>Cupons</dt><dd>{lote.cuponsConcedidos}</dd></div>
+              <div><dt>Faixa original</dt><dd>{lote.cuponsConcedidos > 0 ? formatMoney(lote.faixaMaxima.valorMinimo) : "Sem faixa"}</dd></div>
+              <div><dt>Cupons do pedido</dt><dd>{lote.cuponsConcedidos}</dd></div>
               <div><dt>Aprovados</dt><dd>{lote.saldo.aprovados}</dd></div>
               <div><dt>Pendentes</dt><dd>{lote.saldo.pendentes}</dd></div>
               <div><dt>Rejeitados</dt><dd>{lote.saldo.rejeitados}</dd></div>
               <div><dt>Cancelados</dt><dd>{lote.saldo.cancelados}</dd></div>
               <div><dt>Invalidados (revisão)</dt><dd>{lote.saldo.invalidadosRevisao}</dd></div>
-              <div><dt>Disponível</dt><dd>{lote.saldo.disponivel}</dd></div>
             </dl>
-            <p className={styles.muted}>
-              Benefícios: {lote.faixaMaxima.cupons} cupons · {lote.faixaMaxima.marketingPercentual}% material de marketing · {lote.faixaMaxima.produtosPercentual}% em produtos.
-            </p>
             {lote.status === "ativo" && <LinkParticipacao codigo={lote.codigoPublico} distribuidorNome={lote.distribuidorNome} compacto />}
             {lote.invalidacao && <p className={styles.muted}>Invalidado em {formatDateTimeBR(lote.invalidacao.em)}: {lote.invalidacao.motivo}</p>}
             <RevisoesLote revisoes={lote.revisoes} revisaoPendente={lote.revisaoPendente} gestor />
@@ -502,11 +524,14 @@ function Sorteio({ painel, usuario, onPainel }) {
 }
 
 function NatalGestao() {
+  const { toast } = useFeedback();
   const usuario = getAuthSession()?.usuario;
   const [aba, setAba] = useState("geral");
   const [painel, setPainel] = useState(null);
   const [erro, setErro] = useState("");
   const [filtroLote, setFiltroLote] = useState(null);
+  const [reconciliando, setReconciliando] = useState(false);
+  const [versaoPainel, setVersaoPainel] = useState(0);
 
   const carregarPainel = useCallback(() => {
     api.get("/natal-2026/gestao/painel")
@@ -515,6 +540,23 @@ function NatalGestao() {
   }, []);
   useEffect(() => { carregarPainel(); }, [carregarPainel]);
 
+  const reconciliar = async () => {
+    setReconciliando(true);
+    try {
+      await api.post("/natal-2026/gestao/reconciliar");
+      toast.success("Saldos reconciliados");
+    } catch (error) {
+      const dados = error?.response?.data;
+      toast.error("Reconciliação não concluída", {
+        description: dados?.codigo === "reconciliacao_parcial" ? dados.message : getApiErrorMessage(error),
+      });
+    } finally {
+      setReconciliando(false);
+      setVersaoPainel((atual) => atual + 1);
+      carregarPainel();
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -522,7 +564,7 @@ function NatalGestao() {
         <PageHeader
           eyebrow="Campanha"
           title="Natal Premiado 2026"
-          description="Validação das participações, controle de cupons por lote e preparação do sorteio de 15/12/2026."
+          description="Validação das participações, controle de cupons por distribuidor e preparação do sorteio de 15/12/2026."
         />
         <div className={styles.abas} role="tablist" aria-label="Seções da campanha">
           {ABAS.map(([id, rotulo]) => (
@@ -532,8 +574,17 @@ function NatalGestao() {
           ))}
         </div>
         {erro && <div className={ui.feedback} data-type="error" role="alert">{erro}</div>}
+        {painel && (
+          <AlertaSincronizacao
+            pendencias={painel.pendenciasSincronizacao}
+            isAdmin={usuario?.tipo === "admin"}
+            reconciliando={reconciliando}
+            onReconciliar={reconciliar}
+          />
+        )}
         {!painel && !erro && <p className={styles.muted} role="status">Carregando painel…</p>}
-        {painel && aba === "geral" && <VisaoGeral painel={painel} />}
+        {painel && aba === "geral" && <VisaoGeral painel={painel} onAbrirDistribuidores={() => setAba("distribuidores")} />}
+        {painel && aba === "distribuidores" && <GestaoDistribuidores usuario={usuario} listaFechada={painel.estado.listaFechada} modoCumulativo={painel.estado.modoCumulativo} reconciliando={reconciliando} versaoPainel={versaoPainel} onReconciliar={reconciliar} onAlterado={carregarPainel} />}
         {aba === "participacoes" && (
           <Participacoes
             key={filtroLote?._id || "todas"}

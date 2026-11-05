@@ -1,213 +1,72 @@
 import mongoose from "mongoose";
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
-import NatalCupom from "../models/NatalCupom.js";
+import NatalConta from "../models/NatalConta.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalParticipacao from "../models/NatalParticipacao.js";
 import Pedido from "../models/Pedido.js";
 import { buildAutorNatal } from "../models/natalSchemas.js";
 import {
-  beneficiosDaFaixa,
-  calcularFaixa,
   pedidoAprovadoParaCampanha,
   pedidoDentroDoPeriodo,
+  STATUS_FORA_DA_CAMPANHA,
 } from "../utils/natalCampanha.js";
+import { paraCentavos, paraReais } from "../utils/natalCumulativo.js";
 import {
   garantirIndicesNatal,
-  gerarCodigoPublico,
   natalBancoDisponivel,
-  obterEstadoCampanha,
+  obterModoCumulativo,
   registrarAuditoriaNatal,
 } from "./natalBaseService.js";
+import { recalcularConta } from "./natalContaService.js";
 
-const MAX_TENTATIVAS_CODIGO = 5;
+// Pedidos são a origem dos valores; o saldo fica na conta do distribuidor. Lotes são
+// os links antigos: continuam válidos e só acompanham o valor do pedido que os gerou.
 
-const isDuplicateKey = (error, field) => error?.code === 11000 &&
-  Boolean(error?.keyPattern?.[field] || error?.keyValue?.[field]);
+const origemDoPedido = (pedido, tipo) => ({ tipo, pedidoId: pedido._id, numeroPedido: pedido.numeroPedido });
 
-const valorDoPedido = (pedido) => Math.round(Number(pedido?.valorTotal || 0) * 100) / 100;
-
-const criarLote = async ({ pedido, faixa, usuario, origem, now }) => {
+// Antes da ativação não há revisão por conta: a redução fica sinalizada no lote e
+// aparece no relatório da migração. Benefícios nunca mudam por este caminho.
+const acompanharValorDoLote = async ({ lote, pedido, usuario, origem, now, modo }) => {
+  if (!lote || lote.status !== "ativo") return lote;
+  const valor = paraReais(paraCentavos(pedido.valorTotal));
+  if (paraCentavos(lote.valorAtual) === paraCentavos(valor)) return lote;
   const autor = buildAutorNatal(usuario);
-  const valor = valorDoPedido(pedido);
-  const beneficios = beneficiosDaFaixa(faixa);
-
-  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CODIGO; tentativa += 1) {
-    try {
-      const lote = await NatalLote.create({
-        pedidoId: pedido._id,
-        numeroPedido: pedido.numeroPedido,
-        clienteId: pedido.clienteId,
-        distribuidorNome: pedido.nomeFantasiaCliente || pedido.razaoSocialCliente || pedido.nomeResponsavel,
-        distribuidorRazaoSocial: pedido.razaoSocialCliente,
-        codigoPublico: gerarCodigoPublico(),
-        status: "ativo",
-        pedidoAprovadoEm: pedido.aprovacao?.aprovadoEm || now,
-        valorAprovadoInicial: valor,
+  const reducaoSemRevisao = modo !== "ativo" && Number(lote.cuponsConcedidos) > 0 && paraCentavos(valor) < paraCentavos(lote.valorAtual);
+  const atualizado = await NatalLote.findOneAndUpdate(
+    { _id: lote._id, valorAtual: lote.valorAtual },
+    {
+      $set: {
         valorAtual: valor,
-        faixaMaxima: beneficios,
-        cuponsConcedidos: beneficios.cupons,
-        criadoPor: autor,
-        historicoFaixas: [{
+        ...(reducaoSemRevisao ? { revisaoPendente: { detectadaEm: now, valorAnterior: lote.valorAtual, valorNovo: valor } } : {}),
+      },
+      $push: {
+        historicoFaixas: {
           em: now,
-          tipo: "criacao",
+          tipo: reducaoSemRevisao ? "reducao_sem_revisao" : "valor_atualizado",
           origem,
           valorPedido: valor,
-          nivelNovo: beneficios.nivel,
-          cuponsAnterior: 0,
-          cuponsNovo: beneficios.cupons,
-          acrescimo: beneficios.cupons,
-          autor,
-        }],
-      });
-      await registrarAuditoriaNatal({
-        acao: "lote_criado",
-        autor,
-        now,
-        loteId: lote._id,
-        pedidoId: pedido._id,
-        detalhes: { numeroPedido: pedido.numeroPedido, valor, cupons: beneficios.cupons, origem },
-      });
-      return { lote, criado: true };
-    } catch (error) {
-      // Outra requisição criou o lote deste pedido ao mesmo tempo.
-      if (isDuplicateKey(error, "pedidoId")) {
-        return { lote: await NatalLote.findOne({ pedidoId: pedido._id }), criado: false };
-      }
-      if (!isDuplicateKey(error, "codigoPublico") || tentativa === MAX_TENTATIVAS_CODIGO) throw error;
-    }
-  }
-  throw new Error("Não foi possível gerar o código do lote");
-};
-
-// Ajusta o lote ao valor atual do pedido. Só acrescenta a diferença de cupons
-// quando uma faixa superior é alcançada; reduções preservam a maior faixa.
-// As atualizações são condicionais, então repetir a mesma edição não concede nada.
-const atualizarLote = async ({ lote, pedido, faixa, usuario, origem, now }) => {
-  if (lote.status !== "ativo") return { lote, alterado: false };
-  const autor = buildAutorNatal(usuario);
-  const valor = valorDoPedido(pedido);
-
-  if (faixa && faixa.cupons > Number(lote.cuponsConcedidos)) {
-    const beneficios = beneficiosDaFaixa(faixa);
-    const atualizado = await NatalLote.findOneAndUpdate(
-      { _id: lote._id, status: "ativo", cuponsConcedidos: { $lt: beneficios.cupons } },
-      {
-        $set: { cuponsConcedidos: beneficios.cupons, faixaMaxima: beneficios, valorAtual: valor },
-        $push: {
-          historicoFaixas: {
-            em: now,
-            tipo: "aumento_faixa",
-            origem,
-            valorPedido: valor,
-            valorAnterior: lote.valorAtual,
-            nivelAnterior: lote.faixaMaxima?.nivel,
-            nivelNovo: beneficios.nivel,
-            cuponsAnterior: lote.cuponsConcedidos,
-            cuponsNovo: beneficios.cupons,
-            acrescimo: beneficios.cupons - Number(lote.cuponsConcedidos),
-            autor,
-          },
-        },
-      },
-      { returnDocument: "after", runValidators: true }
-    );
-    if (atualizado) {
-      await registrarAuditoriaNatal({
-        acao: "lote_faixa_aumentada",
-        autor,
-        now,
-        loteId: lote._id,
-        pedidoId: lote.pedidoId,
-        detalhes: {
-          valor,
+          valorAnterior: lote.valorAtual,
+          nivelAnterior: lote.faixaMaxima?.nivel,
+          nivelNovo: lote.faixaMaxima?.nivel,
           cuponsAnterior: lote.cuponsConcedidos,
-          cuponsNovo: beneficios.cupons,
-          acrescimo: beneficios.cupons - Number(lote.cuponsConcedidos),
-          origem,
-        },
-      });
-      return { lote: atualizado, alterado: true };
-    }
-    return { lote: await NatalLote.findById(lote._id), alterado: false };
-  }
-
-  // Redução sem decisão administrativa: a edição instrumentada sempre grava a
-  // revisão junto com o pedido; se chegar aqui, os benefícios ficam como estão
-  // e o lote é sinalizado para revisão (nunca reduzidos ou mantidos em silêncio).
-  if (Math.round(valor * 100) < Math.round(Number(lote.valorAtual) * 100) && Number(lote.cuponsConcedidos) > 0) {
-    const sinalizado = await NatalLote.findOneAndUpdate(
-      { _id: lote._id, valorAtual: lote.valorAtual },
-      {
-        $set: { valorAtual: valor, revisaoPendente: { detectadaEm: now, valorAnterior: lote.valorAtual, valorNovo: valor } },
-        $push: {
-          historicoFaixas: {
-            em: now,
-            tipo: "reducao_sem_revisao",
-            origem,
-            valorPedido: valor,
-            valorAnterior: lote.valorAtual,
-            nivelAnterior: lote.faixaMaxima?.nivel,
-            nivelNovo: lote.faixaMaxima?.nivel,
-            cuponsAnterior: lote.cuponsConcedidos,
-            cuponsNovo: lote.cuponsConcedidos,
-            acrescimo: 0,
-            autor,
-          },
+          cuponsNovo: lote.cuponsConcedidos,
+          acrescimo: 0,
+          autor,
         },
       },
-      { returnDocument: "after", runValidators: true }
-    );
-    if (sinalizado) {
-      await registrarAuditoriaNatal({
-        acao: "lote_reducao_sem_revisao",
-        autor,
-        now,
-        loteId: lote._id,
-        pedidoId: lote.pedidoId,
-        detalhes: { valorAnterior: lote.valorAtual, valor, cuponsMantidos: lote.cuponsConcedidos, origem },
-      });
-      return { lote: sinalizado, alterado: true };
-    }
-    return { lote, alterado: false };
-  }
-
-  if (Math.round(Number(lote.valorAtual) * 100) !== Math.round(valor * 100)) {
-    const atualizado = await NatalLote.findOneAndUpdate(
-      { _id: lote._id, valorAtual: lote.valorAtual },
-      {
-        $set: { valorAtual: valor },
-        $push: {
-          historicoFaixas: {
-            em: now,
-            tipo: "valor_atualizado",
-            origem,
-            valorPedido: valor,
-            valorAnterior: lote.valorAtual,
-            nivelAnterior: lote.faixaMaxima?.nivel,
-            nivelNovo: lote.faixaMaxima?.nivel,
-            cuponsAnterior: lote.cuponsConcedidos,
-            cuponsNovo: lote.cuponsConcedidos,
-            acrescimo: 0,
-            autor,
-          },
-        },
-      },
-      { returnDocument: "after", runValidators: true }
-    );
-    if (atualizado) {
-      await registrarAuditoriaNatal({
-        acao: "lote_valor_atualizado",
-        autor,
-        now,
-        loteId: lote._id,
-        pedidoId: lote.pedidoId,
-        detalhes: { valorAnterior: lote.valorAtual, valor, cuponsMantidos: lote.cuponsConcedidos, origem },
-      });
-      return { lote: atualizado, alterado: true };
-    }
-  }
-
-  return { lote, alterado: false };
+    },
+    { returnDocument: "after", runValidators: true }
+  );
+  if (!atualizado) return lote;
+  await registrarAuditoriaNatal({
+    acao: "lote_valor_atualizado",
+    autor,
+    now,
+    loteId: lote._id,
+    pedidoId: lote.pedidoId,
+    detalhes: { valorAnterior: lote.valorAtual, valor, cuponsMantidos: lote.cuponsConcedidos, origem },
+  });
+  return atualizado;
 };
 
 export const recalcularContadoresLote = async (loteId) => {
@@ -229,97 +88,31 @@ export const recalcularContadoresLote = async (loteId) => {
   return contadores;
 };
 
-// Cancelamento do pedido: lote e participações deixam de valer, mas tudo
-// permanece gravado. Pode ser repetido com segurança (idempotente).
-export const invalidarLotePedido = async ({ pedidoId, usuario, motivo = "Pedido cancelado", now = new Date() }) => {
-  if (!natalBancoDisponivel()) return { skipped: true };
-  await garantirIndicesNatal();
-  const autor = buildAutorNatal(usuario);
-  const lote = await NatalLote.findOne({ pedidoId });
-  if (!lote) return { lote: null, invalidado: false };
-
-  const invalidadoAgora = lote.status === "ativo" && Boolean(await NatalLote.findOneAndUpdate(
-    { _id: lote._id, status: "ativo" },
-    {
-      $set: { status: "invalidado", invalidacao: { em: now, motivo, autor } },
-      $push: {
-        historicoFaixas: {
-          em: now,
-          tipo: "invalidacao",
-          origem: "cancelamento",
-          valorPedido: lote.valorAtual,
-          nivelAnterior: lote.faixaMaxima?.nivel,
-          cuponsAnterior: lote.cuponsConcedidos,
-          cuponsNovo: lote.cuponsConcedidos,
-          acrescimo: 0,
-          autor,
-        },
-      },
-    },
-    { returnDocument: "after" }
-  ));
-
-  let participacoesInvalidadas = 0;
-  for (const statusAnterior of ["pendente", "aprovado"]) {
-    const result = await NatalParticipacao.updateMany(
-      { loteId: lote._id, status: statusAnterior },
-      {
-        $set: { status: "invalidado_pedido", invalidacao: { em: now, motivo, statusAnterior } },
-        $push: { historico: { acao: "invalidado_pedido", em: now, autor, motivo } },
-      }
-    );
-    participacoesInvalidadas += result.modifiedCount || 0;
-  }
-
-  const cupons = await NatalCupom.updateMany(
-    { loteId: lote._id, status: "valido" },
-    { $set: { status: "invalidado", encerradoEm: now, motivoEncerramento: motivo } }
-  );
-  const contadores = await recalcularContadoresLote(lote._id);
-
-  if (invalidadoAgora || participacoesInvalidadas > 0 || cupons.modifiedCount > 0) {
-    const estado = await obterEstadoCampanha();
-    await registrarAuditoriaNatal({
-      acao: "lote_invalidado",
-      autor,
-      now,
-      loteId: lote._id,
-      pedidoId,
-      aposFechamento: Boolean(estado.listaFechada),
-      detalhes: {
-        motivo,
-        participacoesInvalidadas,
-        cuponsInvalidados: cupons.modifiedCount || 0,
-        contadores,
-      },
-    });
-  }
-
-  return { lote: await NatalLote.findById(lote._id), invalidado: invalidadoAgora };
-};
-
-// Ponto único chamado após aprovar, editar ou mudar o status de um pedido.
+// Ponto único chamado após aprovar, editar ou cancelar um pedido.
 export const sincronizarPedidoNatal = async ({ pedido, usuario, origem = "sincronizacao", now = new Date() }) => {
   if (!pedido || !natalBancoDisponivel()) return { skipped: true };
   await garantirIndicesNatal();
 
-  if (pedido.status === "cancelado") {
-    return invalidarLotePedido({ pedidoId: pedido._id, usuario, now });
-  }
+  const modo = await obterModoCumulativo();
+  const lote = await NatalLote.findOne({ pedidoId: pedido._id });
+  const elegivel = pedidoAprovadoParaCampanha(pedido) && pedidoDentroDoPeriodo(pedido);
+  const loteAtual = await acompanharValorDoLote({ lote, pedido, usuario, origem, now, modo });
+  // Antes da ativação nada é concedido: a compra entra no processamento autorizado.
+  if (modo !== "ativo") return { lote: loteAtual, elegivel, ignorado: true };
+  const contaExiste = lote || await NatalConta.exists({ campanha: NATAL_2026.slug, clienteId: pedido.clienteId });
+  if (!elegivel && !contaExiste) return { lote: null, elegivel: false };
 
-  const existente = await NatalLote.findOne({ pedidoId: pedido._id });
-  if (!pedidoAprovadoParaCampanha(pedido)) return { lote: existente, elegivel: false };
-
-  const faixa = calcularFaixa(pedido.valorTotal);
-  if (!existente) {
-    if (!faixa || !pedidoDentroDoPeriodo(pedido)) return { lote: null, elegivel: false };
-    return criarLote({ pedido, faixa, usuario, origem, now });
-  }
-  return atualizarLote({ lote: existente, pedido, faixa, usuario, origem, now });
+  const resultado = await recalcularConta({
+    clienteId: pedido.clienteId,
+    usuario,
+    origem: origemDoPedido(pedido, origem),
+    now,
+  });
+  return { lote: loteAtual, elegivel, ...resultado };
 };
 
 // Falhas na campanha nunca interrompem o fluxo do pedido; a reconciliação
-// automática dos painéis reprocessa o que não tiver sido sincronizado.
+// administrativa reprocessa o que não tiver sido sincronizado.
 export const sincronizarPedidoNatalSeguro = async (args) => {
   try {
     return await sincronizarPedidoNatal(args);
@@ -333,59 +126,44 @@ export const sincronizarPedidoNatalSeguro = async (args) => {
   }
 };
 
-const ultimaReconciliacao = new Map();
-const INTERVALO_RECONCILIACAO_MS = 30 * 1000;
-
-// Cobre pedidos aprovados/editados/cancelados cuja sincronização não ocorreu
-// (falha momentânea, caminho operacional não instrumentado, pedido excluído).
-export const reconciliarLotes = async ({ clienteId, force = false, now = new Date() } = {}) => {
-  if (!natalBancoDisponivel()) return;
-  const chave = clienteId ? String(clienteId) : "*";
-  const anterior = ultimaReconciliacao.get(chave) || 0;
-  if (!force && now.getTime() - anterior < INTERVALO_RECONCILIACAO_MS) return;
-  ultimaReconciliacao.set(chave, now.getTime());
+// Execução explícita da gestão. Cobre pedidos aprovados, editados, cancelados ou excluídos
+// cuja sincronização não ocorreu. Consultas e painéis nunca chamam esta rotina.
+export const reconciliarLotes = async ({ clienteId, now = new Date() } = {}) => {
+  if (!natalBancoDisponivel()) return { falhas: [] };
+  const modo = await obterModoCumulativo();
   await garantirIndicesNatal();
 
   const escopo = clienteId ? { clienteId } : {};
-  const lotes = await NatalLote.find(escopo).select("pedidoId status valorAtual cuponsConcedidos").lean();
-  const lotesPorPedido = new Map(lotes.map((lote) => [String(lote.pedidoId), lote]));
-  const minimo = NATAL_2026.faixas[0].valorMinimo;
-
-  const candidatos = await Pedido.find({
-    ...escopo,
-    status: { $nin: ["aguardando_aprovacao", "cancelado"] },
-    valorTotal: { $gte: minimo },
-    createdAt: { $gte: NATAL_2026.inicio, $lte: NATAL_2026.fimCadastros },
-  }).select("_id").lean().maxTimeMS(5000);
-  const idsParaVerificar = new Set([
-    ...candidatos.map((pedido) => String(pedido._id)),
-    ...lotes.filter((lote) => lote.status === "ativo").map((lote) => String(lote.pedidoId)),
+  const [lotes, contas, pedidos] = await Promise.all([
+    NatalLote.find(escopo).select("pedidoId clienteId status valorAtual cuponsConcedidos faixaMaxima").lean(),
+    NatalConta.find({ campanha: NATAL_2026.slug, ...escopo }).select("clienteId").lean(),
+    Pedido.find({
+      ...escopo,
+      status: { $nin: STATUS_FORA_DA_CAMPANHA },
+      createdAt: { $gte: NATAL_2026.inicio, $lte: NATAL_2026.fimCadastros },
+    }).select("clienteId").lean().maxTimeMS(5000),
   ]);
-  if (idsParaVerificar.size === 0) return;
 
-  const pedidos = await Pedido.find({ _id: { $in: [...idsParaVerificar] } })
-    .select("_id numeroPedido clienteId nomeFantasiaCliente razaoSocialCliente nomeResponsavel valorTotal status aprovacao createdAt dataPedido")
-    .lean()
-    .maxTimeMS(5000);
-  const pedidosPorId = new Map(pedidos.map((pedido) => [String(pedido._id), pedido]));
+  const pedidosDosLotes = await Pedido.find({ _id: { $in: lotes.map((lote) => lote.pedidoId) } })
+    .select("_id valorTotal").lean().maxTimeMS(5000);
+  const valorPorPedido = new Map(pedidosDosLotes.map((pedido) => [String(pedido._id), pedido]));
+  for (const lote of lotes) {
+    const pedido = valorPorPedido.get(String(lote.pedidoId));
+    if (!pedido) continue;
+    await acompanharValorDoLote({ lote, pedido, usuario: null, origem: "reconciliacao", now, modo })
+      .catch((error) => console.error("[natal-2026] Falha ao atualizar valor do lote", { name: error?.name }));
+  }
+  if (modo !== "ativo") return { falhas: [] };
 
-  for (const id of idsParaVerificar) {
-    const pedido = pedidosPorId.get(id);
-    const lote = lotesPorPedido.get(id);
+  const clientes = new Set([...lotes, ...contas, ...pedidos].map((item) => String(item.clienteId)));
+  const falhas = [];
+  for (const id of clientes) {
     try {
-      if (!pedido) {
-        if (lote?.status === "ativo") {
-          await invalidarLotePedido({ pedidoId: lote.pedidoId, motivo: "Pedido excluído", now });
-        }
-        continue;
-      }
-      const precisa = !lote || pedido.status === "cancelado" ||
-        Math.round(Number(lote.valorAtual) * 100) !== Math.round(Number(pedido.valorTotal) * 100);
-      if (precisa) await sincronizarPedidoNatal({ pedido, usuario: null, origem: "reconciliacao", now });
+      await recalcularConta({ clienteId: id, now });
     } catch (error) {
-      console.error("[natal-2026] Falha na reconciliação de lote", { name: error?.name, pedidoId: id });
+      falhas.push(id);
+      console.error("[natal-2026] Falha na reconciliação da conta", { name: error?.name, clienteId: id });
     }
   }
+  return { falhas };
 };
-
-export const resetReconciliacaoParaTestes = () => ultimaReconciliacao.clear();

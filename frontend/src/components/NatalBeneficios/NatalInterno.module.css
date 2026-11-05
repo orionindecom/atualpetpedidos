@@ -699,3 +699,38 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.formulario {
+  display: grid;
+  gap: 12px;
+}
+
+.opcoesBusca {
+  display: grid;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-primary);
+}
+
+.opcoesBusca button {
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.opcoesBusca button:hover,
+.opcoesBusca button:focus-visible {
+  background: var(--surface-secondary);
+}
+
+.celulaAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}

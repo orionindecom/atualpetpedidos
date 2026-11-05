@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   buildParticipacaoLink,
   buildWhatsappShareUrl,
+  descreverPendenciaSincronizacao,
   faixaParaValor,
   formatCnpjBR,
   formatDocumentoBR,
@@ -60,4 +61,17 @@ test("revisão de benefícios: decisão e justificativa obrigatórias; cancelar 
   const pedidos = readFileSync(new URL("../src/pages/AdminPedidos/AdminPedidos.jsx", import.meta.url), "utf8");
   assert.match(pedidos, /revisao_beneficios_obrigatoria/);
   assert.match(pedidos, /onCancelar=\{\(\) => setRevisaoNatal\(null\)\}/);
+});
+
+test("alerta de sincronização usa os dados do painel e o botão existente", () => {
+  assert.equal(
+    descreverPendenciaSincronizacao({ distribuidorNome: "Pet Sul", motivos: ["cupons_pendentes", "bonificacao_pendente"] }),
+    "Pet Sul (cupons a liberar, bonificação a registrar)"
+  );
+  const pagina = readFileSync(new URL("../src/pages/NatalGestao/NatalGestao.jsx", import.meta.url), "utf8");
+  assert.match(pagina, /if \(!pendencias\?\.length\) return null;/, "sem pendência a interface fica normal");
+  assert.match(pagina, /pendencias=\{painel\.pendenciasSincronizacao\}/);
+  assert.match(pagina, /api\.post\("\/natal-2026\/gestao\/reconciliar"\)/);
+  assert.match(pagina, /reconciliacao_parcial/);
+  assert.match(pagina, /finally \{[\s\S]*carregarPainel\(\);/, "o alerta é recalculado com ou sem sucesso");
 });

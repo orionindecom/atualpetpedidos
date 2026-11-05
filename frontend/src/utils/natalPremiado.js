@@ -48,6 +48,46 @@ export const FAIXA_EVENTO_LABELS = Object.freeze({
   reducao_sem_revisao: "Redução sem revisão administrativa (pendente)",
 });
 
+export const MOVIMENTO_CUPOM_LABELS = Object.freeze({
+  legado: "Concedidos no modelo anterior",
+  conquista: "Liberados por compras",
+  revisao_adequacao: "Retirados por revisão",
+  ajuste_manual: "Ajuste manual",
+});
+
+export const BONIFICACAO_EVENTO_LABELS = Object.freeze({
+  complemento: "Complemento calculado",
+  recalculo: "Recálculo",
+  adequacao: "Adequação administrativa",
+  entrega: "Entrega registrada",
+});
+
+export const MOTIVO_SINCRONIZACAO_LABELS = Object.freeze({
+  conta_ausente: "compras sem saldo registrado",
+  acumulado_defasado: "acumulado desatualizado",
+  cupons_pendentes: "cupons a liberar",
+  bonificacao_pendente: "bonificação a registrar",
+  contadores_divergentes: "cupons utilizados divergentes",
+});
+
+export const descreverPendenciaSincronizacao = ({ distribuidorNome, motivos = [] }) => (
+  `${distribuidorNome || "Distribuidor"} (${motivos.map((motivo) => MOTIVO_SINCRONIZACAO_LABELS[motivo] || motivo).join(", ")})`
+);
+
+export const COMPRA_EXTERNA_STATUS_LABELS = Object.freeze({
+  pendente: "Aguardando validação",
+  validada: "Validada",
+  rejeitada: "Rejeitada",
+  cancelada: "Cancelada",
+});
+
+export const COMPRA_EXTERNA_STATUS_TONES = Object.freeze({
+  pendente: "accent",
+  validada: "active",
+  rejeitada: "danger",
+  cancelada: "inactive",
+});
+
 const toCents = (value) => Math.round(Number(value || 0) * 100);
 
 // Mesma regra do backend, aplicada sobre as faixas recebidas da API.
@@ -62,6 +102,16 @@ export const faixaParaValor = (faixas = [], valor = 0) => {
 export const proximaFaixaParaValor = (faixas = [], valor = 0) => (
   faixas.find((faixa) => toCents(faixa.valorMinimo) > toCents(valor)) || null
 );
+
+// Prévia de um valor isolado com a regra de ciclos (mesma regra do backend).
+export const cuponsParaValor = (faixas = [], cicloValor = 0, valor = 0) => {
+  const ciclo = toCents(cicloValor);
+  if (ciclo <= 0) return 0;
+  const total = toCents(valor);
+  const concluidos = Math.floor(total / ciclo);
+  const restante = (total - concluidos * ciclo) / 100;
+  return concluidos * (faixas.at(-1)?.cupons || 0) + (faixaParaValor(faixas, restante)?.cupons || 0);
+};
 
 export const formatMoney = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 

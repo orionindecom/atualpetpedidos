@@ -1,9 +1,28 @@
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
+import NatalBonificacao from "../models/NatalBonificacao.js";
 import NatalLote from "../models/NatalLote.js";
 import Pedido from "../models/Pedido.js";
 import { podeAcessarPedido } from "../services/authorizationService.js";
-import { garantirIndicesNatal, natalBancoDisponivel, NatalError } from "../services/natalBaseService.js";
+import { natalBancoDisponivel, NatalError } from "../services/natalBaseService.js";
 import { ComprovanteError, getComprovanteStorage, validarArquivoComprovante } from "../services/natalComprovanteService.js";
+import {
+  cancelarCompraExterna,
+  listarComprasExternas,
+  obterCompraExterna,
+  registrarCompraExterna,
+  registrarEntregaBonificacao,
+  rejeitarCompraExterna,
+  serializarCompraExterna,
+  validarCompraExterna,
+} from "../services/natalCompraExternaService.js";
+import { ajustarCuponsConta } from "../services/natalContaService.js";
+import {
+  buscarClientesDistribuidores,
+  carregarContaLeitura,
+  detalharDistribuidor,
+  listarDistribuidores,
+  serializarConta,
+} from "../services/natalDistribuidorService.js";
 import { gerarExportacao } from "../services/natalExportacaoService.js";
 import {
   alterarFechamentoLista,
@@ -17,7 +36,9 @@ import {
   serializarLote,
   serializarParticipacao,
 } from "../services/natalGestaoService.js";
-import { reconciliarLotes, sincronizarPedidoNatalSeguro } from "../services/natalLoteService.js";
+import { reconciliarLotes } from "../services/natalLoteService.js";
+import { previaRevisaoPendente, resolverRevisaoPendente } from "../services/natalRevisaoService.js";
+import { aplicarSubstituicao, previaSubstituicao } from "../services/natalSubstituicaoService.js";
 import {
   aprovarParticipacao,
   cancelarParticipacao,
@@ -47,7 +68,7 @@ export const MENSAGEM_CADASTRO_RECEBIDO = "Cadastro recebido com sucesso! Sua pa
 
 const responderErro = (res, error, contexto) => {
   if (error instanceof NatalError || error instanceof ComprovanteError) {
-    return res.status(error.statusCode).json({ message: error.message, codigo: error.code });
+    return res.status(error.statusCode).json({ message: error.message, codigo: error.code, errors: error.errors });
   }
   console.error(`[natal-2026] Falha em ${contexto}`, { name: error?.name, code: error?.code });
   return res.status(500).json({ message: "Erro interno do servidor" });
@@ -126,16 +147,16 @@ export const enviarParticipacaoPublica = async (req, res) => {
 
 export const resumoDistribuidor = async (req, res) => {
   try {
-    await reconciliarLotes({ clienteId: req.usuario._id });
     const lotes = await listarLotes({}, { clienteId: req.usuario._id });
-    const ativos = lotes.filter((lote) => lote.status === "ativo");
-    const totais = ativos.reduce((acc, lote) => ({
-      concedidos: acc.concedidos + lote.saldo.concedidos,
-      aprovados: acc.aprovados + lote.saldo.aprovados,
-      pendentes: acc.pendentes + lote.saldo.pendentes,
-      disponiveis: acc.disponiveis + lote.saldo.disponivel,
-    }), { concedidos: 0, aprovados: 0, pendentes: 0, disponiveis: 0 });
-    return res.status(200).json({ campanha: resumoConfigPublica(), lotes, totais });
+    const conta = await detalharDistribuidor({ clienteId: req.usuario._id, gestor: false });
+    // "totais" mantém compatível a tela publicada enquanto o frontend novo não entra.
+    const totais = {
+      concedidos: conta.cupons.total,
+      aprovados: conta.cupons.utilizados,
+      pendentes: conta.cupons.pendentes,
+      disponiveis: conta.cupons.disponiveis,
+    };
+    return res.status(200).json({ campanha: resumoConfigPublica(), lotes, conta, totais });
   } catch (error) {
     return responderErro(res, error, "resumo do distribuidor");
   }
@@ -153,7 +174,6 @@ export const participacoesDistribuidor = async (req, res) => {
 
 export const detalheParticipacao = async (req, res) => {
   try {
-    await garantirIndicesNatal();
     const participacao = await obterParticipacaoAutorizada(req.params.id, req.usuario);
     return res.status(200).json(serializarParticipacao(participacao.toObject(), { gestor: isGestorCampanha(req.usuario) }));
   } catch (error) {
@@ -163,7 +183,6 @@ export const detalheParticipacao = async (req, res) => {
 
 export const comprovanteParticipacao = async (req, res) => {
   try {
-    await garantirIndicesNatal();
     const participacao = await obterParticipacaoAutorizada(req.params.id, req.usuario);
     const comprovante = participacao.comprovante;
     const stream = await getComprovanteStorage().abrir(comprovante);
@@ -208,25 +227,35 @@ export const beneficiosPedido = async (req, res) => {
     if (!pedido) return res.status(404).json({ message: "Pedido não encontrado" });
     if (!(await podeAcessarPedido(req.usuario, pedido))) return res.status(403).json({ message: "Acesso negado" });
 
-    let lote = natalBancoDisponivel() ? await NatalLote.findOne({ pedidoId: pedido._id }).lean() : null;
-    if (!lote && pedidoAprovadoParaCampanha(pedido)) {
-      const resultado = await sincronizarPedidoNatalSeguro({ pedido, usuario: null, origem: "reconciliacao" });
-      lote = resultado?.lote ? (resultado.lote.toObject?.() || resultado.lote) : null;
-    }
+    const banco = natalBancoDisponivel();
+    const lote = banco ? await NatalLote.findOne({ pedidoId: pedido._id }).lean() : null;
+    const aprovado = pedidoAprovadoParaCampanha(pedido);
     const podeVerLink = isGestorCampanha(req.usuario) ||
       (isDistribuidorCampanha(req.usuario) && String(pedido.clienteId) === String(req.usuario._id));
     const loteSerializado = lote ? serializarLote(lote, { gestor: isGestorCampanha(req.usuario) }) : null;
     if (loteSerializado && !podeVerLink) delete loteSerializado.codigoPublico;
+
+    let conta = null;
+    if (banco && (lote || pedidoDentroDoPeriodo(pedido, NATAL_2026))) {
+      const contaDoc = await carregarContaLeitura(pedido.clienteId);
+      const [lotesConta, bonificacoes] = await Promise.all([
+        NatalLote.find({ clienteId: pedido.clienteId }).select("codigoPublico numeroPedido pedidoId status").lean(),
+        NatalBonificacao.find({ campanha: NATAL_2026.slug, clienteId: pedido.clienteId }).select("tipo valorDevido valorConcedido valorEntregue").lean(),
+      ]);
+      conta = serializarConta(contaDoc, { lotes: lotesConta, bonificacoes, incluirLinks: podeVerLink });
+    }
 
     return res.status(200).json({
       campanha: resumoConfigPublica(),
       dentroDoPeriodo: pedidoDentroDoPeriodo(pedido, NATAL_2026),
       aguardandoAprovacao: pedido.status === "aguardando_aprovacao",
       cancelado: pedido.status === "cancelado",
+      aprovado,
       previa: beneficiosDaFaixa(calcularFaixa(pedido.valorTotal)),
       proximaFaixa: beneficiosDaFaixa(proximaFaixa(pedido.valorTotal)),
       valorPedido: pedido.valorTotal,
       lote: loteSerializado,
+      conta,
     });
   } catch (error) {
     return responderErro(res, error, "benefícios do pedido");
@@ -236,7 +265,6 @@ export const beneficiosPedido = async (req, res) => {
 // Benefícios de vários pedidos do distribuidor (lista "Meus pedidos").
 export const beneficiosMeusPedidos = async (req, res) => {
   try {
-    await reconciliarLotes({ clienteId: req.usuario._id });
     const lotes = await NatalLote.find({ clienteId: req.usuario._id })
       .select("pedidoId status faixaMaxima cuponsConcedidos contadores")
       .lean();
@@ -288,7 +316,6 @@ export const rejeitarParticipacaoHandler = async (req, res) => {
 
 export const painelGestao = async (req, res) => {
   try {
-    await reconciliarLotes();
     return res.status(200).json(await obterPainelGestao());
   } catch (error) {
     return responderErro(res, error, "painel de gestão");
@@ -362,10 +389,181 @@ export const auditoriaGestao = async (req, res) => {
   }
 };
 
+export const distribuidoresGestao = async (req, res) => {
+  try {
+    return res.status(200).json(await listarDistribuidores({ busca: req.query.busca }));
+  } catch (error) {
+    return responderErro(res, error, "listar distribuidores");
+  }
+};
+
+export const detalheDistribuidorGestao = async (req, res) => {
+  try {
+    return res.status(200).json(await detalharDistribuidor({ clienteId: req.params.id, gestor: true }));
+  } catch (error) {
+    return responderErro(res, error, "detalhar distribuidor");
+  }
+};
+
+export const buscarClientesGestao = async (req, res) => {
+  try {
+    return res.status(200).json(await buscarClientesDistribuidores(req.query.busca));
+  } catch (error) {
+    return responderErro(res, error, "buscar distribuidores");
+  }
+};
+
+export const ajustarCuponsHandler = async (req, res) => {
+  try {
+    const { conta, repetido } = await ajustarCuponsConta({
+      clienteId: req.params.id,
+      quantidade: req.body?.quantidade,
+      motivo: req.body?.motivo,
+      justificativa: req.body?.justificativa,
+      chave: req.body?.chave,
+      usuario: req.usuario,
+    });
+    return res.status(repetido ? 200 : 201).json({ message: "Ajuste registrado.", cupons: conta.cupons });
+  } catch (error) {
+    return responderErro(res, error, "ajustar cupons");
+  }
+};
+
+export const previaRevisaoHandler = async (req, res) => {
+  try {
+    return res.status(200).json(await previaRevisaoPendente({ clienteId: req.params.id }));
+  } catch (error) {
+    return responderErro(res, error, "prévia da revisão");
+  }
+};
+
+export const resolverRevisaoHandler = async (req, res) => {
+  try {
+    const { revisao, invalidadas } = await resolverRevisaoPendente({ clienteId: req.params.id, entrada: req.body, usuario: req.usuario });
+    return res.status(200).json({
+      message: revisao.decisao === "manter" ? "Benefícios mantidos." : "Benefícios adequados.",
+      decisao: revisao.decisao,
+      participacoesInvalidadas: invalidadas,
+    });
+  } catch (error) {
+    return responderErro(res, error, "resolver revisão");
+  }
+};
+
+export const comprasExternasGestao = async (req, res) => {
+  try {
+    return res.status(200).json(await listarComprasExternas({
+      clienteId: isValidObjectId(req.query.distribuidorId) ? req.query.distribuidorId : undefined,
+      status: ["pendente", "validada", "rejeitada", "cancelada"].includes(req.query.status) ? req.query.status : undefined,
+    }));
+  } catch (error) {
+    return responderErro(res, error, "listar compras externas");
+  }
+};
+
+export const registrarCompraExternaHandler = async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: "Identificador inválido" });
+    const arquivo = req.file ? { buffer: req.file.buffer, meta: validarArquivoComprovante(req.file) } : null;
+    const compra = await registrarCompraExterna({ clienteId: req.params.id, dados: req.body || {}, arquivo, usuario: req.usuario });
+    return res.status(201).json({ message: "Compra externa registrada. Ela soma no acumulado depois de validada.", compra: serializarCompraExterna(compra) });
+  } catch (error) {
+    return responderErro(res, error, "registrar compra externa");
+  }
+};
+
+export const validarCompraExternaHandler = async (req, res) => {
+  try {
+    const { compra, cuponsLiberados } = await validarCompraExterna({ id: req.params.id, usuario: req.usuario });
+    return res.status(200).json({ message: "Compra validada e incluída no acumulado.", compra: serializarCompraExterna(compra), cuponsLiberados });
+  } catch (error) {
+    return responderErro(res, error, "validar compra externa");
+  }
+};
+
+export const rejeitarCompraExternaHandler = async (req, res) => {
+  try {
+    const { compra } = await rejeitarCompraExterna({ id: req.params.id, motivo: req.body?.motivo, usuario: req.usuario });
+    return res.status(200).json({ message: "Compra rejeitada.", compra: serializarCompraExterna(compra) });
+  } catch (error) {
+    return responderErro(res, error, "rejeitar compra externa");
+  }
+};
+
+export const cancelarCompraExternaHandler = async (req, res) => {
+  try {
+    const { compra } = await cancelarCompraExterna({ id: req.params.id, motivo: req.body?.motivo, usuario: req.usuario });
+    return res.status(200).json({ message: "Compra cancelada.", compra: serializarCompraExterna(compra) });
+  } catch (error) {
+    return responderErro(res, error, "cancelar compra externa");
+  }
+};
+
+export const comprovanteCompraExterna = async (req, res) => {
+  try {
+    const compra = await obterCompraExterna(req.params.id);
+    if (!compra.comprovante) return res.status(404).json({ message: "Esta compra não possui comprovante." });
+    const stream = await getComprovanteStorage().abrir(compra.comprovante);
+    res.setHeader("Content-Type", compra.comprovante.mimetype);
+    res.setHeader("Content-Disposition", `inline; filename="comprovante-compra-${compra._id}"`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Content-Security-Policy", "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    stream.on("error", () => {
+      if (!res.headersSent) res.status(502).json({ message: "Comprovante indisponível no momento." });
+      else res.destroy();
+    });
+    return stream.pipe(res);
+  } catch (error) {
+    return responderErro(res, error, "abrir comprovante de compra externa");
+  }
+};
+
+export const registrarEntregaHandler = async (req, res) => {
+  try {
+    const bonificacao = await registrarEntregaBonificacao({ id: req.params.id, valor: req.body?.valor, observacao: req.body?.observacao, usuario: req.usuario });
+    return res.status(200).json({ message: "Entrega registrada.", saldoPendente: bonificacao.saldoPendente });
+  } catch (error) {
+    return responderErro(res, error, "registrar entrega de bonificação");
+  }
+};
+
+export const previaSubstituicaoHandler = async (req, res) => {
+  try {
+    return res.status(200).json(await previaSubstituicao({ pedidoId: req.params.id, dados: req.body || {} }));
+  } catch (error) {
+    return responderErro(res, error, "prévia de substituição");
+  }
+};
+
+export const aplicarSubstituicaoHandler = async (req, res) => {
+  try {
+    const { repetida, substituicao } = await aplicarSubstituicao({
+      pedidoId: req.params.id,
+      dados: req.body?.compra || {},
+      motivo: req.body?.motivo,
+      confirmacao: req.body?.confirmacao,
+      usuario: req.usuario,
+    });
+    return res.status(repetida ? 200 : 201).json({ message: "Substituição registrada.", substituicaoId: substituicao._id, repetida });
+  } catch (error) {
+    return responderErro(res, error, "aplicar substituição");
+  }
+};
+
 export const reconciliarHandler = async (req, res) => {
   try {
-    await reconciliarLotes({ force: true });
-    return res.status(200).json(await reconciliarContadores({ usuario: req.usuario }));
+    const { falhas } = await reconciliarLotes();
+    const contadores = await reconciliarContadores({ usuario: req.usuario });
+    if (falhas.length > 0) {
+      return res.status(500).json({
+        message: `Reconciliação incompleta: ${falhas.length} distribuidor(es) com falha. Tente novamente.`,
+        codigo: "reconciliacao_parcial",
+        falhas,
+        ...contadores,
+      });
+    }
+    return res.status(200).json(contadores);
   } catch (error) {
     return responderErro(res, error, "reconciliar contadores");
   }

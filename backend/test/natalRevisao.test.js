@@ -9,14 +9,16 @@ import Produto from "../src/models/Produto.js";
 import PrecoProduto from "../src/models/PrecoProduto.js";
 import Usuario from "../src/models/Usuario.js";
 import NatalAuditoria from "../src/models/NatalAuditoria.js";
+import NatalConta from "../src/models/NatalConta.js";
 import NatalCupom from "../src/models/NatalCupom.js";
 import NatalLote from "../src/models/NatalLote.js";
 import NatalParticipacao from "../src/models/NatalParticipacao.js";
+import { NatalCampanhaEstado } from "../src/models/NatalCampanhaEstado.js";
 import natalRoutes from "../src/routes/natalRoutes.js";
 import { aprovarPedidoAdmin, atualizarPedidoAdmin, atualizarStatusPedido } from "../src/controllers/pedidoController.js";
-import { resetIndicesNatalParaTestes } from "../src/services/natalBaseService.js";
+import { gerarCodigoPublico, resetIndicesNatalParaTestes } from "../src/services/natalBaseService.js";
+import { garantirConta, recalcularContadoresConta } from "../src/services/natalContaService.js";
 import { criarStorageMemoria, setComprovanteStorage, validarArquivoComprovante } from "../src/services/natalComprovanteService.js";
-import { resetReconciliacaoParaTestes } from "../src/services/natalLoteService.js";
 import {
   aprovarParticipacao,
   cancelarParticipacao,
@@ -25,7 +27,7 @@ import {
 } from "../src/services/natalParticipacaoService.js";
 import { listarParticipacoes } from "../src/services/natalGestaoService.js";
 import { listarCuponsValidosParaSorteio } from "../src/services/natalExportacaoService.js";
-import { validarParticipacaoPublica } from "../src/utils/natalCampanha.js";
+import { beneficiosParaValor, validarParticipacaoPublica } from "../src/utils/natalCampanha.js";
 
 process.env.JWT_SECRET ||= "segredo-de-teste-com-mais-de-32-caracteres!!";
 
@@ -49,7 +51,7 @@ after(async () => {
 beforeEach(async () => {
   await mongoose.connection.db.dropDatabase();
   resetIndicesNatalParaTestes();
-  resetReconciliacaoParaTestes();
+  await NatalCampanhaEstado.create({ _id: "natal-2026", modoCumulativo: "ativo" });
 });
 
 let seq = 0;
@@ -74,7 +76,10 @@ const contexto = async () => {
   return { admin, comercial, vendedor, distribuidor, produto, tabelaPrecoId };
 };
 
-// Pedido aprovado de R$ "valor" (unidades de R$ 1.000) com lote criado na aprovação.
+const contaDe = (lote) => NatalConta.findOne({ clienteId: lote.clienteId });
+
+// Pedido aprovado no modelo antigo, com lote e link já divulgado (valor em unidades
+// de R$ 1.000). Os cupons são legados, reconhecidos pela conta antes da aprovação.
 const pedidoAprovado = async (ctx, valor) => {
   seq += 1;
   const quantidade = valor / 1000;
@@ -89,10 +94,25 @@ const pedidoAprovado = async (ctx, valor) => {
     status: "aguardando_aprovacao",
     createdAt: CRIADO_EM,
   });
+  const beneficios = beneficiosParaValor(valor);
+  const lote = await NatalLote.create({
+    pedidoId: pedido._id,
+    numeroPedido: pedido.numeroPedido,
+    clienteId: pedido.clienteId,
+    distribuidorNome: pedido.nomeFantasiaCliente,
+    codigoPublico: gerarCodigoPublico(),
+    pedidoAprovadoEm: DENTRO,
+    valorAprovadoInicial: valor,
+    valorAtual: valor,
+    faixaMaxima: beneficios,
+    cuponsConcedidos: beneficios.cupons,
+    criadoPor: { usuarioTipo: "sistema" },
+  });
+  await garantirConta({ clienteId: pedido.clienteId });
   const res = response();
   await aprovarPedidoAdmin({ usuario: ctx.admin, params: { id: String(pedido._id) } }, res);
   assert.equal(res.statusCode, 200);
-  return { pedido: await Pedido.findById(pedido._id), lote: await NatalLote.findOne({ pedidoId: pedido._id }) };
+  return { pedido: await Pedido.findById(pedido._id), lote };
 };
 
 const editar = async (ctx, pedidoId, valor, { usuario = ctx.comercial, revisao } = {}) => {
@@ -142,6 +162,7 @@ const semearAprovadas = async (lote, quantidade, { base = new Date("2026-11-12T1
   await NatalParticipacao.insertMany(docs);
   await NatalCupom.insertMany(cupons);
   await NatalLote.updateOne({ _id: lote._id }, { $inc: { "contadores.aprovados": quantidade } });
+  await recalcularContadoresConta(lote.clienteId);
   return docs;
 };
 
@@ -150,10 +171,11 @@ const semearPendentes = async (lote, quantidade) => {
   await NatalParticipacao.updateMany({ _id: { $in: docs } }, { $set: { status: "pendente" }, $unset: { cupom: 1, decisao: 1 } });
   await NatalCupom.deleteMany({ participacaoId: { $in: docs } });
   await NatalLote.updateOne({ _id: lote._id }, { $inc: { "contadores.aprovados": -quantidade, "contadores.pendentes": quantidade } });
+  await recalcularContadoresConta(lote.clienteId);
   return docs;
 };
 
-// 11–14 e 18: toda redução de pedido participante exige decisão explícita.
+// 11–14 e 18: redução que atinge benefícios concedidos exige decisão explícita.
 for (const [de, para, depois] of [[12000, 10000, 0], [20000, 18000, 100], [40000, 35000, 300], [40000, 30000, 300]]) {
   test(`redução de R$ ${de} para R$ ${para} exige decisão e nada é salvo sem ela`, async () => {
     const ctx = await contexto();
@@ -166,7 +188,7 @@ for (const [de, para, depois] of [[12000, 10000, 0], [20000, 18000, 100], [40000
     assert.equal(res.body.revisao.beneficiosAtuais.cupons, lote.cuponsConcedidos);
     assert.equal(res.body.revisao.beneficiosDoNovoValor.cupons, depois);
     assert.equal((await Pedido.findById(pedido._id)).valorTotal, de, "pedido não é salvo parcialmente");
-    assert.equal((await NatalLote.findById(lote._id)).cuponsConcedidos, lote.cuponsConcedidos);
+    assert.equal((await contaDe(lote)).cupons.total, lote.cuponsConcedidos);
   });
 }
 
@@ -181,40 +203,37 @@ test("18. backend rejeita decisão inválida, justificativa ausente e perfil sem
   assert.equal((await Pedido.findById(pedido._id)).valorTotal, 20000);
 });
 
-test("15. manter preserva faixa, cupons e bonificações e registra a decisão", async () => {
+test("15. manter preserva cupons e registra a decisão", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 40000);
   const res = await editar(ctx, pedido._id, 35000, { revisao: { decisao: "manter", justificativa: JUSTIFICATIVA } });
   assert.equal(res.statusCode, 200, res.body?.message);
-  const atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 400);
-  assert.equal(atual.faixaMaxima.produtosPercentual, 10);
-  assert.equal(atual.valorAtual, 35000);
+  const atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 400);
+  assert.equal((await NatalLote.findById(lote._id)).valorAtual, 35000);
   assert.equal((await Pedido.findById(pedido._id)).valorTotal, 35000);
   assert.equal(atual.revisoes.length, 1);
   assert.equal(atual.revisoes[0].decisao, "manter");
   assert.equal(atual.revisoes[0].justificativa, JUSTIFICATIVA);
   assert.equal(atual.revisoes[0].autor.usuarioTipo, "comercial");
-  assert.ok(await NatalAuditoria.findOne({ acao: "beneficios_revisados", loteId: lote._id }));
+  assert.ok(await NatalAuditoria.findOne({ acao: "beneficios_revisados", clienteId: lote.clienteId }));
+  assert.equal(atual.revisaoPendente, undefined);
 });
-
-test("16 e 4.7. adequar recalcula cupons e todas as bonificações (R$ 40 mil → R$ 20 mil)", async () => {
+test("16 e 4.7. adequar recalcula cupons e faixas (R$ 40 mil → R$ 20 mil)", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 40000);
   const res = await editar(ctx, pedido._id, 20000, { revisao: { decisao: "adequar", justificativa: JUSTIFICATIVA, cuponsEsperados: 400 } });
   assert.equal(res.statusCode, 200, res.body?.message);
   assert.equal(res.body.revisaoBeneficios.cupons, 200);
-  const atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 200);
-  assert.equal(atual.faixaMaxima.marketingPercentual, 3);
-  assert.equal(atual.faixaMaxima.produtosPercentual, 7);
-  assert.equal(atual.codigoPublico, lote.codigoPublico, "mesmo link");
+  const atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 200);
+  assert.equal((await NatalLote.findById(lote._id)).codigoPublico, lote.codigoPublico, "mesmo link");
   const revisao = atual.revisoes[0];
   assert.equal(revisao.faixaAnterior.cupons, 400);
   assert.equal(revisao.faixaResultante.cupons, 200);
+  assert.equal(revisao.faixaResultante.produtosPercentual, 7);
   assert.equal(revisao.faixaAnterior.produtosPercentual, 10);
 });
-
 test("17. cancelar o modal (nenhuma decisão enviada) não salva itens nem benefícios", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 30000);
@@ -225,35 +244,33 @@ test("17. cancelar o modal (nenhuma decisão enviada) não salva itens nem benef
   assert.equal(depois.__v, antes.__v);
   assert.equal(depois.itens[0].quantidade, 30);
   assert.equal(depois.historicoAlteracoes, undefined);
-  assert.equal((await NatalLote.findById(lote._id)).revisoes.length, 0);
+  assert.equal((await contaDe(lote)).revisoes.length, 0);
 });
 
-test("19 e 20. aumento continua automático e repetido não duplica cupons nem benefícios", async () => {
+test("19 e 20. aumento continua automático e libera só a diferença, sem duplicar", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 12000);
   assert.equal((await editar(ctx, pedido._id, 20000)).statusCode, 200);
   assert.equal((await editar(ctx, pedido._id, 20000)).statusCode, 200);
   assert.equal((await editar(ctx, pedido._id, 21000)).statusCode, 200);
-  const atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 200);
-  assert.equal(atual.faixaMaxima.produtosPercentual, 7);
-  assert.equal(atual.historicoFaixas.filter((evento) => evento.tipo === "aumento_faixa").length, 1);
+  const atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 200);
+  assert.equal(atual.cupons.legado, 100);
+  assert.equal(atual.cupons.conquistados, 100);
   assert.equal(atual.revisoes.length, 0);
   assert.equal(await NatalLote.countDocuments({ pedidoId: pedido._id }), 1);
-});
-
-test("21. 400 → 300 com 250 aprovados não invalida ninguém e mantém pendentes", async () => {
+});test("21. 400 → 300 com 250 aprovados não invalida ninguém e mantém pendentes", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 40000);
   await semearAprovadas(lote, 250);
   await semearPendentes(lote, 30);
   const res = await editar(ctx, pedido._id, 30000, { revisao: { decisao: "adequar", justificativa: JUSTIFICATIVA } });
   assert.equal(res.statusCode, 200, res.body?.message);
-  const atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 300);
+  const atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 300);
   assert.equal(atual.contadores.aprovados, 250);
   assert.equal(atual.contadores.pendentes, 30);
-  assert.equal(atual.cuponsConcedidos - atual.contadores.aprovados, 50);
+  assert.equal(atual.cupons.total - atual.contadores.aprovados, 50);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "invalidado_revisao" }), 0);
 });
 
@@ -285,10 +302,11 @@ test("22 a 29. 400 → 300 com 350 aprovados invalida exatamente as 50 mais rece
   assert.ok(invalidadas.every((doc) => doc.invalidacao.tipo === "revisao_faixa" && doc.petshop.nomeFantasia && doc.comprovante.chave));
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "aprovado" }), 300);
 
-  const atual = await NatalLote.findById(lote._id);
+  const atual = await contaDe(lote);
   assert.equal(atual.contadores.aprovados, 300);
   assert.equal(atual.contadores.invalidadosRevisao, 50);
-  assert.equal(atual.cuponsConcedidos - atual.contadores.aprovados, 0);
+  assert.equal(atual.cupons.total - atual.contadores.aprovados, 0);
+  assert.equal((await NatalLote.findById(lote._id)).contadores.aprovados, 300);
   // 26: pendentes continuam registrados, sem saldo para aprovação.
   assert.equal(await NatalParticipacao.countDocuments({ _id: { $in: pendentes }, status: "pendente" }), 20);
   await assert.rejects(aprovarParticipacao({ id: pendentes[0], usuario: ctx.comercial, now: DENTRO }), { code: "sem_saldo" });
@@ -306,7 +324,7 @@ test("22 a 29. 400 → 300 com 350 aprovados invalida exatamente as 50 mais rece
   assert.equal(revisao.aprovadasAntes, 350);
   assert.equal(revisao.pendentesNoMomento, 20);
   assert.equal(await NatalAuditoria.countDocuments({ acao: "participacao_invalidada_revisao", loteId: lote._id }), 50);
-  const auditoria = await NatalAuditoria.findOne({ acao: "beneficios_revisados", loteId: lote._id });
+  const auditoria = await NatalAuditoria.findOne({ acao: "beneficios_revisados", clienteId: lote.clienteId });
   assert.equal(auditoria.detalhes.cuponsInvalidados.length, 50);
   assert.equal(auditoria.detalhes.decisao, "adequar");
 
@@ -322,11 +340,9 @@ test("30 e 31. abaixo de R$ 12 mil zera benefícios e o aumento posterior reativ
   await semearPendentes(lote, 5);
   const res = await editar(ctx, pedido._id, 10000, { revisao: { decisao: "adequar", justificativa: JUSTIFICATIVA } });
   assert.equal(res.statusCode, 200, res.body?.message);
-  let atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.status, "ativo");
-  assert.equal(atual.cuponsConcedidos, 0);
-  assert.equal(atual.faixaMaxima.marketingPercentual, 0);
-  assert.equal(atual.faixaMaxima.produtosPercentual, 0);
+  let atual = await contaDe(lote);
+  assert.equal((await NatalLote.findById(lote._id)).status, "ativo");
+  assert.equal(atual.cupons.total, 0);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "invalidado_revisao" }), 40);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "pendente" }), 5);
   assert.equal((await Pedido.findById(pedido._id)).status, "aprovado", "pedido continua existindo");
@@ -335,28 +351,25 @@ test("30 e 31. abaixo de R$ 12 mil zera benefícios e o aumento posterior reativ
   assert.equal(publico.motivo, "sem_beneficios");
 
   assert.equal((await editar(ctx, pedido._id, 20000)).statusCode, 200);
-  atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 200);
-  assert.equal(atual.faixaMaxima.produtosPercentual, 7);
+  atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 200);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "invalidado_revisao" }), 40, "sem reativação silenciosa");
   assert.equal(atual.contadores.aprovados, 0);
   assert.equal((await obterLotePublico(lote.codigoPublico, { now: DENTRO })).aceitandoCadastros, true);
 });
-
 test("4.6. R$ 40 mil → 30 mil (adequar) → 40 mil volta a 400 sem duplicar nem restaurar", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 40000);
   await semearAprovadas(lote, 320);
   await editar(ctx, pedido._id, 30000, { revisao: { decisao: "adequar", justificativa: JUSTIFICATIVA } });
   assert.equal((await editar(ctx, pedido._id, 40000)).statusCode, 200);
-  const atual = await NatalLote.findById(lote._id);
-  assert.equal(atual.cuponsConcedidos, 400);
+  const atual = await contaDe(lote);
+  assert.equal(atual.cupons.total, 400);
   assert.equal(atual.contadores.aprovados, 300);
-  assert.equal(atual.cuponsConcedidos - atual.contadores.aprovados, 100);
+  assert.equal(atual.cupons.total - atual.contadores.aprovados, 100);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "invalidado_revisao" }), 20);
   assert.equal(await NatalLote.countDocuments(), 1);
 });
-
 test("32. revisões e aprovações simultâneas não produzem inconsistências", async () => {
   const ctx = await contexto();
   const { pedido, lote } = await pedidoAprovado(ctx, 40000);
@@ -379,17 +392,17 @@ test("32. revisões e aprovações simultâneas não produzem inconsistências",
   assert.equal(revisoes.filter((res) => res.statusCode === 200).length, 1, "só uma revisão vence");
   assert.ok(revisoes.every((res) => [200, 409].includes(res.statusCode)));
 
-  const final = await NatalLote.findById(lote._id);
+  const final = await contaDe(lote);
   const aprovadas = await NatalParticipacao.countDocuments({ loteId: lote._id, status: "aprovado" });
   const invalidadas = await NatalParticipacao.countDocuments({ loteId: lote._id, status: "invalidado_revisao" });
   const pendentesFinais = await NatalParticipacao.countDocuments({ loteId: lote._id, status: "pendente" });
   assert.equal(final.contadores.aprovados, aprovadas, "contador igual aos registros");
   assert.equal(final.contadores.invalidadosRevisao, invalidadas);
   assert.equal(final.contadores.pendentes, pendentesFinais);
-  assert.ok(aprovadas <= final.cuponsConcedidos, "nunca acima do limite");
+  assert.ok(aprovadas <= final.cupons.total, "nunca acima do limite");
   assert.equal(await NatalCupom.countDocuments({ loteId: lote._id, status: "valido" }), aprovadas);
   assert.equal(final.revisoes.length, 1);
-  assert.equal((await Pedido.findById(pedido._id)).valorTotal, final.valorAtual, "pedido e lote coerentes");
+  assert.equal((await Pedido.findById(pedido._id)).valorTotal, (await NatalLote.findById(lote._id)).valorAtual, "pedido e lote coerentes");
 });
 
 test("33. falha durante a revisão não deixa alterações parciais", async (t) => {
@@ -406,8 +419,8 @@ test("33. falha durante a revisão não deixa alterações parciais", async (t) 
   }, res).then(() => { if (res.statusCode >= 500) throw new Error("500"); if (res.statusCode !== 200) throw new Error(String(res.statusCode)); }));
   t.mock.restoreAll();
   assert.equal((await Pedido.findById(pedido._id)).valorTotal, 40000);
-  const intacto = await NatalLote.findById(lote._id);
-  assert.equal(intacto.cuponsConcedidos, 400);
+  const intacto = await contaDe(lote);
+  assert.equal(intacto.cupons.total, 400);
   assert.equal(intacto.contadores.aprovados, 350);
   assert.equal(intacto.revisoes.length, 0);
   assert.equal(await NatalParticipacao.countDocuments({ loteId: lote._id, status: "aprovado" }), 350);
@@ -442,7 +455,8 @@ test("34, 35 e 38. cancelamento pelo distribuidor, aprovação e cancelamento do
   const res = response();
   await atualizarStatusPedido({ usuario: ctx.admin, params: { id: String(pedido._id) }, body: { status: "cancelado" } }, res);
   assert.equal(res.statusCode, 200);
-  assert.equal((await NatalLote.findById(lote._id)).status, "invalidado");
+  assert.equal((await NatalLote.findById(lote._id)).status, "ativo", "o link segue válido");
+  assert.ok((await contaDe(lote)).revisaoPendente, "cancelamento fica para decisão administrativa");
 });
 
 test("CPF e CNPJ: aceitos, validados, normalizados e pesquisáveis", async () => {

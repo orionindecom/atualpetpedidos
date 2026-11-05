@@ -63,6 +63,8 @@ function NatalDistribuidor() {
 
   const campanha = resumo?.campanha;
   const lotes = resumo?.lotes || [];
+  const conta = resumo?.conta;
+  const links = conta?.links || lotes.map((lote) => ({ tipo: "pedido", codigoPublico: lote.codigoPublico, numeroPedido: lote.numeroPedido, status: lote.status }));
 
   return (
     <>
@@ -71,7 +73,7 @@ function NatalDistribuidor() {
         <PageHeader
           eyebrow="Campanha"
           title="Natal Premiado 2026"
-          description="Acompanhe os cupons conquistados nos seus pedidos, compartilhe os links de cadastro com a equipe comercial e consulte as participações dos pet shops."
+          description="Acompanhe suas compras acumuladas e os cupons conquistados, compartilhe os links de cadastro com a equipe comercial e consulte as participações dos pet shops."
         />
 
         {erro && <div className={ui.feedback} data-type="error" role="alert">{erro}</div>}
@@ -84,7 +86,7 @@ function NatalDistribuidor() {
               <span>
                 Período: {formatDateBR(campanha.inicio)} a {formatDateBR(campanha.fimCadastros)} · Sorteio em {formatDateBR(campanha.sorteio)} · Prêmio: {campanha.premio}.
               </span>
-              <span>Cada pedido aprovado é avaliado individualmente. Os cupons são liberados na aprovação do pedido.</span>
+              <span>Suas compras elegíveis acumulam em ciclos de {formatMoney(campanha.cicloValor)}. Os benefícios são liberados na aprovação do pedido e, ao completar um ciclo, o próximo começa automaticamente.</span>
               <ul>
                 {campanha.faixas.map((faixa) => (
                   <li key={faixa.nivel}>
@@ -95,53 +97,84 @@ function NatalDistribuidor() {
             </section>
 
             <div className={styles.kpis}>
-              <div className={styles.kpi}><span>Cupons conquistados</span><strong>{resumo.totais.concedidos}</strong></div>
-              <div className={styles.kpi} data-tone="success"><span>Utilizados (aprovados)</span><strong>{resumo.totais.aprovados}</strong></div>
-              <div className={styles.kpi} data-tone="accent"><span>Em análise</span><strong>{resumo.totais.pendentes}</strong></div>
-              <div className={styles.kpi}><span>Disponíveis</span><strong>{resumo.totais.disponiveis}</strong></div>
+              <div className={styles.kpi}><span>Compras acumuladas</span><strong>{formatMoney(conta?.compras.total)}</strong></div>
+              <div className={styles.kpi}><span>Ciclo atual</span><strong>{conta?.compras.cicloAtual || 1}º · {formatMoney(conta?.compras.acumuladoCiclo)}</strong></div>
+              <div className={styles.kpi}><span>Cupons conquistados</span><strong>{conta?.cupons.total || 0}</strong></div>
+              <div className={styles.kpi} data-tone="success"><span>Utilizados (aprovados)</span><strong>{conta?.cupons.utilizados || 0}</strong></div>
+              <div className={styles.kpi} data-tone="accent"><span>Em análise</span><strong>{conta?.cupons.pendentes || 0}</strong></div>
+              <div className={styles.kpi}><span>Disponíveis</span><strong>{conta?.cupons.disponiveis || 0}</strong></div>
             </div>
+
+            {conta?.compras.proximaFaixa && (
+              <p className={styles.muted}>
+                Faltam {formatMoney(conta.compras.restanteProximaFaixa)} para a faixa de {conta.compras.proximaFaixa.cupons} cupons neste ciclo.
+              </p>
+            )}
 
             <section className={styles.secao}>
               <div className={styles.secaoTitulo}>
-                <h2>Pedidos participantes</h2>
-                <p>{lotes.length} {lotes.length === 1 ? "pedido" : "pedidos"}</p>
+                <h2>Links de cadastro</h2>
+                <p>Todos usam o mesmo saldo de cupons.</p>
               </div>
-              {lotes.length === 0 ? (
+              {links.length === 0 ? (
                 <EmptyState
                   headingLevel={3}
-                  title="Nenhum pedido participante ainda"
-                  description={`Pedidos aprovados a partir de ${formatMoney(campanha.faixas[0].valorMinimo)}, lançados durante a campanha, geram cupons automaticamente.`}
+                  title="Nenhum link disponível ainda"
+                  description={`Seu link aparece aqui depois da aprovação das suas compras. Benefícios a partir de ${formatMoney(campanha.faixas[0].valorMinimo)} acumulados no ciclo.`}
                 />
               ) : (
                 <div className={styles.lotes}>
-                  {lotes.map((lote) => (
-                    <article key={lote._id} className={styles.lote} data-status={lote.status}>
+                  {links.map((link) => (
+                    <article key={link.codigoPublico} className={styles.lote} data-status={link.status}>
                       <div className={styles.loteTopo}>
                         <div>
-                          <h3>Pedido {lote.numeroPedido}</h3>
-                          <p>Valor atual {formatMoney(lote.valorAtual)} · aprovado em {formatDateBR(lote.pedidoAprovadoEm)}</p>
+                          <h3>{link.tipo === "distribuidor" ? "Link do distribuidor" : `Pedido ${link.numeroPedido}`}</h3>
                         </div>
-                        <span className={ui.badge} data-tone={lote.status === "ativo" ? "active" : "inactive"}>
-                          {lote.status === "ativo" ? "Lote ativo" : "Lote invalidado"}
+                        <span className={ui.badge} data-tone={link.status === "ativo" ? "active" : "inactive"}>
+                          {link.status === "ativo" ? "Link ativo" : "Link invalidado"}
                         </span>
                       </div>
-                      <dl className={styles.numeros}>
-                        <div><dt>Faixa atual</dt><dd>{lote.cuponsConcedidos > 0 ? formatMoney(lote.faixaMaxima.valorMinimo) : "Sem faixa"}</dd></div>
-                        <div><dt>Cupons</dt><dd>{lote.cuponsConcedidos}</dd></div>
-                        <div><dt>Aprovados</dt><dd>{lote.saldo.aprovados}</dd></div>
-                        <div><dt>Pendentes</dt><dd>{lote.saldo.pendentes}</dd></div>
-                        <div><dt>Saldo disponível</dt><dd>{lote.saldo.disponivel}</dd></div>
-                      </dl>
-                      <NatalBeneficiosCard tipo={lote.status !== "ativo" ? "invalidado" : lote.cuponsConcedidos > 0 ? "conquistado" : "sem_beneficios"} beneficios={{ ...lote.faixaMaxima, cupons: lote.cuponsConcedidos }} />
-                      <RevisoesLote revisoes={lote.revisoes} revisaoPendente={lote.revisaoPendente} />
-                      {lote.status === "ativo"
-                        ? <LinkParticipacao codigo={lote.codigoPublico} distribuidorNome={lote.distribuidorNome} />
-                        : <p className={styles.muted}>Lote invalidado: {lote.invalidacao?.motivo || "pedido cancelado"}. O link não aceita novos cadastros.</p>}
+                      {link.status === "ativo"
+                        ? <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={conta?.distribuidorNome} />
+                        : <p className={styles.muted}>Este link não aceita novos cadastros.</p>}
                     </article>
                   ))}
                 </div>
               )}
             </section>
+
+            {conta && (
+              <section className={styles.secao}>
+                <div className={styles.secaoTitulo}><h2>Compras acumuladas</h2></div>
+                {conta.comprasParticipantes.length === 0 ? (
+                  <p className={styles.muted}>Nenhuma compra aprovada na campanha até agora.</p>
+                ) : (
+                  <div className={styles.rolagem}>
+                    <table className={styles.tabelaSimples}>
+                      <thead><tr><th>Compra</th><th>Data</th><th>Valor</th><th>Ciclos</th></tr></thead>
+                      <tbody>
+                        {conta.comprasParticipantes.map((compra) => (
+                          <tr key={compra.id}>
+                            <td>{compra.referencia}</td>
+                            <td>{formatDateBR(compra.data)}</td>
+                            <td>{formatMoney(compra.valor)}</td>
+                            <td>{compra.ciclos.map((item) => `${item.ciclo}º: ${formatMoney(item.valor)}`).join(" · ")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <NatalBeneficiosCard
+                  tipo={conta.cupons.total > 0 ? "conquistado" : "sem_beneficios"}
+                  beneficios={{ ...conta.compras.faixaAtual, cupons: conta.cupons.total }}
+                  titulo="Benefícios acumulados"
+                >
+                  <p>Bonificação em produtos: {formatMoney(conta.bonificacoes.produtos.concedido)} · Material de marketing: {formatMoney(conta.bonificacoes.marketing.concedido)}.</p>
+                </NatalBeneficiosCard>
+                <RevisoesLote revisoes={conta.revisoes} revisaoPendente={conta.revisaoPendente} />
+              </section>
+            )}
           </>
         )}
 
@@ -172,7 +205,7 @@ function NatalDistribuidor() {
           </div>
           {!lista && <p className={styles.muted} role="status">Carregando participações…</p>}
           {lista && lista.itens.length === 0 && (
-            <EmptyState headingLevel={3} title="Nenhuma participação encontrada" description="Os cadastros feitos pelos links dos seus pedidos aparecem aqui." />
+            <EmptyState headingLevel={3} title="Nenhuma participação encontrada" description="Os cadastros feitos pelos seus links aparecem aqui." />
           )}
           {lista && lista.itens.length > 0 && (
             <div className={styles.tabela} role="list">
@@ -187,7 +220,7 @@ function NatalDistribuidor() {
                     <span>{item.vendedorNome}</span>
                   </div>
                   <div>
-                    <small>Pedido {item.numeroPedido}</small>
+                    <small>{item.numeroPedido ? `Pedido ${item.numeroPedido}` : "Link do distribuidor"}</small>
                     <span>{formatDateTimeBR(item.recebidoEm)}</span>
                   </div>
                   <div className={styles.linhaStatus}>

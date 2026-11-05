@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 import { PARTICIPACAO_STATUS } from "../utils/natalCampanha.js";
 import { autorNatalSchema } from "./natalSchemas.js";
 
-// Cadastro de um pet shop enviado pelo link público de um lote.
-// Nunca é excluído: cancelamentos e invalidações apenas mudam o status.
+// Cadastro de um pet shop enviado por um link público do distribuidor.
+// Links antigos preenchem loteId e pedidoId; o link próprio do distribuidor não tem
+// nenhum dos dois. Nunca é excluído: cancelamentos e invalidações apenas mudam o status.
 
 const eventoSchema = new mongoose.Schema(
   {
@@ -42,8 +43,8 @@ const decisaoSchema = new mongoose.Schema(
 const natalParticipacaoSchema = new mongoose.Schema(
   {
     campanha: { type: String, required: true, default: "natal-2026", immutable: true },
-    loteId: { type: mongoose.Schema.Types.ObjectId, ref: "NatalLote", required: true, immutable: true },
-    pedidoId: { type: mongoose.Schema.Types.ObjectId, ref: "Pedido", required: true, immutable: true },
+    loteId: { type: mongoose.Schema.Types.ObjectId, ref: "NatalLote", immutable: true },
+    pedidoId: { type: mongoose.Schema.Types.ObjectId, ref: "Pedido", immutable: true },
     numeroPedido: { type: String, trim: true },
     clienteId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true, immutable: true },
     distribuidorNome: { type: String, trim: true, maxlength: 200 },
@@ -130,6 +131,7 @@ const natalParticipacaoSchema = new mongoose.Schema(
 natalParticipacaoSchema.index({ protocolo: 1 }, { unique: true });
 natalParticipacaoSchema.index({ loteId: 1, status: 1, recebidoEm: 1 });
 natalParticipacaoSchema.index({ clienteId: 1, recebidoEm: -1 });
+natalParticipacaoSchema.index({ clienteId: 1, status: 1, recebidoEm: 1 });
 natalParticipacaoSchema.index({ status: 1, recebidoEm: -1 });
 natalParticipacaoSchema.index({ "petshop.cnpj": 1, "compra.data": 1 });
 natalParticipacaoSchema.index({ "petshop.documento": 1, "compra.data": 1 });
