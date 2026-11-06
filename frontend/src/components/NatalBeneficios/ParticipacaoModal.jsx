@@ -252,8 +252,8 @@ function ParticipacaoModal({ participacaoId, gestor = false, usuarioTipo, onClos
               {acao ? (
                 <section className={styles.acaoPainel} aria-label={ACOES[acao].titulo}>
                   <h3>{ACOES[acao].titulo}</h3>
-                  {acao === "aprovar" && <p className={styles.muted}>Um número de cupom aleatório e único será emitido e uma vaga do lote será consumida.</p>}
-                  {acao === "cancelar" && dados.status === "aprovado" && <p className={styles.muted}>O cupom {dados.cupom?.codigo} será invalidado e não será reutilizado. A vaga volta ao saldo do lote.</p>}
+                  {acao === "aprovar" && <p className={styles.muted}>Um número de cupom aleatório e único será emitido e um cupom do saldo do distribuidor será utilizado.</p>}
+                  {acao === "cancelar" && dados.status === "aprovado" && <p className={styles.muted}>O cupom {dados.cupom?.codigo} será invalidado e não será reutilizado. A vaga volta ao saldo do distribuidor.</p>}
                   {ACOES[acao].exigeMotivo && (
                     <label className={styles.campoTexto}>
                       <span>{ACOES[acao].rotulo}</span>

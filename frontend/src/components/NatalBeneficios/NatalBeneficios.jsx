@@ -9,6 +9,7 @@ import {
   faixaParaValor,
   formatMoney,
   proximaFaixaParaValor,
+  separarLinks,
 } from "../../utils/natalPremiado";
 import RevisoesLote from "./RevisoesLote";
 import styles from "./NatalBeneficios.module.css";
@@ -92,7 +93,7 @@ export function LinkParticipacao({ codigo, distribuidorNome, compacto = false })
       <div className={styles.linkAcoes}>
         <button type="button" className={styles.botao} onClick={copiar}>Copiar link</button>
         <a className={styles.botaoSecundario} href={buildWhatsappShareUrl({ link, distribuidorNome })} target="_blank" rel="noopener noreferrer">
-          Enviar pelo WhatsApp
+          Compartilhar pelo WhatsApp
         </a>
       </div>
     </div>
@@ -113,7 +114,7 @@ export function NatalBeneficiosPedido({ pedidoId, versao, mostrarLink = true }) 
   if (!dados) return null;
   const { lote, conta, campanha } = dados;
   if (conta && (lote || dados.aprovado)) {
-    const link = conta.links?.find((item) => item.status === "ativo");
+    const { principal: link } = separarLinks(conta.links);
     return (
       <NatalBeneficiosCard
         tipo={conta.cupons.total > 0 ? "conquistado" : "sem_beneficios"}

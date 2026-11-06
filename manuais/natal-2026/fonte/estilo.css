@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
+
+@page { size: A4; margin: 19mm 17mm 19mm; }
+@page :first { margin: 0; }
+
+:root {
+  --teal: #469f9b;
+  --teal-ink: #2f7773;
+  --teal-soft: #e8f7f6;
+  --orange: #ed7b0a;
+  --orange-ink: #a84f00;
+  --orange-soft: #fff1e3;
+  --red: #a73524;
+  --red-soft: #fdf0ed;
+  --ink: #17211f;
+  --text: #2b3633;
+  --muted: #66736f;
+  --line: #d7dedc;
+  --page: #f1f4f3;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--text); font: 400 11.5pt/1.55 "DM Sans", Arial, sans-serif; }
+
+.capa {
+  position: relative;
+  height: 297mm;
+  padding: 30mm 22mm 24mm;
+  overflow: hidden;
+  background: var(--ink);
+  color: #f5f8f7;
+  page-break-after: always;
+}
+.capa::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 7mm;
+  background: linear-gradient(180deg, var(--teal), var(--orange));
+}
+.capa-logo { height: 38mm; display: block; }
+.capa-rotulo { margin: 34mm 0 4mm; color: #71c4c0; font: 700 12pt "Manrope"; letter-spacing: .14em; text-transform: uppercase; }
+.capa h1 { margin: 0; color: #fff; font: 800 38pt/1.1 "Manrope"; page-break-before: avoid; }
+.capa-sub { max-width: 135mm; margin: 7mm 0 0; color: #cfdad7; font-size: 14pt; line-height: 1.45; }
+.capa-dados { position: absolute; left: 22mm; right: 22mm; bottom: 24mm; display: flex; gap: 8mm; border-top: 1px solid #3c4a47; padding-top: 6mm; font-size: 11pt; color: #cfdad7; }
+.capa-dados b { display: block; color: #fff; font: 700 11.5pt "Manrope"; }
+
+.sumario { page-break-after: always; }
+.sumario h2 { margin-top: 0; }
+.sumario ol { margin: 6mm 0 0; padding: 0; list-style: none; }
+.sumario li { border-bottom: 1px solid var(--line); }
+.sumario a { display: flex; align-items: baseline; gap: 4mm; padding: 2.7mm 0; color: var(--text); font-size: 12pt; text-decoration: none; }
+.sumario .letra { width: 8mm; color: var(--orange-ink); font: 800 12pt "Manrope"; }
+.sumario .num { margin-left: auto; color: var(--teal-ink); font-weight: 700; }
+
+.secao { page-break-before: always; }
+.secao > h1 {
+  margin: 0 0 6mm;
+  padding: 4mm 5mm;
+  border-left: 2mm solid var(--orange);
+  border-radius: 1.5mm;
+  background: var(--page);
+  color: var(--ink);
+  font: 800 20pt/1.2 "Manrope";
+}
+.secao > h1 small { display: block; color: var(--orange-ink); font: 700 9.5pt "Manrope"; letter-spacing: .1em; text-transform: uppercase; }
+h2 { margin: 7mm 0 2mm; color: var(--ink); font: 700 14pt/1.25 "Manrope"; page-break-after: avoid; }
+h3 { margin: 5mm 0 1.5mm; color: var(--teal-ink); font: 700 12pt/1.25 "Manrope"; page-break-after: avoid; }
+p { margin: 0 0 2.6mm; }
+ul { margin: 0 0 3mm; padding-left: 5.5mm; }
+li { margin-bottom: 1.2mm; }
+strong { color: var(--ink); }
+
+.passos { margin: 2mm 0 4mm; padding: 0; list-style: none; counter-reset: passo; }
+.passos li { position: relative; min-height: 7mm; margin-bottom: 2mm; padding-left: 10mm; counter-increment: passo; page-break-inside: avoid; }
+.passos li::before {
+  content: counter(passo);
+  position: absolute;
+  left: 0; top: .4mm;
+  width: 6.6mm; height: 6.6mm;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font: 700 10pt/6.6mm "Manrope";
+  text-align: center;
+}
+
+.nota { margin: 3.5mm 0; padding: 3mm 4mm; border-left: 1.4mm solid var(--teal); border-radius: 1.2mm; background: var(--teal-soft); page-break-inside: avoid; }
+.nota b.t { display: block; margin-bottom: .6mm; color: var(--teal-ink); font: 700 10.5pt "Manrope"; }
+.nota p:last-child, .nota ul:last-child { margin-bottom: 0; }
+.nota.aviso { border-color: var(--orange); background: var(--orange-soft); }
+.nota.aviso b.t { color: var(--orange-ink); }
+.nota.perigo { border-color: var(--red); background: var(--red-soft); }
+.nota.perigo b.t { color: var(--red); }
+
+.exemplo { margin: 3.5mm 0; padding: 3.5mm 4mm; border: 1px solid var(--line); border-radius: 1.5mm; page-break-inside: avoid; }
+.exemplo > b.t { display: block; margin-bottom: 1.5mm; color: var(--orange-ink); font: 700 11pt "Manrope"; }
+
+table { width: 100%; margin: 2.5mm 0 4mm; border-collapse: collapse; font-size: 10.5pt; page-break-inside: avoid; }
+th { padding: 2mm 2.5mm; background: var(--ink); color: #fff; font: 700 9.5pt "Manrope"; text-align: left; }
+td { padding: 1.9mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:nth-child(even) td { background: #f8faf9; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+
+figure { margin: 3.5mm 0 4.5mm; page-break-inside: avoid; }
+figure img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 2mm; }
+figure.medio img { width: 76%; margin: 0 auto; }
+figure.estreito img { width: 52%; margin: 0 auto; }
+figcaption { margin-top: 1.4mm; color: var(--muted); font-size: 9.5pt; text-align: center; }
+
+.grade { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.cartao { padding: 3.5mm 4mm; border: 1px solid var(--line); border-radius: 1.5mm; page-break-inside: avoid; }
+.cartao h3 { margin-top: 0; }
+.cartao p:last-child, .cartao ul:last-child { margin-bottom: 0; }
+
+/* Guia de consulta rápida: mais denso, ainda legível no celular. */
+.guia .secao { page-break-before: auto; }
+.guia .bloco { margin-bottom: 4mm; padding: 3.5mm 4mm; border: 1px solid var(--line); border-top: 1.2mm solid var(--teal); border-radius: 1.5mm; page-break-inside: avoid; }
+.guia .bloco h2 { margin-top: 0; font-size: 12.5pt; }
+.guia .passos { margin-bottom: 0; }

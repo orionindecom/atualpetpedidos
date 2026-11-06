@@ -239,7 +239,7 @@ export const beneficiosPedido = async (req, res) => {
     if (banco && (lote || pedidoDentroDoPeriodo(pedido, NATAL_2026))) {
       const contaDoc = await carregarContaLeitura(pedido.clienteId);
       const [lotesConta, bonificacoes] = await Promise.all([
-        NatalLote.find({ clienteId: pedido.clienteId }).select("codigoPublico numeroPedido pedidoId status").lean(),
+        NatalLote.find({ clienteId: pedido.clienteId }).select("codigoPublico numeroPedido pedidoId status createdAt").lean(),
         NatalBonificacao.find({ campanha: NATAL_2026.slug, clienteId: pedido.clienteId }).select("tipo valorDevido valorConcedido valorEntregue").lean(),
       ]);
       conta = serializarConta(contaDoc, { lotes: lotesConta, bonificacoes, incluirLinks: podeVerLink });

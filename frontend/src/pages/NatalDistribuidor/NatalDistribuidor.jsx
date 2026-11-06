@@ -11,12 +11,14 @@ import Navbar from "../../components/Navbar/Navbar";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import { getApiErrorMessage } from "../../utils/apiErrors";
 import {
+  descreverFaixa,
   formatDocumentoBR,
   formatDateBR,
   formatDateTimeBR,
   formatMoney,
   PARTICIPACAO_STATUS_LABELS,
   PARTICIPACAO_STATUS_TONES,
+  separarLinks,
 } from "../../utils/natalPremiado";
 
 function NatalDistribuidor() {
@@ -64,7 +66,7 @@ function NatalDistribuidor() {
   const campanha = resumo?.campanha;
   const lotes = resumo?.lotes || [];
   const conta = resumo?.conta;
-  const links = conta?.links || lotes.map((lote) => ({ tipo: "pedido", codigoPublico: lote.codigoPublico, numeroPedido: lote.numeroPedido, status: lote.status }));
+  const { principal: linkPrincipal, anteriores: linksAnteriores } = separarLinks(conta?.links);
 
   return (
     <>
@@ -81,65 +83,58 @@ function NatalDistribuidor() {
 
         {resumo && (
           <>
-            <section className={styles.resumoCampanha} aria-label="Resumo da campanha">
-              <strong>{campanha.nome}</strong>
-              <span>
-                Período: {formatDateBR(campanha.inicio)} a {formatDateBR(campanha.fimCadastros)} · Sorteio em {formatDateBR(campanha.sorteio)} · Prêmio: {campanha.premio}.
-              </span>
-              <span>Suas compras elegíveis acumulam em ciclos de {formatMoney(campanha.cicloValor)}. Os benefícios são liberados na aprovação do pedido e, ao completar um ciclo, o próximo começa automaticamente.</span>
-              <ul>
-                {campanha.faixas.map((faixa) => (
-                  <li key={faixa.nivel}>
-                    A partir de {formatMoney(faixa.valorMinimo)}: {faixa.cupons} cupons, {faixa.marketingPercentual}% em material de marketing e {faixa.produtosPercentual}% em produtos.
-                  </li>
-                ))}
-              </ul>
-            </section>
-
             <div className={styles.kpis}>
-              <div className={styles.kpi}><span>Compras acumuladas</span><strong>{formatMoney(conta?.compras.total)}</strong></div>
-              <div className={styles.kpi}><span>Ciclo atual</span><strong>{conta?.compras.cicloAtual || 1}º · {formatMoney(conta?.compras.acumuladoCiclo)}</strong></div>
-              <div className={styles.kpi}><span>Cupons conquistados</span><strong>{conta?.cupons.total || 0}</strong></div>
-              <div className={styles.kpi} data-tone="success"><span>Utilizados (aprovados)</span><strong>{conta?.cupons.utilizados || 0}</strong></div>
+              <div className={styles.kpi}><span>Cupons concedidos</span><strong>{conta?.cupons.total || 0}</strong></div>
+              <div className={styles.kpi} data-tone="success"><span>Cupons disponíveis</span><strong>{conta?.cupons.disponiveis || 0}</strong></div>
+              <div className={styles.kpi}><span>Cupons utilizados</span><strong>{conta?.cupons.utilizados || 0}</strong></div>
               <div className={styles.kpi} data-tone="accent"><span>Em análise</span><strong>{conta?.cupons.pendentes || 0}</strong></div>
-              <div className={styles.kpi}><span>Disponíveis</span><strong>{conta?.cupons.disponiveis || 0}</strong></div>
+              <div className={styles.kpi}><span>Acumulado no ciclo {conta?.compras.cicloAtual || 1}</span><strong>{formatMoney(conta?.compras.acumuladoCiclo)}</strong></div>
+              <div className={styles.kpi}><span>Faixa atual</span><strong>{descreverFaixa(conta?.compras.faixaAtual)}</strong></div>
+              <div className={styles.kpi}><span>Falta para a próxima faixa</span><strong>{conta?.compras.proximaFaixa ? formatMoney(conta.compras.restanteProximaFaixa) : "—"}</strong></div>
+              <div className={styles.kpi}><span>Total comprado na campanha</span><strong>{formatMoney(conta?.compras.total)}</strong></div>
             </div>
-
-            {conta?.compras.proximaFaixa && (
-              <p className={styles.muted}>
-                Faltam {formatMoney(conta.compras.restanteProximaFaixa)} para a faixa de {conta.compras.proximaFaixa.cupons} cupons neste ciclo.
-              </p>
-            )}
 
             <section className={styles.secao}>
               <div className={styles.secaoTitulo}>
-                <h2>Links de cadastro</h2>
-                <p>Todos usam o mesmo saldo de cupons.</p>
+                <h2>Seu link de cadastro</h2>
+                <p>O mesmo link vale para todos os seus pedidos e ciclos.</p>
               </div>
-              {links.length === 0 ? (
+              {linkPrincipal ? (
+                <>
+                  <LinkParticipacao codigo={linkPrincipal.codigoPublico} distribuidorNome={conta?.distribuidorNome} />
+                  {!conta?.cupons.disponiveis && (
+                    <p className={styles.muted}>Este link passa a aceitar cadastros quando houver cupons disponíveis.</p>
+                  )}
+                </>
+              ) : (
                 <EmptyState
                   headingLevel={3}
-                  title="Nenhum link disponível ainda"
-                  description={`Seu link aparece aqui depois da aprovação das suas compras. Benefícios a partir de ${formatMoney(campanha.faixas[0].valorMinimo)} acumulados no ciclo.`}
+                  title="Seu link ainda não está disponível"
+                  description={`Ele aparece aqui depois da aprovação da sua primeira compra. Os benefícios começam a partir de ${formatMoney(campanha.faixas[0].valorMinimo)} acumulados no ciclo.`}
                 />
-              ) : (
-                <div className={styles.lotes}>
-                  {links.map((link) => (
-                    <article key={link.codigoPublico} className={styles.lote} data-status={link.status}>
-                      <div className={styles.loteTopo}>
-                        <div>
-                          <h3>{link.tipo === "distribuidor" ? "Link do distribuidor" : `Pedido ${link.numeroPedido}`}</h3>
+              )}
+              {linksAnteriores.length > 0 && (
+                <details>
+                  <summary>Links anteriores ({linksAnteriores.length})</summary>
+                  <p className={styles.muted}>Continuam funcionando e usam o mesmo saldo. Divulgue apenas o link acima.</p>
+                  <div className={styles.lotes}>
+                    {linksAnteriores.map((link) => (
+                      <article key={link.codigoPublico} className={styles.lote} data-status={link.status}>
+                        <div className={styles.loteTopo}>
+                          <div>
+                            <h3>{link.tipo === "distribuidor" ? "Link do distribuidor" : `Pedido ${link.numeroPedido}`}</h3>
+                          </div>
+                          <span className={ui.badge} data-tone={link.status === "ativo" ? "active" : "inactive"}>
+                            {link.status === "ativo" ? "Link ativo" : "Link invalidado"}
+                          </span>
                         </div>
-                        <span className={ui.badge} data-tone={link.status === "ativo" ? "active" : "inactive"}>
-                          {link.status === "ativo" ? "Link ativo" : "Link invalidado"}
-                        </span>
-                      </div>
-                      {link.status === "ativo"
-                        ? <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={conta?.distribuidorNome} />
-                        : <p className={styles.muted}>Este link não aceita novos cadastros.</p>}
-                    </article>
-                  ))}
-                </div>
+                        {link.status === "ativo"
+                          ? <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={conta?.distribuidorNome} compacto />
+                          : <p className={styles.muted}>Este link não aceita novos cadastros.</p>}
+                      </article>
+                    ))}
+                  </div>
+                </details>
               )}
             </section>
 
@@ -175,6 +170,21 @@ function NatalDistribuidor() {
                 <RevisoesLote revisoes={conta.revisoes} revisaoPendente={conta.revisaoPendente} />
               </section>
             )}
+
+            <section className={styles.resumoCampanha} aria-label="Resumo da campanha">
+              <strong>{campanha.nome}</strong>
+              <span>
+                Período: {formatDateBR(campanha.inicio)} a {formatDateBR(campanha.fimCadastros)} · Sorteio em {formatDateBR(campanha.sorteio)} · Prêmio: {campanha.premio}.
+              </span>
+              <span>Suas compras elegíveis acumulam em ciclos de {formatMoney(campanha.cicloValor)}. Os benefícios são liberados na aprovação do pedido e, ao completar um ciclo, o próximo começa automaticamente.</span>
+              <ul>
+                {campanha.faixas.map((faixa) => (
+                  <li key={faixa.nivel}>
+                    A partir de {formatMoney(faixa.valorMinimo)}: {faixa.cupons} cupons, {faixa.marketingPercentual}% em material de marketing e {faixa.produtosPercentual}% em produtos.
+                  </li>
+                ))}
+              </ul>
+            </section>
           </>
         )}
 

@@ -9,17 +9,17 @@ import {
   BONIFICACAO_EVENTO_LABELS,
   COMPRA_EXTERNA_STATUS_LABELS,
   COMPRA_EXTERNA_STATUS_TONES,
+  descreverFaixa,
   formatDateBR,
   formatDateTimeBR,
   formatMoney,
   MOVIMENTO_CUPOM_LABELS,
+  separarLinks,
 } from "../../utils/natalPremiado";
 import { LinkParticipacao } from "./NatalBeneficios";
 import RevisaoBeneficiosModal from "./RevisaoBeneficiosModal";
 import RevisoesLote from "./RevisoesLote";
 import styles from "./NatalInterno.module.css";
-
-const descreverFaixa = (faixa) => (faixa?.cupons > 0 ? `${formatMoney(faixa.valorMinimo)} · ${faixa.cupons} cupons` : "Sem faixa");
 
 function ModalFormulario({ titulo, subtitulo, salvando, onFechar, children }) {
   const dialogRef = useModalDialog({ onClose: onFechar, closeDisabled: salvando });
@@ -361,6 +361,7 @@ function DetalheDistribuidor({ clienteId, listaFechada, isAdmin, cumulativoAtivo
   if (erro) return <div className={ui.feedback} data-type="error" role="alert">{erro}</div>;
   if (!detalhe) return <p className={styles.muted} role="status">Carregando distribuidor…</p>;
   const { compras, cupons, bonificacoes } = detalhe;
+  const { principal: linkPrincipal, anteriores: linksAnteriores } = separarLinks(detalhe.links);
   const referencia = { clienteId: detalhe.clienteId, nome: detalhe.distribuidorNome };
 
   return (
@@ -403,17 +404,25 @@ function DetalheDistribuidor({ clienteId, listaFechada, isAdmin, cumulativoAtivo
         </div>
       )}
 
-      <section className={styles.bloco} aria-label="Links públicos">
-        <h3>Links públicos</h3>
-        {detalhe.links.length === 0 && <p className={styles.muted}>Nenhum link disponível.</p>}
-        {detalhe.links.map((link) => (
-          <div key={link.codigoPublico}>
-            <p className={styles.muted}>
-              {link.tipo === "distribuidor" ? "Link do distribuidor" : `Link do pedido ${link.numeroPedido}`} · saldo compartilhado{link.status !== "ativo" ? " · invalidado" : ""}
-            </p>
-            {link.status === "ativo" && <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={detalhe.distribuidorNome} compacto />}
-          </div>
-        ))}
+      <section className={styles.bloco} aria-label="Link do distribuidor">
+        <h3>Link do distribuidor</h3>
+        {linkPrincipal
+          ? <LinkParticipacao codigo={linkPrincipal.codigoPublico} distribuidorNome={detalhe.distribuidorNome} compacto />
+          : <p className={styles.muted}>Nenhum link disponível. O link é criado na primeira compra aprovada.</p>}
+        {linksAnteriores.length > 0 && (
+          <details>
+            <summary>Links anteriores ({linksAnteriores.length})</summary>
+            <p className={styles.muted}>Continuam válidos e usam o mesmo saldo. Divulgue apenas o link acima.</p>
+            {linksAnteriores.map((link) => (
+              <div key={link.codigoPublico}>
+                <p className={styles.muted}>
+                  {link.tipo === "distribuidor" ? "Link do distribuidor" : `Pedido ${link.numeroPedido}`}{link.status !== "ativo" ? " · invalidado" : ""}
+                </p>
+                {link.status === "ativo" && <LinkParticipacao codigo={link.codigoPublico} distribuidorNome={detalhe.distribuidorNome} compacto />}
+              </div>
+            ))}
+          </details>
+        )}
       </section>
 
       <section className={styles.bloco} aria-label="Ciclos">
@@ -649,7 +658,7 @@ function GestaoDistribuidores({ usuario, listaFechada, modoCumulativo, reconcili
       <div className={styles.filtros}>
         <label>Distribuidor<input type="search" value={busca} onChange={(event) => setBusca(event.target.value)} /></label>
         {cumulativoAtivo && (
-          <div className={styles.acoes} style={{ marginTop: 0 }}>
+          <div className={styles.acoes} style={{ marginTop: 0, gridColumn: "1 / -1" }}>
             <button type="button" className={ui.secondaryButton} onClick={() => setModal("compra")}>Registrar compra externa</button>
             <button type="button" className={ui.secondaryButton} onClick={() => setModal("ajuste")}>Ajustar cupons</button>
             {isAdmin && <button type="button" className={ui.ghostButton} disabled={reconciliando} onClick={onReconciliar}>{reconciliando ? "Reconciliando…" : "Reconciliar saldos"}</button>}
@@ -665,7 +674,7 @@ function GestaoDistribuidores({ usuario, listaFechada, modoCumulativo, reconcili
             <thead>
               <tr>
                 <th>Distribuidor</th><th>Compras</th><th>Ciclos</th><th>Ciclo atual</th><th>Falta p/ faixa</th>
-                <th>Cupons</th><th>Disponíveis</th><th>Utilizados</th><th>Bonif. produtos</th><th>Bonif. MKT</th><th aria-label="Ações" />
+                <th>Cupons</th><th>Disponíveis</th><th>Utilizados</th><th>Bonif. produtos</th><th>Bonif. MKT</th>
               </tr>
             </thead>
             <tbody>
@@ -674,6 +683,7 @@ function GestaoDistribuidores({ usuario, listaFechada, modoCumulativo, reconcili
                   <td>
                     {linha.distribuidorNome}
                     {linha.revisaoPendente && <span className={styles.alertaIcone}> ⚠ Revisão pendente</span>}
+                    <div><button type="button" className={ui.ghostButton} onClick={() => setSelecionado(linha.clienteId)}>Detalhes</button></div>
                   </td>
                   <td>{formatMoney(linha.compras.total)}</td>
                   <td>{linha.compras.ciclosConcluidos}</td>
@@ -684,7 +694,6 @@ function GestaoDistribuidores({ usuario, listaFechada, modoCumulativo, reconcili
                   <td>{linha.cupons.utilizados}</td>
                   <td>{formatMoney(linha.bonificacoes.produtos.concedido)}</td>
                   <td>{formatMoney(linha.bonificacoes.marketing.concedido)}</td>
-                  <td><button type="button" className={ui.ghostButton} onClick={() => setSelecionado(linha.clienteId)}>Detalhes</button></td>
                 </tr>
               ))}
             </tbody>

@@ -9,6 +9,7 @@ import {
   formatCnpjBR,
   formatDocumentoBR,
   proximaFaixaParaValor,
+  separarLinks,
 } from "../src/utils/natalPremiado.js";
 
 const faixas = [
@@ -74,4 +75,18 @@ test("alerta de sincronização usa os dados do painel e o botão existente", ()
   assert.match(pagina, /api\.post\("\/natal-2026\/gestao\/reconciliar"\)/);
   assert.match(pagina, /reconciliacao_parcial/);
   assert.match(pagina, /finally \{[\s\S]*carregarPainel\(\);/, "o alerta é recalculado com ou sem sucesso");
+});
+
+test("distribuidor divulga um único link e os anteriores ficam separados", () => {
+  const antigo = { codigoPublico: "antigo", status: "ativo", principal: true };
+  const outro = { codigoPublico: "outro", status: "ativo", principal: false };
+  assert.deepEqual(separarLinks([antigo, outro]), { principal: antigo, anteriores: [outro] });
+  assert.deepEqual(separarLinks([]), { principal: null, anteriores: [] });
+  const pagina = readFileSync(new URL("../src/pages/NatalDistribuidor/NatalDistribuidor.jsx", import.meta.url), "utf8");
+  for (const rotulo of ["Cupons concedidos", "Cupons disponíveis", "Cupons utilizados", "Faixa atual", "Falta para a próxima faixa"]) {
+    assert.match(pagina, new RegExp(rotulo));
+  }
+  const cartao = readFileSync(new URL("../src/components/NatalBeneficios/NatalBeneficios.jsx", import.meta.url), "utf8");
+  assert.match(cartao, /Copiar link/);
+  assert.match(cartao, /Compartilhar pelo WhatsApp/);
 });

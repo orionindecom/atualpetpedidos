@@ -68,16 +68,23 @@ const totaisBonificacao = (docs) => {
   return { produtos: montar("produtos"), marketing: montar("marketing") };
 };
 
-const linksDaConta = (conta, lotes) => [
-  ...lotes.map((lote) => ({
-    tipo: "pedido",
-    codigoPublico: lote.codigoPublico,
-    numeroPedido: lote.numeroPedido,
-    pedidoId: lote.pedidoId,
-    status: lote.status,
-  })),
-  ...(conta.codigoPublico ? [{ tipo: "distribuidor", codigoPublico: conta.codigoPublico, status: "ativo" }] : []),
-];
+// O link principal é o mais antigo em uso: quem já divulgou um link continua com ele.
+// Novos pedidos e ciclos não mudam essa escolha, porque nenhum link novo é criado.
+const linksDaConta = (conta, lotes) => {
+  const antigos = [...lotes]
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .map((lote) => ({
+      tipo: "pedido",
+      codigoPublico: lote.codigoPublico,
+      numeroPedido: lote.numeroPedido,
+      pedidoId: lote.pedidoId,
+      status: lote.status,
+    }));
+  const proprio = conta.codigoPublico ? [{ tipo: "distribuidor", codigoPublico: conta.codigoPublico, status: "ativo" }] : [];
+  const links = [...antigos, ...proprio];
+  const principal = links.find((link) => link.status === "ativo");
+  return links.map((link) => ({ ...link, principal: link === principal }));
+};
 
 // Visão consolidada de uma conta. O distribuidor vê o próprio saldo e os totais;
 // justificativas e extrato completo ficam no detalhe da gestão.
@@ -132,7 +139,7 @@ export const listarDistribuidores = async ({ busca } = {}) => {
   const contas = [...gravadas, ...virtuais];
   const ids = contas.map((conta) => conta.clienteId);
   const [lotes, bonificacoes] = await Promise.all([
-    NatalLote.find({ clienteId: { $in: ids } }).select("clienteId codigoPublico numeroPedido pedidoId status").lean(),
+    NatalLote.find({ clienteId: { $in: ids } }).select("clienteId codigoPublico numeroPedido pedidoId status createdAt").lean(),
     NatalBonificacao.find({ campanha: CAMPANHA, clienteId: { $in: ids } }).select("clienteId tipo valorDevido valorConcedido valorEntregue").lean(),
   ]);
   return contas.map((conta) => serializarConta(conta, {

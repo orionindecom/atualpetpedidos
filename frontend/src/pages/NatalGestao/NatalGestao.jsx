@@ -27,7 +27,7 @@ const ABAS = [
   ["geral", "Visão geral"],
   ["distribuidores", "Distribuidores"],
   ["participacoes", "Participações"],
-  ["lotes", "Links de pedidos"],
+  ["lotes", "Histórico de links"],
   ["sorteio", "Sorteio"],
 ];
 
@@ -281,7 +281,7 @@ function Lotes({ onVerParticipacoes }) {
           </select>
         </label>
       </div>
-      <p className={styles.muted}>Links gerados por pedido antes do modelo cumulativo. Continuam válidos e usam o saldo único do distribuidor.</p>
+      <p className={styles.muted}>Links gerados por pedido antes do modelo cumulativo. Continuam válidos e usam o saldo único do distribuidor. O link de cada distribuidor fica na aba Distribuidores.</p>
       {erro && <div className={ui.feedback} data-type="error" role="alert">{erro}</div>}
       {!lotes && !erro && <p className={styles.muted} role="status">Carregando links…</p>}
       {lotes && lotes.length === 0 && <EmptyState headingLevel={3} title="Nenhum link encontrado" description="Novos distribuidores recebem um link próprio na aba Distribuidores." />}

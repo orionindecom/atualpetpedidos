@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manual operacional Natal Premiado 2026</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<section class="capa">
+  <img class="capa-logo" src="../../../frontend/src/assets/natal-2026/logo-natal-branco.png" alt="Atual Pet">
+  <p class="capa-rotulo">Manual operacional</p>
+  <h1>Natal Premiado 2026</h1>
+  <p class="capa-sub">Guia prático para a equipe comercial operar a campanha na Central Comercial.</p>
+  <div class="capa-dados">
+    <div><b>Campanha</b>03/11 a 10/12/2026</div>
+    <div><b>Sorteio</b>15/12/2026</div>
+    <div><b>Público</b>Equipe comercial</div>
+  </div>
+</section>
+
+<section class="sumario">
+  <h2>Sumário</h2>
+  <ol><!--SUMARIO--></ol>
+  <div class="nota">
+    <b class="t">Sobre as imagens</b>
+    <p>Todas as telas deste manual usam dados fictícios de um ambiente de testes. Nomes, valores e documentos não são reais. O endereço de link mostrado nas imagens é apenas um exemplo e não funciona. Use sempre o link que aparece na Central.</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="A" data-titulo="Visão geral da campanha">
+  <h1><small>Parte A</small>Visão geral da campanha</h1>
+  <p>O Natal Premiado incentiva as compras dos distribuidores e premia os pet shops que compram produtos Atual Pet. Cada compra de distribuidor gera benefícios. Os pet shops se cadastram pelo link do distribuidor e, depois de aprovados, recebem um cupom para o sorteio.</p>
+  <table>
+    <tr><th>Informação</th><th>Detalhe</th></tr>
+    <tr><td>Período da campanha</td><td>03/11/2026 a 10/12/2026</td></tr>
+    <tr><td>Sorteio</td><td>15/12/2026</td></tr>
+    <tr><td>Prêmio</td><td>1 Kit Groomer Profissional (1 soprador e 1 secador)</td></tr>
+    <tr><td>Onde operar</td><td>Menu Campanhas &gt; Natal Premiado 2026</td></tr>
+  </table>
+
+  <h2>Faixas de benefícios por ciclo</h2>
+  <table>
+    <tr><th>Acumulado no ciclo</th><th class="n">Cupons</th><th class="n">Marketing</th><th class="n">Produtos</th></tr>
+    <tr><td>Abaixo de R$ 12.000</td><td class="n">0</td><td class="n">0%</td><td class="n">0%</td></tr>
+    <tr><td>R$ 12.000 a R$ 19.999,99</td><td class="n">100</td><td class="n">3%</td><td class="n">5%</td></tr>
+    <tr><td>R$ 20.000 a R$ 29.999,99</td><td class="n">200</td><td class="n">3%</td><td class="n">7%</td></tr>
+    <tr><td>R$ 30.000 a R$ 39.999,99</td><td class="n">300</td><td class="n">3%</td><td class="n">10%</td></tr>
+    <tr><td>R$ 40.000</td><td class="n">400</td><td class="n">3%</td><td class="n">10%</td></tr>
+  </table>
+
+  <h2>Como funcionam os ciclos</h2>
+  <ul>
+    <li><strong>Tudo acumula.</strong> As compras do mesmo distribuidor somam, inclusive as pequenas.</li>
+    <li><strong>O ciclo fecha em R$ 40.000.</strong> Ao atingir esse valor, o próximo ciclo começa sozinho.</li>
+    <li><strong>O excedente não se perde.</strong> O que passar de R$ 40.000 entra no ciclo seguinte, mesmo que seja no mesmo pedido.</li>
+    <li><strong>Não há limite de ciclos.</strong> O distribuidor pode completar quantos conseguir durante a campanha.</li>
+  </ul>
+  <div class="exemplo">
+    <b class="t">Exemplo: pedido único de R$ 52.000</b>
+    <p>R$ 40.000 completam o 1º ciclo e liberam 400 cupons. Os R$ 12.000 restantes abrem o 2º ciclo e liberam mais 100 cupons. Total: 500 cupons.</p>
+  </div>
+  <figure>
+    <img src="capturas/g01-visao-geral.png" alt="Visão geral da campanha">
+    <figcaption>Visão geral: indicadores da campanha, alertas e resultado por distribuidor.</figcaption>
+  </figure>
+
+  <h2>Quem faz o quê</h2>
+  <table>
+    <tr><th>Atividade</th><th>Comercial</th><th>Administrador</th></tr>
+    <tr><td>Aprovar, rejeitar e cancelar cadastros</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Registrar e validar compras externas</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Decidir revisões de benefícios</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Registrar entrega de bonificações</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Gerar arquivos do sorteio</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Reconciliar saldos</td><td>Não</td><td>Sim</td></tr>
+    <tr><td>Fechar ou reabrir a lista oficial</td><td>Não</td><td>Sim</td></tr>
+  </table>
+</section>
+
+<section class="secao" data-letra="B" data-titulo="Pedidos e cupons">
+  <h1><small>Parte B</small>Pedidos e cupons</h1>
+  <h2>Quando um pedido começa a contar</h2>
+  <p>O pedido entra no acumulado <strong>na aprovação</strong>, desde que tenha sido lançado no período da campanha. Depois disso, separação, faturamento, envio e entrega não mudam nada: os benefícios já foram calculados e não se repetem.</p>
+  <div class="nota">
+    <b class="t">O sistema faz a conta sozinho</b>
+    <p>Ao aprovar um pedido, a Central soma o valor ao acumulado, identifica a faixa e libera somente a diferença de cupons. Não há nada a lançar manualmente.</p>
+  </div>
+
+  <h2>Como os cupons adicionais são calculados</h2>
+  <p>Ao subir de faixa, o distribuidor recebe apenas o que falta para chegar ao total da nova faixa.</p>
+  <table>
+    <tr><th>Pedido</th><th class="n">Valor</th><th>Situação do ciclo</th><th class="n">Cupons novos</th></tr>
+    <tr><td>1º</td><td class="n">R$ 12.000</td><td>1º ciclo com R$ 12.000</td><td class="n">100</td></tr>
+    <tr><td>2º</td><td class="n">R$ 8.000</td><td>1º ciclo com R$ 20.000</td><td class="n">100</td></tr>
+    <tr><td>3º</td><td class="n">R$ 20.000</td><td>1º ciclo fechado em R$ 40.000</td><td class="n">200</td></tr>
+    <tr><td>4º</td><td class="n">R$ 8.000</td><td>2º ciclo com R$ 8.000</td><td class="n">0</td></tr>
+    <tr><td>5º</td><td class="n">R$ 4.000</td><td>2º ciclo com R$ 12.000</td><td class="n">100</td></tr>
+    <tr><td>6º</td><td class="n">R$ 8.000</td><td>2º ciclo com R$ 20.000</td><td class="n">100</td></tr>
+    <tr><td><strong>Total</strong></td><td class="n"><strong>R$ 60.000</strong></td><td>1 ciclo completo e o 2º em andamento</td><td class="n"><strong>600</strong></td></tr>
+  </table>
+
+  <h2>Pedido abaixo de R$ 12.000</h2>
+  <p>Um pedido menor não libera benefícios sozinho, mas o valor fica guardado. Se o distribuidor comprar R$ 8.000 e depois R$ 4.000, o acumulado chega a R$ 12.000 e os 100 cupons são liberados na segunda aprovação.</p>
+
+  <h2>Pedidos grandes</h2>
+  <div class="grade">
+    <div class="cartao"><h3>R$ 52.000</h3><p>1 ciclo completo mais R$ 12.000 no 2º: 500 cupons.</p></div>
+    <div class="cartao"><h3>R$ 80.000</h3><p>2 ciclos completos: 800 cupons.</p></div>
+  </div>
+
+  <h2>Novo pedido não precisa de novo link</h2>
+  <p>O saldo pertence ao distribuidor, não ao pedido. Depois de cada aprovação, os novos cupons aparecem automaticamente no mesmo link. O distribuidor continua divulgando o endereço que já tem.</p>
+
+  <h2>Como acompanhar um distribuidor</h2>
+  <ol class="passos">
+    <li>Abra <strong>Natal Premiado 2026</strong> e clique na aba <strong>Distribuidores</strong>.</li>
+    <li>Localize o distribuidor na lista ou digite o nome no campo de busca.</li>
+    <li>Clique em <strong>Detalhes</strong> para ver ciclos, pedidos, cupons e bonificações.</li>
+  </ol>
+  <figure>
+    <img src="capturas/g03-distribuidores.png" alt="Lista de distribuidores">
+    <figcaption>Aba Distribuidores: visão consolidada de todos os participantes.</figcaption>
+  </figure>
+  <figure>
+    <img src="capturas/g04-detalhe-indicadores.png" alt="Indicadores do distribuidor">
+    <figcaption>Detalhes do distribuidor: acumulado, ciclo, faixa e saldo de cupons.</figcaption>
+  </figure>
+  <figure>
+    <img src="capturas/g06-ciclos.png" alt="Ciclos do distribuidor">
+    <figcaption>Ciclos: quanto cada ciclo acumulou e quanto gerou de benefícios.</figcaption>
+  </figure>
+  <figure>
+    <img src="capturas/g07-pedidos.png" alt="Pedidos participantes">
+    <figcaption>Pedidos participantes: de onde veio cada valor e em qual ciclo ele entrou.</figcaption>
+  </figure>
+</section>
+
+<section class="secao" data-letra="C" data-titulo="Links dos distribuidores">
+  <h1><small>Parte C</small>Links dos distribuidores</h1>
+  <p>Cada distribuidor divulga <strong>um único link</strong>. Por ele, os pet shops enviam os cadastros. O mesmo link vale para todos os pedidos e todos os ciclos.</p>
+
+  <h2>Onde encontrar, copiar e compartilhar</h2>
+  <ol class="passos">
+    <li>Na aba <strong>Distribuidores</strong>, clique em <strong>Detalhes</strong>.</li>
+    <li>Desça até o bloco <strong>Link do distribuidor</strong>.</li>
+    <li>Clique em <strong>Copiar link</strong> para colar onde precisar.</li>
+    <li>Ou clique em <strong>Compartilhar pelo WhatsApp</strong> para abrir a mensagem pronta.</li>
+  </ol>
+  <figure>
+    <img src="capturas/g05-link-distribuidor.png" alt="Link do distribuidor">
+    <figcaption>Link do distribuidor, com os botões de copiar e compartilhar.</figcaption>
+  </figure>
+
+  <h2>Como consultar os cupons disponíveis</h2>
+  <p>Nos detalhes do distribuidor, veja <strong>Cupons concedidos</strong>, <strong>Cupons disponíveis</strong> e <strong>Cupons utilizados</strong>. Disponível é o que sobra depois de descontar os cadastros aprovados. Cadastro em análise ainda não consome cupom.</p>
+
+  <h2>Links antigos</h2>
+  <ul>
+    <li>Os links criados antes do modelo cumulativo continuam funcionando no mesmo endereço.</li>
+    <li>Se o distribuidor tem mais de um, todos usam o mesmo saldo. Não existe saldo por link.</li>
+    <li>O mais antigo é o link principal. Os demais ficam em <strong>Links anteriores</strong>, nos detalhes do distribuidor.</li>
+    <li>A aba <strong>Histórico de links</strong> mostra de quais pedidos esses links vieram.</li>
+  </ul>
+  <figure>
+    <img src="capturas/g24-historico-links.png" alt="Histórico de links">
+    <figcaption>Histórico de links: registros antigos para consulta. O saldo fica na aba Distribuidores.</figcaption>
+  </figure>
+
+  <h2>Distribuidor novo</h2>
+  <p>O link é criado automaticamente na primeira compra aprovada ou na primeira compra externa validada. Basta abrir os detalhes do distribuidor e enviar o link.</p>
+  <div class="nota aviso">
+    <b class="t">Link sem cupons</b>
+    <p>Enquanto o distribuidor não atingir R$ 12.000, o link existe, mas a página pública informa que não há cupons disponíveis. Ele passa a aceitar cadastros quando os cupons forem liberados.</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="D" data-titulo="Compras externas">
+  <h1><small>Parte D</small>Compras externas</h1>
+  <p>Use <strong>Registrar compra externa</strong> para compras feitas <strong>fora da Central Comercial</strong>, como vendas por telefone ou por outro sistema. Assim o valor entra no acumulado sem criar um pedido no catálogo.</p>
+  <ul>
+    <li>Compras menores que R$ 12.000 podem ser registradas.</li>
+    <li>Os valores acumulam com os pedidos da Central.</li>
+    <li>A compra só conta depois de <strong>validada</strong>.</li>
+    <li>Pedidos que já estão na Central <strong>não</strong> devem ser registrados de novo.</li>
+  </ul>
+
+  <h2>Passo a passo</h2>
+  <ol class="passos">
+    <li>Na aba <strong>Distribuidores</strong>, clique em <strong>Registrar compra externa</strong> e busque o distribuidor. Se já estiver nos detalhes dele, use o mesmo botão.</li>
+    <li>Informe <strong>Valor da compra</strong> e <strong>Data da compra</strong>. A data precisa estar no período da campanha e não pode ser futura.</li>
+    <li>Informe a <strong>Referência do pedido ou nota fiscal</strong>. A mesma referência não pode ser usada duas vezes para o distribuidor.</li>
+    <li>Se quiser, preencha <strong>Observações</strong> e anexe o <strong>Comprovante</strong> (JPG, PNG, WEBP ou PDF, até 10 MB).</li>
+    <li>Clique em <strong>Registrar compra</strong>. Ela fica como <strong>Aguardando validação</strong> e ainda não soma.</li>
+    <li>Confira os dados e, nos detalhes do distribuidor, clique em <strong>Validar</strong> e confirme.</li>
+  </ol>
+  <figure class="medio">
+    <img src="capturas/g13-compra-externa.png" alt="Formulário de compra externa">
+    <figcaption>Formulário de registro de compra externa.</figcaption>
+  </figure>
+  <figure>
+    <img src="capturas/g12-compras-externas.png" alt="Compras externas registradas">
+    <figcaption>Compras externas do distribuidor, com situação e ações disponíveis.</figcaption>
+  </figure>
+
+  <div class="exemplo">
+    <b class="t">Exemplo: compras pequenas que chegam à primeira faixa</b>
+    <table>
+      <tr><th>Compra</th><th class="n">Valor</th><th class="n">Acumulado</th><th class="n">Cupons</th></tr>
+      <tr><td>Primeira</td><td class="n">R$ 2.000</td><td class="n">R$ 2.000</td><td class="n">0</td></tr>
+      <tr><td>Segunda</td><td class="n">R$ 3.000</td><td class="n">R$ 5.000</td><td class="n">0</td></tr>
+      <tr><td>Terceira</td><td class="n">R$ 7.000</td><td class="n">R$ 12.000</td><td class="n">100</td></tr>
+    </table>
+    <p>Total de R$ 12.000 e benefício de 100 cupons, liberados ao validar a terceira compra. A bonificação fica em R$ 600 de produtos e R$ 360 de marketing.</p>
+  </div>
+
+  <h2>Rejeitar ou cancelar</h2>
+  <ul>
+    <li><strong>Rejeitar:</strong> para compra que ainda aguarda validação e não deve contar. Exige motivo.</li>
+    <li><strong>Cancelar:</strong> para retirar uma compra registrada por engano. Exige motivo.</li>
+  </ul>
+  <div class="nota aviso">
+    <b class="t">Compra já validada</b>
+    <p>Cancelar uma compra validada retira o valor do acumulado. Se isso atingir benefícios já concedidos, o distribuidor fica com revisão pendente (Parte G).</p>
+  </div>
+
+  <h2>Ajuste manual de cupons</h2>
+  <p>O botão <strong>Ajustar cupons</strong> adiciona ou retira cupons sem relação com compras. Exige motivo com pelo menos 10 caracteres e fica registrado com responsável, data e horário. Não é possível retirar cupons que já estejam em uso. Use apenas com orientação do Administrador.</p>
+</section>
+
+<section class="secao" data-letra="E" data-titulo="Bonificações">
+  <h1><small>Parte E</small>Bonificações</h1>
+  <p>Cada ciclo gera dois valores separados: <strong>bonificação em produtos</strong> e <strong>verba de marketing</strong>. A porcentagem da faixa vale sobre todo o acumulado do ciclo.</p>
+  <table>
+    <tr><th>Acumulado no ciclo</th><th class="n">Produtos</th><th class="n">Valor</th><th class="n">Marketing</th><th class="n">Valor</th></tr>
+    <tr><td>R$ 12.000</td><td class="n">5%</td><td class="n">R$ 600</td><td class="n">3%</td><td class="n">R$ 360</td></tr>
+    <tr><td>R$ 20.000</td><td class="n">7%</td><td class="n">R$ 1.400</td><td class="n">3%</td><td class="n">R$ 600</td></tr>
+    <tr><td>R$ 30.000</td><td class="n">10%</td><td class="n">R$ 3.000</td><td class="n">3%</td><td class="n">R$ 900</td></tr>
+    <tr><td>R$ 40.000</td><td class="n">10%</td><td class="n">R$ 4.000</td><td class="n">3%</td><td class="n">R$ 1.200</td></tr>
+  </table>
+
+  <h2>Desconto do que já foi concedido</h2>
+  <p>A cada nova faixa, o sistema calcula o total do ciclo e desconta o que já foi concedido nele. O resultado é o complemento.</p>
+  <table>
+    <tr><th>Acumulado</th><th>Total devido em produtos</th><th>Já concedido</th><th class="n">Complemento</th></tr>
+    <tr><td>R$ 12.000</td><td>R$ 600 (5%)</td><td>R$ 0</td><td class="n">R$ 600</td></tr>
+    <tr><td>R$ 20.000</td><td>R$ 1.400 (7%)</td><td>R$ 600</td><td class="n">R$ 800</td></tr>
+    <tr><td>R$ 40.000</td><td>R$ 4.000 (10%)</td><td>R$ 1.400</td><td class="n">R$ 2.600</td></tr>
+  </table>
+  <p>Ao abrir um novo ciclo, a conta recomeça do zero, sem interferir no ciclo anterior. A verba de marketing segue a mesma lógica, sempre em registro separado.</p>
+
+  <h2>Como consultar valores pendentes</h2>
+  <p>Nos detalhes do distribuidor, o bloco <strong>Bonificações</strong> mostra, por ciclo e tipo: devido, concedido, entregue e pendente. <strong>Pendente</strong> é o que foi concedido e ainda não foi entregue. Abra <strong>Histórico das bonificações</strong> para ver a origem de cada complemento.</p>
+  <figure>
+    <img src="capturas/g08-bonificacoes.png" alt="Bonificações do distribuidor">
+    <figcaption>Bonificações por ciclo, separadas entre produtos e marketing.</figcaption>
+  </figure>
+
+  <h2>Como registrar uma entrega</h2>
+  <ol class="passos">
+    <li>No bloco <strong>Bonificações</strong>, clique em <strong>Registrar entrega</strong> na linha correspondente.</li>
+    <li>Informe o valor entregue ou utilizado. Ele não pode passar do saldo pendente.</li>
+    <li>Descreva a entrega e clique em <strong>Registrar entrega</strong>.</li>
+  </ol>
+  <figure class="medio">
+    <img src="capturas/g10-entrega.png" alt="Registro de entrega de bonificação">
+    <figcaption>Registro de entrega. Ele não gera nota fiscal nem movimentação financeira.</figcaption>
+  </figure>
+  <div class="nota perigo">
+    <b class="t">Registre só depois da entrega</b>
+    <p>Calculado não significa entregue. Registre somente depois que os produtos ou a verba tiverem sido realmente entregues.</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="F" data-titulo="Cadastros de pet shops">
+  <h1><small>Parte F</small>Cadastros de pet shops</h1>
+  <p>Os pet shops preenchem o formulário pelo link do distribuidor e anexam o comprovante. Todo cadastro entra como <strong>Pendente</strong> e não consome cupom até ser aprovado.</p>
+
+  <h2>Como consultar</h2>
+  <ol class="passos">
+    <li>Abra a aba <strong>Participações</strong>.</li>
+    <li>Use os filtros: distribuidor, pedido, pet shop, CPF/CNPJ, vendedor, número do cupom, status e datas.</li>
+    <li>Em <strong>Ordem</strong>, escolha <strong>Ordem de recebimento</strong> para analisar primeiro os mais antigos.</li>
+    <li>Clique na linha para abrir o cadastro.</li>
+  </ol>
+  <figure>
+    <img src="capturas/g17-filtros.png" alt="Filtros de participações">
+    <figcaption>Filtros de participações.</figcaption>
+  </figure>
+  <figure>
+    <img src="capturas/g18-participacoes.png" alt="Lista de participações">
+    <figcaption>Lista de participações, com status, alerta de duplicidade e número do cupom.</figcaption>
+  </figure>
+
+  <h2>Como analisar o cadastro</h2>
+  <ol class="passos">
+    <li>Clique em <strong>Visualizar comprovante</strong> e confira se o documento está legível.</li>
+    <li>Compare data e valor do comprovante com os dados informados.</li>
+    <li>Confirme se a compra é de produtos Atual Pet, dentro do período da campanha.</li>
+    <li>Abra o Instagram do cadastro e confira se o estabelecimento segue o <strong>@atualpet</strong>.</li>
+    <li>Veja se há aviso de <strong>Possível duplicidade</strong>.</li>
+  </ol>
+  <figure class="estreito">
+    <img src="capturas/g19-participacao.png" alt="Detalhe da participação">
+    <figcaption>Cadastro aberto, com dados, comprovante, histórico e ações.</figcaption>
+  </figure>
+
+  <h2>Aviso de possível duplicidade</h2>
+  <p>O sistema avisa quando encontra o mesmo comprovante, ou o mesmo CPF/CNPJ com mesma data. É um alerta para análise, não uma recusa: o mesmo pet shop pode participar várias vezes com compras diferentes.</p>
+  <figure>
+    <img src="capturas/g23-duplicidade.png" alt="Aviso de duplicidade">
+    <figcaption>Aviso exibido dentro do cadastro, com o protocolo relacionado.</figcaption>
+  </figure>
+
+  <h2>Aprovar</h2>
+  <ol class="passos">
+    <li>No cadastro, clique em <strong>Aprovar</strong>.</li>
+    <li>Clique em <strong>Confirmar aprovação</strong>.</li>
+  </ol>
+  <figure>
+    <img src="capturas/g20-aprovar.png" alt="Confirmação de aprovação">
+    <figcaption>Na aprovação, um número de cupom é emitido e um cupom do saldo é utilizado.</figcaption>
+  </figure>
+  <ul>
+    <li>O número é aleatório, tem 5 dígitos e nunca se repete.</li>
+    <li>Com poucas vagas, o sistema exige analisar antes os cadastros mais antigos.</li>
+    <li>Sem saldo, o sistema não aprova. Oriente o distribuidor conforme o acumulado dele.</li>
+  </ul>
+
+  <h2>Rejeitar</h2>
+  <p>Use quando o cadastro não atende às regras. Clique em <strong>Rejeitar</strong>, informe o motivo (mínimo de 5 caracteres) e clique em <strong>Confirmar rejeição</strong>. Só cadastros pendentes podem ser rejeitados.</p>
+  <figure>
+    <img src="capturas/g21-rejeitar.png" alt="Rejeição de cadastro">
+    <figcaption>A rejeição exige motivo, que fica no histórico.</figcaption>
+  </figure>
+
+  <h2>Cancelar</h2>
+  <p>Use para retirar um cadastro pendente ou aprovado. Clique em <strong>Cancelar participação</strong>, informe o motivo e confirme.</p>
+  <div class="nota aviso">
+    <b class="t">Cadastro aprovado</b>
+    <p>Ao cancelar um cadastro aprovado, o número do cupom é invalidado e nunca mais é usado. A vaga volta ao saldo do distribuidor.</p>
+  </div>
+
+  <h2>Status dos cadastros</h2>
+  <table>
+    <tr><th>Status</th><th>Significado</th><th>Consome cupom?</th></tr>
+    <tr><td>Pendente</td><td>Aguardando análise</td><td>Não</td></tr>
+    <tr><td>Aprovado</td><td>Tem número de cupom e vai para o sorteio</td><td>Sim</td></tr>
+    <tr><td>Rejeitado</td><td>Não atendeu às regras</td><td>Não</td></tr>
+    <tr><td>Cancelado</td><td>Retirado pela gestão ou pelo distribuidor</td><td>Não</td></tr>
+    <tr><td>Invalidado</td><td>Retirado por decisão de adequação ou registro antigo de pedido cancelado</td><td>Não</td></tr>
+  </table>
+
+  <h2>Como consultar o cupom de um cadastro</h2>
+  <ul>
+    <li>Na aba <strong>Participações</strong>, o número aparece na linha do cadastro aprovado.</li>
+    <li>Para o caminho inverso, use o filtro <strong>Nº do cupom</strong> ou a consulta da aba <strong>Sorteio</strong>.</li>
+  </ul>
+</section>
+
+<section class="secao" data-letra="G" data-titulo="Alterações e cancelamentos">
+  <h1><small>Parte G</small>Alterações e cancelamentos</h1>
+  <p>Quando um pedido é reduzido, cancelado ou excluído, o acumulado cai. Se isso atingir benefícios já concedidos, o sistema não retira nada sozinho: a decisão é administrativa.</p>
+
+  <h2>Como identificar uma revisão pendente</h2>
+  <ul>
+    <li>A <strong>Visão geral</strong> avisa quantos distribuidores têm redução sem decisão.</li>
+    <li>Na aba <strong>Distribuidores</strong>, aparece <strong>Revisão pendente</strong> ao lado do nome.</li>
+    <li>Nos detalhes, um aviso mostra de quanto para quanto o acumulado caiu.</li>
+  </ul>
+  <figure>
+    <img src="capturas/g15-revisao-aviso.png" alt="Aviso de revisão pendente">
+    <figcaption>Aviso nos detalhes do distribuidor, com o botão Revisar benefícios.</figcaption>
+  </figure>
+  <p>Ao editar um pedido para um valor menor, a mesma janela de revisão aparece antes de salvar, se a redução atingir benefícios. Reduções que não atingem nada são salvas normalmente.</p>
+
+  <h2>Manter ou adequar</h2>
+  <div class="grade">
+    <div class="cartao">
+      <h3>Manter</h3>
+      <ul>
+        <li>Cupons e bonificações continuam como estão.</li>
+        <li>Nenhum cadastro é invalidado.</li>
+        <li>Use quando a empresa decidir preservar o benefício.</li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>Adequar</h3>
+      <ul>
+        <li>Cupons e bonificações passam ao novo direito.</li>
+        <li>Se faltar saldo, os cadastros aprovados mais recentes são invalidados.</li>
+        <li>Os números invalidados saem do sorteio e nunca voltam.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Como decidir</h2>
+  <ol class="passos">
+    <li>Nos detalhes do distribuidor, clique em <strong>Revisar benefícios</strong>.</li>
+    <li>Compare o antes e o depois.</li>
+    <li>Leia quantos cadastros seriam invalidados.</li>
+    <li>Escolha <strong>Manter</strong> ou <strong>Adequar</strong> e escreva a justificativa (mínimo de 10 caracteres).</li>
+    <li>Clique em <strong>Confirmar decisão</strong>.</li>
+  </ol>
+  <figure class="medio">
+    <img src="capturas/g16-revisao-modal.png" alt="Revisão dos benefícios">
+    <figcaption>Revisão dos benefícios: comparação e impacto das duas decisões.</figcaption>
+  </figure>
+
+  <h2>Quando pedir orientação ao Administrador</h2>
+  <ul>
+    <li>A adequação invalidaria cadastros aprovados.</li>
+    <li>Parte da bonificação já foi entregue.</li>
+    <li>O cancelamento aconteceu por falta de estoque, sem culpa do distribuidor.</li>
+    <li>A lista oficial do sorteio já foi fechada.</li>
+    <li>Há qualquer dúvida sobre o motivo da redução.</li>
+  </ul>
+  <div class="nota perigo">
+    <b class="t">Cuidado</b>
+    <p>Adequar pode invalidar cadastros de pet shops que não têm relação com o pedido alterado. Enquanto a revisão estiver pendente, novas aprovações continuam possíveis e podem ser atingidas pela decisão. Decida antes de seguir com as aprovações desse distribuidor.</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="H" data-titulo="Sincronização">
+  <h1><small>Parte H</small>Sincronização</h1>
+  <h2>O que significa o alerta</h2>
+  <p>Às vezes um pedido é aprovado normalmente, mas o saldo da campanha não se atualiza por uma falha momentânea. O sistema compara o saldo com os pedidos e compras e mostra um aviso sempre que encontra diferença.</p>
+  <figure>
+    <img src="capturas/g02-alerta.png" alt="Alerta de sincronização">
+    <figcaption>Alerta exibido no topo da gestão, com os distribuidores afetados e o que falta.</figcaption>
+  </figure>
+  <p>Sem o aviso, os saldos estão corretos. Distribuidor abaixo da primeira faixa não gera alerta por esse motivo.</p>
+
+  <h2>O que fazer quando aparecer</h2>
+  <ol class="passos">
+    <li>Anote os distribuidores listados no aviso.</li>
+    <li>Avise o Administrador, que é quem executa a reconciliação.</li>
+    <li>Até a correção, informe ao distribuidor que o saldo será atualizado.</li>
+    <li>Depois do retorno do Administrador, recarregue a página.</li>
+  </ol>
+  <div class="nota perigo">
+    <b class="t">Não compense manualmente</b>
+    <p>Não ajuste cupons, não registre compra externa e não recrie pedidos para corrigir o saldo. A reconciliação aplica apenas a diferença, e um lançamento manual pode gerar benefício em dobro.</p>
+  </div>
+
+  <h2>Como confirmar que foi resolvido</h2>
+  <p>Recarregue a gestão da campanha. O aviso desaparece quando não há mais diferença. Se um distribuidor continuar listado, avise novamente o Administrador.</p>
+</section>
+
+<section class="secao" data-letra="I" data-titulo="Sorteio">
+  <h1><small>Parte I</small>Sorteio</h1>
+  <h2>Consulta dos participantes</h2>
+  <p>Na aba <strong>Participações</strong>, filtre o status <strong>Aprovado</strong>. Somente cupons válidos de cadastros aprovados entram no sorteio. Pendentes, rejeitados, cancelados, invalidados e saldo não usado ficam de fora.</p>
+
+  <h2>Conferência dos cupons</h2>
+  <ul>
+    <li>A <strong>Visão geral</strong> mostra o total de cupons válidos para o sorteio.</li>
+    <li>A consulta <strong>Consultar cupom sorteado</strong>, na aba Sorteio, mostra pet shop, documento, responsável, distribuidor e protocolo.</li>
+  </ul>
+  <figure>
+    <img src="capturas/g26-consulta-cupom.png" alt="Consulta de cupom">
+    <figcaption>Consulta pelo número do cupom.</figcaption>
+  </figure>
+
+  <h2>Procedimentos disponíveis</h2>
+  <figure>
+    <img src="capturas/g25-sorteio.png" alt="Opções de sorteio">
+    <figcaption>Aba Sorteio: urna, gerador de números e fechamento da lista.</figcaption>
+  </figure>
+  <div class="grade">
+    <div class="cartao">
+      <h3>Sorteio por urna</h3>
+      <p><strong>Gerar PDF para impressão</strong> cria os cupons em A4, 10 por folha, com linhas de corte.</p>
+    </div>
+    <div class="cartao">
+      <h3>Gerador de números</h3>
+      <p><strong>Gerar lista numérica</strong> cria uma planilha com cupom, pet shop, documento e distribuidor, para sorteio externo.</p>
+    </div>
+  </div>
+
+  <h2>PDF e registro de auditoria</h2>
+  <p>Cada arquivo gerado fica registrado em <strong>Histórico de exportações</strong>, com data, nome do arquivo, quantidade de cupons, tipo de lista, responsável e código SHA-256. Esse código identifica o arquivo gerado e serve para comprovar qual versão foi usada.</p>
+  <figure>
+    <img src="capturas/g27-historico-exportacoes.png" alt="Histórico de exportações">
+    <figcaption>Histórico de exportações, com arquivo, cupons, lista, responsável e código.</figcaption>
+  </figure>
+  <div class="nota aviso">
+    <b class="t">Prévia ou oficial</b>
+    <p>Enquanto a lista estiver aberta, todo arquivo é uma <strong>prévia</strong>. Depois que o Administrador fechar a lista, os arquivos saem como <strong>oficiais</strong>.</p>
+  </div>
+
+  <h2>Antes de finalizar a campanha</h2>
+  <ol class="passos">
+    <li>Depois de 10/12/2026, último dia de cadastros, confira se não restam cadastros pendentes.</li>
+    <li>Resolva avisos de possível duplicidade.</li>
+    <li>Confirme que não há revisão pendente nem alerta de sincronização.</li>
+    <li>Peça ao Administrador o fechamento da lista oficial.</li>
+    <li>Gere o arquivo oficial e confira a quantidade de cupons.</li>
+    <li>Guarde o arquivo usado no sorteio de 15/12/2026.</li>
+  </ol>
+  <div class="nota perigo">
+    <b class="t">Depois do fechamento</b>
+    <p>Com a lista fechada, aprovações, rejeições e cancelamentos ficam bloqueados para a equipe comercial. Qualquer exceção depende do Administrador, com justificativa.</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="J" data-titulo="Cuidados importantes">
+  <h1><small>Parte J</small>Cuidados importantes</h1>
+  <div class="nota perigo"><b class="t">Não cadastre duas vezes a mesma compra</b><p>Pedido da Central já conta na aprovação. Só registre como compra externa o que foi vendido fora da Central.</p></div>
+  <div class="nota perigo"><b class="t">Não crie pedidos fictícios para liberar cupons</b><p>Pedido fictício distorce o acumulado, os cupons e as bonificações. Quando a compra real foi feita fora da Central, use a compra externa.</p></div>
+  <div class="nota perigo"><b class="t">Não invalide cupons sem analisar as consequências</b><p>Cancelar um cadastro aprovado ou adequar benefícios invalida números que nunca voltam. Leia o impacto antes de confirmar.</p></div>
+  <div class="nota perigo"><b class="t">Não registre bonificação como entregue antes da entrega</b><p>O registro serve de controle. Faça-o somente depois da entrega efetiva.</p></div>
+  <div class="nota aviso"><b class="t">Procure o Administrador em situações excepcionais</b><p>Alerta de sincronização, lista fechada, cancelamento por falta de estoque, suspeita de fraude ou qualquer caso que este manual não cubra.</p></div>
+
+  <h2>Mensagens que o distribuidor pode relatar</h2>
+  <table>
+    <tr><th>Mensagem no link</th><th>O que significa</th><th>O que fazer</th></tr>
+    <tr><td>Sem cupons disponíveis no momento</td><td>O distribuidor ainda não atingiu a primeira faixa, ou o saldo foi retirado por revisão</td><td>Consulte o acumulado nos detalhes</td></tr>
+    <tr><td>Todos os cupons já foram utilizados</td><td>Todo o saldo está em cadastros aprovados</td><td>Informe o valor que falta para a próxima faixa</td></tr>
+    <tr><td>Limite de cadastros em análise</td><td>A fila de pendentes atingiu o limite</td><td>Analise os cadastros pendentes</td></tr>
+    <tr><td>Prazo terminou em 10/12/2026</td><td>O período de cadastros acabou</td><td>Encaminhe ao Administrador, se for exceção</td></tr>
+  </table>
+</section>
+
+</body>
+</html>

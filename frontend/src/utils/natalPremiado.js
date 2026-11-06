@@ -113,6 +113,14 @@ export const cuponsParaValor = (faixas = [], cicloValor = 0, valor = 0) => {
   return concluidos * (faixas.at(-1)?.cupons || 0) + (faixaParaValor(faixas, restante)?.cupons || 0);
 };
 
+export const descreverFaixa = (faixa) => (faixa?.cupons > 0 ? `${formatMoney(faixa.valorMinimo)} · ${faixa.cupons} cupons` : "Sem faixa");
+
+// Link que o distribuidor deve divulgar. Os demais continuam válidos e usam o mesmo saldo.
+export const separarLinks = (links = []) => {
+  const principal = links.find((link) => link.principal) || links.find((link) => link.status === "ativo") || null;
+  return { principal, anteriores: links.filter((link) => link !== principal) };
+};
+
 export const formatMoney = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export const formatDateBR = (value) => {
