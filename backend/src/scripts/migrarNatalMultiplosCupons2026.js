@@ -117,6 +117,8 @@ const verificarBackup = async (pasta) => {
       const texto = fs.readFileSync(path.join(pasta, `${nome}.ejson`), "utf8");
       const indices = JSON.parse(fs.readFileSync(path.join(pasta, `${nome}.indexes.json`), "utf8"));
       const documentos = EJSON.parse(texto, { relaxed: false });
+      // Coleção vazia também existe na origem (com o índice _id_): cria antes de restaurar.
+      if (indices.length > 0) await conexao.db.createCollection(nome).catch(() => {});
       const colecao = conexao.db.collection(nome);
       if (documentos.length > 0) await colecao.insertMany(documentos);
       for (const indice of indices.filter((item) => item.name !== "_id_")) {
