@@ -3,6 +3,7 @@ import NatalAuditoria from "../models/NatalAuditoria.js";
 import NatalBonificacao from "../models/NatalBonificacao.js";
 import NatalConta from "../models/NatalConta.js";
 import NatalCupom from "../models/NatalCupom.js";
+import NatalDistribuicao from "../models/NatalDistribuicao.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalMovimentoCupom from "../models/NatalMovimentoCupom.js";
 import NatalParticipacao from "../models/NatalParticipacao.js";
@@ -24,6 +25,7 @@ import {
   recalcularConta,
   somarCentavos,
 } from "./natalContaService.js";
+import { garantirDistribuicaoLegada } from "./natalDistribuicaoService.js";
 
 // Revisão dos benefícios do distribuidor quando uma redução ou um cancelamento atinge
 // o que já foi concedido. A decisão (manter ou adequar) é sempre administrativa. Na
@@ -56,13 +58,39 @@ export const validarDecisaoRevisao = (entrada, usuario) => {
 // No limite de um ciclo o ciclo seguinte ainda está vazio: vale a faixa do último com valor.
 const descreverBeneficios = (estado, cupons) => ({ ...(estado.ciclos.at(-1)?.faixa || estado.faixaAtual), cupons });
 
-// Participações aprovadas na ordem do cadastro original (recebimento), em todos os
-// links do distribuidor; empate é resolvido pelo identificador, estável e único.
-const aprovadasPorAntiguidade = (clienteId, session) => NatalParticipacao.find({ clienteId, status: "aprovado" })
-  .select("_id protocolo recebidoEm cupom petshop.nomeFantasia loteId pedidoId")
-  .sort({ recebidoEm: 1, _id: 1 })
-  .session(session || null)
-  .lean();
+// Cupons válidos na ordem de recebimento do lote que os gerou (cadastros antigos de 1
+// cupom: recebimento do cadastro), em todos os links do distribuidor. Empate resolvido
+// pelo cadastro e depois pelo número, estável e único. A adequação retira os mais recentes.
+const aprovadasPorAntiguidade = async (clienteId, session) => {
+  const cupons = await NatalCupom.find({ clienteId, status: "valido" })
+    .select("_id numero codigo participacaoId distribuicaoId loteId pedidoId recebidoEm")
+    .session(session || null)
+    .lean();
+  const participacoes = await NatalParticipacao.find({ _id: { $in: [...new Set(cupons.map((item) => String(item.participacaoId)))] } })
+    .select("_id protocolo recebidoEm petshop.nomeFantasia loteId pedidoId")
+    .session(session || null)
+    .lean();
+  const porId = new Map(participacoes.map((item) => [String(item._id), item]));
+  return cupons
+    .map((cupom) => {
+      const participacao = porId.get(String(cupom.participacaoId));
+      return {
+        _id: participacao?._id || cupom.participacaoId,
+        cupomId: cupom._id,
+        protocolo: participacao?.protocolo,
+        recebidoEm: cupom.recebidoEm || participacao?.recebidoEm,
+        petshop: participacao?.petshop,
+        cupom: { numero: cupom.numero, codigo: cupom.codigo },
+        distribuicaoId: cupom.distribuicaoId,
+        loteId: cupom.loteId,
+        pedidoId: cupom.pedidoId || participacao?.pedidoId,
+      };
+    })
+    .sort((a, b) => (new Date(a.recebidoEm).getTime() - new Date(b.recebidoEm).getTime()) ||
+      String(a._id).localeCompare(String(b._id)) || (a.cupom.numero - b.cupom.numero));
+};
+
+const pendentesDaConta = (conta) => Number(conta?.contadores?.pendentes || 0);
 
 const limiteAdequado = (conta, estado) => {
   const automatico = Math.min(cuponsAutomaticos(conta), estado.cuponsDevidos);
@@ -84,11 +112,11 @@ const resumirBonificacoes = async (clienteId, estado, session) => {
 // (resposta 409) e pela revisão pendente aberta na gestão.
 const montarPrevia = async ({ conta, estadoAntes, estadoDepois, valorAnterior, valorNovo, numeroPedido, session }) => {
   const clienteId = conta.clienteId;
-  const [aprovadas, pendentes, bonificacoes] = await Promise.all([
+  const [aprovadas, bonificacoes] = await Promise.all([
     aprovadasPorAntiguidade(clienteId, session),
-    NatalParticipacao.countDocuments({ clienteId, status: "pendente" }).session(session || null),
     resumirBonificacoes(clienteId, estadoDepois, session),
   ]);
+  const pendentes = pendentesDaConta(conta);
   const totalAtual = Number(conta.cupons.total);
   const limite = limiteAdequado(conta, estadoDepois);
   const excedentes = aprovadas.slice(limite.total);
@@ -231,33 +259,77 @@ export const aplicarRevisaoBeneficios = async ({
   const resultante = adequar ? beneficioNovo : beneficioAtual;
   resultante.cupons = Math.max(totalResultante, 0);
 
-  const pendentes = await NatalParticipacao.countDocuments({ clienteId, status: "pendente" }).session(session);
+  const pendentes = pendentesDaConta(conta);
   const aprovadas = await aprovadasPorAntiguidade(clienteId, session);
   const excedentes = adequar ? aprovadas.slice(Math.max(totalResultante, 0)) : [];
   const revisaoId = new NatalConta.base.Types.ObjectId();
   const motivo = `Revisão de benefícios de ${conta.distribuidorNome || "distribuidor"}: limite reduzido de ${totalAtual} para ${totalResultante} cupons`;
+  const cadastrosInvalidados = new Set();
 
   if (excedentes.length > 0) {
-    const ids = excedentes.map((item) => item._id);
-    const participacoes = await NatalParticipacao.updateMany(
-      { _id: { $in: ids }, clienteId, status: "aprovado" },
-      {
-        $set: {
-          status: "invalidado_revisao",
-          invalidacao: { em: now, motivo: motivo.slice(0, 300), statusAnterior: "aprovado", tipo: "revisao_faixa", revisaoId },
-        },
-        $push: { historico: { acao: "invalidado_revisao", em: now, autor, motivo: justificativa.slice(0, 500), detalhes: motivo.slice(0, 500) } },
-      },
-      { session }
-    );
-    if (participacoes.modifiedCount !== ids.length) {
-      throw new NatalError(409, "As participações deste distribuidor mudaram durante a revisão. Tente novamente.", "concorrencia");
+    const porCadastro = new Map();
+    for (const item of excedentes) porCadastro.set(String(item._id), [...(porCadastro.get(String(item._id)) || []), item.cupom.codigo]);
+    // Cadastros antigos de 1 cupom ganham o lote histórico antes da invalidação.
+    for (const participacaoId of porCadastro.keys()) {
+      const participacao = await NatalParticipacao.findById(participacaoId).session(session);
+      if (participacao) await garantirDistribuicaoLegada({ participacao, session, now, autor });
     }
-    await NatalCupom.updateMany(
-      { participacaoId: { $in: ids }, status: "valido" },
+    // Invalidação por cupom: os mais recentes saem; os demais cupons do mesmo cadastro continuam.
+    const idsCupons = excedentes.map((item) => item.cupomId);
+    const cupons = await NatalCupom.updateMany(
+      { _id: { $in: idsCupons }, clienteId, status: "valido" },
       { $set: { status: "invalidado", encerradoEm: now, motivoEncerramento: motivo.slice(0, 500), revisaoId } },
       { session }
     );
+    if (cupons.modifiedCount !== excedentes.length) {
+      throw new NatalError(409, "Os cupons deste distribuidor mudaram durante a revisão. Tente novamente.", "concorrencia");
+    }
+    const porLoteDistribuicao = new Map();
+    const cuponsComLote = await NatalCupom.find({ _id: { $in: idsCupons } }).select("distribuicaoId").session(session).lean();
+    for (const item of cuponsComLote) {
+      if (item.distribuicaoId) porLoteDistribuicao.set(String(item.distribuicaoId), (porLoteDistribuicao.get(String(item.distribuicaoId)) || 0) + 1);
+    }
+    for (const [participacaoId, codigos] of porCadastro) {
+      const atualizada = await NatalParticipacao.findOneAndUpdate(
+        { _id: participacaoId, "cupons.validos": { $gte: codigos.length } },
+        {
+          $inc: { "cupons.validos": -codigos.length, "cupons.invalidados": codigos.length },
+          $push: { historico: { acao: "cupons_invalidados_revisao", em: now, autor, motivo: justificativa.slice(0, 500), detalhes: `${codigos.length} cupom(ns): ${codigos.join(", ")}`.slice(0, 500) } },
+        },
+        { returnDocument: "after", session }
+      );
+      if (!atualizada) throw new NatalError(409, "Os cupons deste distribuidor mudaram durante a revisão. Tente novamente.", "concorrencia");
+      // Sem nenhum cupom válido ou aguardando, o cadastro fica invalidado, como antes.
+      if (atualizada.status === "aprovado" && atualizada.cupons.validos === 0 && atualizada.cupons.pendentes === 0) {
+        await NatalParticipacao.updateOne(
+          { _id: participacaoId, status: "aprovado" },
+          {
+            $set: {
+              status: "invalidado_revisao",
+              invalidacao: { em: now, motivo: motivo.slice(0, 300), statusAnterior: "aprovado", tipo: "revisao_faixa", revisaoId },
+            },
+            $unset: { chaveCadastro: 1 },
+            $push: { historico: { acao: "invalidado_revisao", em: now, autor, motivo: justificativa.slice(0, 500), detalhes: motivo.slice(0, 500) } },
+          },
+          { session }
+        );
+        cadastrosInvalidados.add(participacaoId);
+      }
+    }
+    for (const [distribuicaoId, quantidade] of porLoteDistribuicao) {
+      const lote = await NatalDistribuicao.findOneAndUpdate(
+        { _id: distribuicaoId },
+        { $inc: { "contadores.validos": -quantidade, "contadores.invalidados": quantidade } },
+        { returnDocument: "after", session }
+      );
+      if (lote && lote.status === "aprovado" && lote.contadores.validos <= 0 && lote.contadores.pendentes <= 0) {
+        await NatalDistribuicao.updateOne(
+          { _id: distribuicaoId, status: "aprovado" },
+          { $set: { status: "invalidado" }, $push: { historico: { acao: "invalidado_revisao", em: now, autor, motivo: justificativa.slice(0, 500) } } },
+          { session }
+        );
+      }
+    }
     const porLote = new Map();
     for (const item of excedentes) {
       if (item.loteId) porLote.set(String(item.loteId), (porLote.get(String(item.loteId)) || 0) + 1);
@@ -383,7 +455,7 @@ export const aplicarRevisaoBeneficios = async ({
       ajusteBonificacaoPendente: revisao.ajusteBonificacaoPendente,
     },
   }, ...excedentes.map((item) => ({
-    acao: "participacao_invalidada_revisao",
+    acao: cadastrosInvalidados.has(String(item._id)) ? "participacao_invalidada_revisao" : "cupons_invalidados_revisao",
     em: now,
     autor,
     clienteId,

@@ -99,7 +99,8 @@ export const formatarNumeroCupom = (numero, digitos = NATAL_2026.numeracao.digit
   String(numero).padStart(digitos, "0")
 );
 
-// Saldo compartilhado do distribuidor. Vale para todos os links dele.
+// Saldo compartilhado do distribuidor. Vale para todos os links dele. Cupons
+// aguardando validação já ocupam saldo (reserva estrita), por isso saem do disponível.
 export const saldoConta = (conta) => {
   const concedidos = Number(conta?.cupons?.total || 0);
   const aprovados = Number(conta?.contadores?.aprovados || 0);
@@ -111,7 +112,7 @@ export const saldoConta = (conta) => {
     cancelados: Number(conta?.contadores?.cancelados || 0),
     invalidados: Number(conta?.contadores?.invalidados || 0),
     invalidadosRevisao: Number(conta?.contadores?.invalidadosRevisao || 0),
-    disponivel: Math.max(concedidos - aprovados, 0),
+    disponivel: Math.max(concedidos - aprovados - Number(conta?.contadores?.pendentes || 0), 0),
   };
 };
 
@@ -126,7 +127,7 @@ export const saldoLote = (lote) => {
     cancelados: Number(lote?.contadores?.cancelados || 0),
     invalidados: Number(lote?.contadores?.invalidados || 0),
     invalidadosRevisao: Number(lote?.contadores?.invalidadosRevisao || 0),
-    disponivel: lote?.status === "ativo" ? Math.max(concedidos - aprovados, 0) : 0,
+    disponivel: lote?.status === "ativo" ? Math.max(concedidos - aprovados - Number(lote?.contadores?.pendentes || 0), 0) : 0,
   };
 };
 
@@ -221,6 +222,38 @@ export const validarParticipacaoPublica = (body = {}, { config = NATAL_2026, now
     errors.aceiteTermos = "Confirme a declaração para enviar o cadastro.";
   }
 
+  return { valid: Object.keys(errors).length === 0, errors, data };
+};
+
+// Lote adicional enviado pelo painel do distribuidor: só vendedor, compra e declaração.
+// Os dados do pet shop vêm do cadastro existente e não são reenviados.
+export const validarLoteAdicional = (body = {}, { config = NATAL_2026, now = new Date() } = {}) => {
+  const errors = {};
+  const data = {};
+  const vendedor = limparTexto(body.vendedorNome);
+  if (vendedor.length < LIMITES.vendedorNome[0] || vendedor.length > LIMITES.vendedorNome[1]) {
+    errors.vendedorNome = `Informe ${ROTULOS.vendedorNome} (2 a 120 caracteres).`;
+  } else data.vendedorNome = vendedor;
+
+  const dataCompra = typeof body.dataCompra === "string" ? body.dataCompra.trim() : "";
+  const hoje = dataBrasilia(now, config.timeZone);
+  const inicio = dataBrasilia(config.inicio, config.timeZone);
+  const fim = dataBrasilia(config.fimCadastros, config.timeZone);
+  const limite = hoje < fim ? hoje : fim;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataCompra) ||
+    dataBrasilia(new Date(`${dataCompra}T12:00:00-03:00`), config.timeZone) !== dataCompra) {
+    errors.dataCompra = "Informe a data da compra.";
+  } else if (dataCompra < inicio || dataCompra > limite) {
+    errors.dataCompra = "A data da compra precisa estar dentro do período da campanha e não pode ser futura.";
+  } else data.dataCompra = dataCompra;
+
+  const valorCompra = parseValorMonetario(body.valorCompra);
+  if (valorCompra === null || valorCompra <= 0 || valorCompra > 10000000) errors.valorCompra = "Informe o valor da compra.";
+  else data.valorCompra = Math.round(valorCompra * 100) / 100;
+
+  if (body.aceiteTermos !== true && body.aceiteTermos !== "true") {
+    errors.aceiteTermos = "Confirme a declaração para enviar os cupons.";
+  }
   return { valid: Object.keys(errors).length === 0, errors, data };
 };
 

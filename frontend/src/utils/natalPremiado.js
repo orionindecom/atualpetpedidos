@@ -22,9 +22,10 @@ export const PARTICIPACAO_STATUS_TONES = Object.freeze({
 });
 
 export const ALERTA_LABELS = Object.freeze({
-  mesmo_comprovante: "Mesmo comprovante enviado em outro cadastro",
+  mesmo_comprovante: "Mesmo comprovante enviado em outro cadastro ou lote",
   mesma_compra: "Mesmo CPF/CNPJ, data e valor de compra",
   mesmo_cnpj_data: "Mesmo CPF/CNPJ e data de compra",
+  mesmo_documento_distribuidor: "Cadastro antigo com o mesmo CPF/CNPJ neste distribuidor",
 });
 
 export const HISTORICO_LABELS = Object.freeze({
@@ -36,7 +37,82 @@ export const HISTORICO_LABELS = Object.freeze({
   invalidado_revisao: "Invalidado por revisão de faixa",
   alerta_duplicidade: "Alerta de duplicidade",
   ajuste_apos_fechamento: "Ajuste após fechamento",
+  lote_recebido: "Novo lote de cupons recebido",
+  lote_aprovado: "Lote de cupons aprovado",
+  lote_rejeitado: "Lote de cupons rejeitado",
+  lote_cancelado: "Lote de cupons cancelado",
+  cupons_invalidados_revisao: "Cupons invalidados por revisão de faixa",
 });
+
+// ---------- Múltiplos cupons por cadastro ----------
+
+export const CUPOM_STATUS_LABELS = Object.freeze({
+  pendente: "Aguardando validação",
+  valido: "Válido",
+  rejeitado: "Rejeitado",
+  cancelado: "Cancelado",
+  invalidado: "Invalidado",
+});
+
+export const CUPOM_STATUS_TONES = Object.freeze({
+  pendente: "accent",
+  valido: "active",
+  rejeitado: "danger",
+  cancelado: "inactive",
+  invalidado: "inactive",
+});
+
+export const LOTE_STATUS_LABELS = Object.freeze({
+  pendente: "Aguardando validação",
+  aprovado: "Aprovado",
+  rejeitado: "Rejeitado",
+  cancelado: "Cancelado",
+  invalidado: "Invalidado",
+});
+
+export const LOTE_CANAL_LABELS = Object.freeze({
+  link_publico: "Link do distribuidor",
+  painel_distribuidor: "Painel do distribuidor",
+  migracao: "Cadastro anterior aos lotes",
+});
+
+// Teto por envio, igual ao do servidor (o saldo do distribuidor limita antes).
+export const LIMITE_CUPONS_POR_ENVIO = 1000;
+
+// Validação de interface; o servidor valida de novo e é quem decide.
+export const validarQuantidadeCupons = (texto, maximo) => {
+  const valor = String(texto ?? "").trim();
+  if (!/^\d{1,7}$/.test(valor)) return { valido: false, erro: "Informe um número inteiro de cupons, a partir de 1." };
+  const quantidade = Number(valor);
+  if (quantidade < 1) return { valido: false, erro: "A quantidade mínima é 1 cupom." };
+  if (quantidade > LIMITE_CUPONS_POR_ENVIO) return { valido: false, erro: `A quantidade máxima por envio é de ${LIMITE_CUPONS_POR_ENVIO} cupons.` };
+  if (Number.isFinite(maximo) && quantidade > maximo) {
+    return { valido: false, erro: maximo > 0 ? `O saldo disponível é de ${maximo} cupom(ns).` : "Não há cupons disponíveis." };
+  }
+  return { valido: true, quantidade };
+};
+
+export const textoCupons = (quantidade) => `${quantidade} ${Number(quantidade) === 1 ? "cupom" : "cupons"}`;
+export const textoChances = (quantidade) => `${quantidade} ${Number(quantidade) === 1 ? "chance" : "chances"}`;
+
+// Identificador de um envio: repetir o mesmo envio (clique duplo, conexão que caiu)
+// devolve o resultado original no servidor, sem gerar cupons de novo.
+export const gerarChaveEnvio = () => {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  const bytes = new Uint8Array(18);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+// Resumo de cupons de um cadastro (os antigos de 1 cupom não trazem "cupons").
+export const resumoCupons = (participacao) => participacao?.cupons || {
+  total: 1,
+  validos: participacao?.status === "aprovado" ? 1 : 0,
+  pendentes: participacao?.status === "pendente" ? 1 : 0,
+  cancelados: participacao?.status === "cancelado" ? 1 : 0,
+  rejeitados: participacao?.status === "rejeitado" ? 1 : 0,
+  invalidados: String(participacao?.status || "").startsWith("invalidado") ? 1 : 0,
+};
 
 export const FAIXA_EVENTO_LABELS = Object.freeze({
   criacao: "Lote criado na aprovação",

@@ -124,7 +124,7 @@ export function NatalBeneficiosPedido({ pedidoId, versao, mostrarLink = true }) 
         <dl className={styles.saldo}>
           <div><dt>Compras acumuladas</dt><dd>{formatMoney(conta.compras.total)}</dd></div>
           <div><dt>Cupons concedidos</dt><dd>{conta.cupons.total}</dd></div>
-          <div><dt>Utilizados</dt><dd>{conta.cupons.utilizados}</dd></div>
+          <div><dt>Válidos</dt><dd>{conta.cupons.utilizados}</dd></div>
           <div><dt>Disponíveis</dt><dd>{conta.cupons.disponiveis}</dd></div>
         </dl>
         {dados.cancelado && <p className={styles.nota}>Este pedido foi cancelado e não conta para o acumulado.</p>}

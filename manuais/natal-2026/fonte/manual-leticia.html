@@ -30,7 +30,7 @@
 
 <section class="secao" data-letra="A" data-titulo="Visão geral da campanha">
   <h1><small>Parte A</small>Visão geral da campanha</h1>
-  <p>O Natal Premiado incentiva as compras dos distribuidores e premia os pet shops que compram produtos Atual Pet. Cada compra de distribuidor gera benefícios. Os pet shops se cadastram pelo link do distribuidor e, depois de aprovados, recebem um cupom para o sorteio.</p>
+  <p>O Natal Premiado incentiva as compras dos distribuidores e premia os pet shops que compram produtos Atual Pet. Cada compra de distribuidor gera benefícios. Os pet shops se cadastram pelo link do distribuidor e recebem a quantidade de cupons que o distribuidor entregar. <strong>Cada cupom é uma chance individual no sorteio</strong>, depois da validação.</p>
   <table>
     <tr><th>Informação</th><th>Detalhe</th></tr>
     <tr><td>Período da campanha</td><td>03/11/2026 a 10/12/2026</td></tr>
@@ -69,6 +69,7 @@
   <table>
     <tr><th>Atividade</th><th>Comercial</th><th>Administrador</th></tr>
     <tr><td>Aprovar, rejeitar e cancelar cadastros</td><td>Sim</td><td>Sim</td></tr>
+    <tr><td>Aprovar, rejeitar e cancelar lotes de cupons</td><td>Sim</td><td>Sim</td></tr>
     <tr><td>Registrar e validar compras externas</td><td>Sim</td><td>Sim</td></tr>
     <tr><td>Decidir revisões de benefícios</td><td>Sim</td><td>Sim</td></tr>
     <tr><td>Registrar entrega de bonificações</td><td>Sim</td><td>Sim</td></tr>
@@ -274,12 +275,17 @@
 
 <section class="secao" data-letra="F" data-titulo="Cadastros de pet shops">
   <h1><small>Parte F</small>Cadastros de pet shops</h1>
-  <p>Os pet shops preenchem o formulário pelo link do distribuidor e anexam o comprovante. Todo cadastro entra como <strong>Pendente</strong> e não consome cupom até ser aprovado.</p>
+  <p>Os pet shops preenchem o formulário pelo link do distribuidor, informam quantos cupons recebem e anexam o comprovante. Todo cadastro entra como <strong>Pendente</strong>.</p>
+  <ul>
+    <li>Os números dos cupons são gerados no envio, com a situação <strong>Aguardando validação</strong>. Eles já ocupam o saldo do distribuidor, mas ainda não entram no sorteio.</li>
+    <li>Um cadastro tem um ou mais <strong>lotes</strong> (distribuições). Cada lote tem data, vendedor, quantidade e comprovante próprios.</li>
+    <li>O distribuidor adiciona lotes pela área dele. Um novo envio pelo link com o mesmo CPF/CNPJ também vira um lote do mesmo cadastro.</li>
+  </ul>
 
   <h2>Como consultar</h2>
   <ol class="passos">
     <li>Abra a aba <strong>Participações</strong>.</li>
-    <li>Use os filtros: distribuidor, pedido, pet shop, CPF/CNPJ, vendedor, número do cupom, status e datas.</li>
+    <li>Use os filtros: distribuidor, pedido, pet shop, CPF/CNPJ, vendedor, número do cupom, status e datas. Marque <strong>Só com cupons aguardando validação</strong> para achar lotes novos de cadastros já aprovados.</li>
     <li>Em <strong>Ordem</strong>, escolha <strong>Ordem de recebimento</strong> para analisar primeiro os mais antigos.</li>
     <li>Clique na linha para abrir o cadastro.</li>
   </ol>
@@ -289,63 +295,78 @@
   </figure>
   <figure>
     <img src="capturas/g18-participacoes.png" alt="Lista de participações">
-    <figcaption>Lista de participações, com status, alerta de duplicidade e número do cupom.</figcaption>
+    <figcaption>Lista de participações: status, alerta de duplicidade e total de cupons, válidos e aguardando.</figcaption>
   </figure>
 
   <h2>Como analisar o cadastro</h2>
   <ol class="passos">
     <li>Clique em <strong>Visualizar comprovante</strong> e confira se o documento está legível.</li>
-    <li>Compare data e valor do comprovante com os dados informados.</li>
+    <li>Compare data e valor do comprovante com os dados informados e veja se a quantidade de cupons faz sentido para a compra.</li>
     <li>Confirme se a compra é de produtos Atual Pet, dentro do período da campanha.</li>
     <li>Abra o Instagram do cadastro e confira se o estabelecimento segue o <strong>@atualpet</strong>.</li>
     <li>Veja se há aviso de <strong>Possível duplicidade</strong>.</li>
   </ol>
   <figure class="estreito">
     <img src="capturas/g19-participacao.png" alt="Detalhe da participação">
-    <figcaption>Cadastro aberto, com dados, comprovante, histórico e ações.</figcaption>
+    <figcaption>Cadastro aberto: total de cupons por situação, dados, lotes, comprovante, histórico e ações.</figcaption>
   </figure>
 
   <h2>Aviso de possível duplicidade</h2>
-  <p>O sistema avisa quando encontra o mesmo comprovante, ou o mesmo CPF/CNPJ com mesma data. É um alerta para análise, não uma recusa: o mesmo pet shop pode participar várias vezes com compras diferentes.</p>
+  <p>O sistema avisa quando encontra o mesmo comprovante, ou o mesmo CPF/CNPJ com mesma data, em qualquer cadastro ou lote, inclusive em lotes anteriores do mesmo pet shop. É um alerta para análise, não uma recusa: o mesmo pet shop pode receber vários lotes por compras diferentes.</p>
+  <p>Cadastros antigos, feitos várias vezes para o mesmo pet shop antes dos múltiplos cupons, ficam com o aviso <strong>Cadastro antigo com o mesmo CPF/CNPJ</strong>. Nada é juntado automaticamente: os novos lotes vão para o cadastro mais antigo e os demais seguem como estão, para a sua análise.</p>
   <figure>
     <img src="capturas/g23-duplicidade.png" alt="Aviso de duplicidade">
     <figcaption>Aviso exibido dentro do cadastro, com o protocolo relacionado.</figcaption>
   </figure>
 
-  <h2>Aprovar</h2>
+  <h2>Aprovar o cadastro</h2>
   <ol class="passos">
-    <li>No cadastro, clique em <strong>Aprovar</strong>.</li>
+    <li>No cadastro, clique em <strong>Aprovar cadastro</strong>.</li>
     <li>Clique em <strong>Confirmar aprovação</strong>.</li>
   </ol>
   <figure>
     <img src="capturas/g20-aprovar.png" alt="Confirmação de aprovação">
-    <figcaption>Na aprovação, um número de cupom é emitido e um cupom do saldo é utilizado.</figcaption>
+    <figcaption>A aprovação valida o pet shop e todos os cupons que aguardam validação.</figcaption>
   </figure>
   <ul>
-    <li>O número é aleatório, tem 5 dígitos e nunca se repete.</li>
-    <li>Com poucas vagas, o sistema exige analisar antes os cadastros mais antigos.</li>
-    <li>Sem saldo, o sistema não aprova. Oriente o distribuidor conforme o acumulado dele.</li>
+    <li>Todos os lotes aguardando validação do cadastro são aprovados juntos. Os números já gerados passam a valer no sorteio.</li>
+    <li>Os números são aleatórios, têm 5 dígitos e nunca se repetem.</li>
+    <li>Cadastros antigos de 1 cupom recebem o número na aprovação, como antes.</li>
+    <li>Se o saldo do distribuidor foi reduzido depois dos envios, o sistema exige analisar antes os cadastros mais antigos e não aprova além do saldo.</li>
+  </ul>
+
+  <h2>Lotes de cupons</h2>
+  <p>Na seção <strong>Distribuições de cupons</strong> do cadastro, cada lote mostra quantidade, data, vendedor, compra, origem do saldo e os números.</p>
+  <figure>
+    <img src="capturas/g28-lotes.png" alt="Lote aguardando validação">
+    <figcaption>Lote novo de um cadastro aprovado, com as ações do lote.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Aprovar lote</strong>: para lotes novos de cadastros já aprovados. Confira o comprovante do lote antes.</li>
+    <li><strong>Rejeitar lote</strong>: o lote não atende às regras. Os cupons dele voltam ao saldo do distribuidor; os outros lotes não mudam.</li>
+    <li><strong>Cancelar lote</strong>: retira só aquele lote, aprovado ou não. Os cupons voltam ao saldo e os números nunca são reutilizados.</li>
+    <li>Adicionar cupons nunca aprova o cadastro sozinho. Lote de cadastro pendente só vale quando o cadastro for aprovado.</li>
   </ul>
 
   <h2>Rejeitar</h2>
-  <p>Use quando o cadastro não atende às regras. Clique em <strong>Rejeitar</strong>, informe o motivo (mínimo de 5 caracteres) e clique em <strong>Confirmar rejeição</strong>. Só cadastros pendentes podem ser rejeitados.</p>
+  <p>Use quando o cadastro não atende às regras. Clique em <strong>Rejeitar cadastro</strong>, informe o motivo (mínimo de 5 caracteres) e clique em <strong>Confirmar rejeição</strong>. Só cadastros pendentes podem ser rejeitados. Todos os cupons aguardando validação são rejeitados e voltam ao saldo do distribuidor. Um novo envio do mesmo CPF/CNPJ abre outro cadastro, pendente.</p>
   <figure>
     <img src="capturas/g21-rejeitar.png" alt="Rejeição de cadastro">
     <figcaption>A rejeição exige motivo, que fica no histórico.</figcaption>
   </figure>
 
   <h2>Cancelar</h2>
-  <p>Use para retirar um cadastro pendente ou aprovado. Clique em <strong>Cancelar participação</strong>, informe o motivo e confirme.</p>
+  <p>Use para retirar um cadastro pendente ou aprovado inteiro. Clique em <strong>Cancelar cadastro</strong>, informe o motivo e confirme. Para retirar só uma entrega, use <strong>Cancelar lote</strong>.</p>
   <div class="nota aviso">
-    <b class="t">Cadastro aprovado</b>
-    <p>Ao cancelar um cadastro aprovado, o número do cupom é invalidado e nunca mais é usado. A vaga volta ao saldo do distribuidor.</p>
+    <b class="t">Cupons cancelados</b>
+    <p>Os cupons cancelados saem do sorteio, voltam ao saldo do distribuidor uma única vez e os números nunca mais são usados. Cupons já invalidados por revisão não voltam.</p>
   </div>
 
   <h2>Status dos cadastros</h2>
   <table>
-    <tr><th>Status</th><th>Significado</th><th>Consome cupom?</th></tr>
-    <tr><td>Pendente</td><td>Aguardando análise</td><td>Não</td></tr>
-    <tr><td>Aprovado</td><td>Tem número de cupom e vai para o sorteio</td><td>Sim</td></tr>
+    <tr><th>Status do cadastro</th><th>Significado</th><th>Ocupa saldo?</th></tr>
+    <tr><td>Pendente</td><td>Aguardando análise; cupons gerados, fora do sorteio</td><td>Sim, reservado</td></tr>
+    <tr><td>Aprovado</td><td>Cupons validados vão para o sorteio</td><td>Sim</td></tr>
     <tr><td>Rejeitado</td><td>Não atendeu às regras</td><td>Não</td></tr>
     <tr><td>Cancelado</td><td>Retirado pela gestão ou pelo distribuidor</td><td>Não</td></tr>
     <tr><td>Invalidado</td><td>Retirado por decisão de adequação ou registro antigo de pedido cancelado</td><td>Não</td></tr>
@@ -353,8 +374,8 @@
 
   <h2>Como consultar o cupom de um cadastro</h2>
   <ul>
-    <li>Na aba <strong>Participações</strong>, o número aparece na linha do cadastro aprovado.</li>
-    <li>Para o caminho inverso, use o filtro <strong>Nº do cupom</strong> ou a consulta da aba <strong>Sorteio</strong>.</li>
+    <li>Abra o cadastro: os números ficam em cada lote, com a situação de cada um.</li>
+    <li>Para o caminho inverso, use o filtro <strong>Nº do cupom</strong> ou a consulta da aba <strong>Sorteio</strong>, que mostra o lote e o total de cupons do pet shop.</li>
   </ul>
 </section>
 
@@ -388,7 +409,7 @@
       <h3>Adequar</h3>
       <ul>
         <li>Cupons e bonificações passam ao novo direito.</li>
-        <li>Se faltar saldo, os cadastros aprovados mais recentes são invalidados.</li>
+        <li>Se faltar saldo, os cupons válidos mais recentes são invalidados um a um. O cadastro só fica invalidado se perder todos os cupons.</li>
         <li>Os números invalidados saem do sorteio e nunca voltam.</li>
       </ul>
     </div>
@@ -398,7 +419,7 @@
   <ol class="passos">
     <li>Nos detalhes do distribuidor, clique em <strong>Revisar benefícios</strong>.</li>
     <li>Compare o antes e o depois.</li>
-    <li>Leia quantos cadastros seriam invalidados.</li>
+    <li>Leia quantos cupons seriam invalidados e de quais pet shops.</li>
     <li>Escolha <strong>Manter</strong> ou <strong>Adequar</strong> e escreva a justificativa (mínimo de 10 caracteres).</li>
     <li>Clique em <strong>Confirmar decisão</strong>.</li>
   </ol>
@@ -409,7 +430,7 @@
 
   <h2>Quando pedir orientação ao Administrador</h2>
   <ul>
-    <li>A adequação invalidaria cadastros aprovados.</li>
+    <li>A adequação invalidaria cupons válidos.</li>
     <li>Parte da bonificação já foi entregue.</li>
     <li>O cancelamento aconteceu por falta de estoque, sem culpa do distribuidor.</li>
     <li>A lista oficial do sorteio já foi fechada.</li>
@@ -417,7 +438,7 @@
   </ul>
   <div class="nota perigo">
     <b class="t">Cuidado</b>
-    <p>Adequar pode invalidar cadastros de pet shops que não têm relação com o pedido alterado. Enquanto a revisão estiver pendente, novas aprovações continuam possíveis e podem ser atingidas pela decisão. Decida antes de seguir com as aprovações desse distribuidor.</p>
+    <p>Adequar pode invalidar cupons de pet shops que não têm relação com o pedido alterado. A origem do saldo mostrada em cada lote é informativa e não muda essa regra. Enquanto a revisão estiver pendente, novas aprovações continuam possíveis e podem ser atingidas pela decisão. Decida antes de seguir com as aprovações desse distribuidor.</p>
   </div>
 </section>
 
@@ -450,12 +471,13 @@
 <section class="secao" data-letra="I" data-titulo="Sorteio">
   <h1><small>Parte I</small>Sorteio</h1>
   <h2>Consulta dos participantes</h2>
-  <p>Na aba <strong>Participações</strong>, filtre o status <strong>Aprovado</strong>. Somente cupons válidos de cadastros aprovados entram no sorteio. Pendentes, rejeitados, cancelados, invalidados e saldo não usado ficam de fora.</p>
+  <p>O sorteio considera <strong>cupons</strong>, não cadastros. Cada cupom válido é uma chance: um pet shop com 25 cupons válidos tem 25 números, e outro com 5 tem 5. Somente cupons válidos, de cadastros e lotes aprovados, entram. Aguardando validação, rejeitados, cancelados, invalidados e saldo não usado ficam de fora.</p>
 
   <h2>Conferência dos cupons</h2>
   <ul>
-    <li>A <strong>Visão geral</strong> mostra o total de cupons válidos para o sorteio.</li>
-    <li>A consulta <strong>Consultar cupom sorteado</strong>, na aba Sorteio, mostra pet shop, documento, responsável, distribuidor e protocolo.</li>
+    <li>A <strong>Visão geral</strong> mostra os cupons válidos, os aguardando validação e os pet shops com cupom válido.</li>
+    <li>A consulta <strong>Consultar cupom sorteado</strong>, na aba Sorteio, mostra pet shop, documento, responsável, distribuidor, lote e quantos cupons o pet shop tem.</li>
+    <li>Com o cupom válido na tela, <strong>Gerar PDF do resultado</strong> emite o documento do sorteio com o cupom, o participante, as chances dele e a assinatura da lista usada.</li>
   </ul>
   <figure>
     <img src="capturas/g26-consulta-cupom.png" alt="Consulta de cupom">
@@ -465,16 +487,20 @@
   <h2>Procedimentos disponíveis</h2>
   <figure>
     <img src="capturas/g25-sorteio.png" alt="Opções de sorteio">
-    <figcaption>Aba Sorteio: urna, gerador de números e fechamento da lista.</figcaption>
+    <figcaption>Aba Sorteio: urna, gerador de números, auditoria e fechamento da lista.</figcaption>
   </figure>
   <div class="grade">
     <div class="cartao">
       <h3>Sorteio por urna</h3>
-      <p><strong>Gerar PDF para impressão</strong> cria os cupons em A4, 10 por folha, com linhas de corte.</p>
+      <p><strong>Gerar PDF para impressão</strong> cria os cupons em A4, 10 por folha, com linhas de corte. É um papel por cupom válido.</p>
     </div>
     <div class="cartao">
       <h3>Gerador de números</h3>
-      <p><strong>Gerar lista numérica</strong> cria uma planilha com cupom, pet shop, documento e distribuidor, para sorteio externo.</p>
+      <p><strong>Gerar lista numérica</strong> cria uma planilha com cupom, pet shop, documento, distribuidor, lote e origem do saldo, para sorteio externo.</p>
+    </div>
+    <div class="cartao">
+      <h3>Auditoria dos cupons</h3>
+      <p><strong>PDF de auditoria (interno)</strong> traz os totais (elegíveis, invalidados, pet shops) e cada cupom com pet shop, CPF/CNPJ, distribuidor, lote, origem, situação e emissão. O <strong>PDF público</strong> lista só os elegíveis, com o documento mascarado.</p>
     </div>
   </div>
 
@@ -517,7 +543,8 @@
     <tr><th>Mensagem no link</th><th>O que significa</th><th>O que fazer</th></tr>
     <tr><td>Sem cupons disponíveis no momento</td><td>O distribuidor ainda não atingiu a primeira faixa, ou o saldo foi retirado por revisão</td><td>Consulte o acumulado nos detalhes</td></tr>
     <tr><td>Todos os cupons já foram utilizados</td><td>Todo o saldo está em cadastros aprovados</td><td>Informe o valor que falta para a próxima faixa</td></tr>
-    <tr><td>Limite de cadastros em análise</td><td>A fila de pendentes atingiu o limite</td><td>Analise os cadastros pendentes</td></tr>
+    <tr><td>Todos os cupons disponíveis já estão reservados</td><td>Todo o saldo está em cupons válidos ou aguardando validação</td><td>Analise os cadastros e lotes pendentes</td></tr>
+    <tr><td>Saldo insuficiente</td><td>A quantidade pedida passa do saldo disponível</td><td>Oriente a enviar uma quantidade menor</td></tr>
     <tr><td>Prazo terminou em 10/12/2026</td><td>O período de cadastros acabou</td><td>Encaminhe ao Administrador, se for exceção</td></tr>
   </table>
 </section>

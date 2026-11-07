@@ -11,7 +11,7 @@ process.env.NATAL2026_FIM_CADASTROS = new Date(agora + 5 * 24 * 60 * 60 * 1000).
 process.env.JWT_SECRET ||= "segredo-de-teste-com-mais-de-32-caracteres!!";
 
 const { natalPublicRoutes } = await import("../src/routes/natalRoutes.js");
-const { MENSAGEM_CADASTRO_RECEBIDO } = await import("../src/controllers/natalController.js");
+const { mensagemEnvioPublico } = await import("../src/controllers/natalController.js");
 const { criarStorageMemoria, setComprovanteStorage } = await import("../src/services/natalComprovanteService.js");
 const { sincronizarPedidoNatal } = await import("../src/services/natalLoteService.js");
 const { default: Pedido } = await import("../src/models/Pedido.js");
@@ -104,7 +104,7 @@ test("14 e 30. envio público sem login (multipart, como no celular) fica penden
   const envio = await fetch(`${base}/lotes/${conta.codigoPublico}/participacoes`, { method: "POST", body: form });
   const corpo = await envio.json();
   assert.equal(envio.status, 201, corpo.message);
-  assert.equal(corpo.message, MENSAGEM_CADASTRO_RECEBIDO);
+  assert.equal(corpo.message, mensagemEnvioPublico(1));
   assert.match(corpo.protocolo, /^NP26-[A-Z2-9]{8}$/);
 
   const salvo = await NatalParticipacao.findOne({ protocolo: corpo.protocolo });

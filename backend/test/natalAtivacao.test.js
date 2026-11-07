@@ -703,7 +703,7 @@ test("aprovações de pedidos simultâneas somam sem duplicar", async () => {
   assert.equal(conta.cupons.total, 500);
 });
 
-test("cadastros simultâneos respeitam a fila do saldo compartilhado", async () => {
+test("cadastros simultâneos respeitam a reserva estrita do saldo compartilhado", async () => {
   await ativarModo();
   const { distribuidor } = await contexto();
   const pedido = await criarPedido(distribuidor, 12000);
@@ -712,7 +712,7 @@ test("cadastros simultâneos respeitam a fila do saldo compartilhado", async () 
   await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 1 } });
   const resultados = await Promise.allSettled(Array.from({ length: 60 }, () => cadastrar(conta.codigoPublico)));
   const aceitos = resultados.filter((item) => item.status === "fulfilled").length;
-  assert.equal(aceitos, 51, "1 vaga + folga de 50 na fila");
+  assert.equal(aceitos, 1, "reserva estrita: 1 vaga, nenhum envio além do saldo");
   assert.equal((await contaDe(distribuidor)).contadores.pendentes, aceitos);
   assert.equal(await NatalParticipacao.countDocuments({ status: "pendente" }), aceitos);
 });
@@ -720,9 +720,11 @@ test("cadastros simultâneos respeitam a fila do saldo compartilhado", async () 
 test("consumo simultâneo no modelo legado nunca ultrapassa o lote nem cruza a troca de modo", async () => {
   const { comercial, distribuidor } = await contexto();
   const pedido = await criarPedido(distribuidor, 100);
-  const lote = await criarLote(distribuidor, pedido, 2);
+  const lote = await criarLote(distribuidor, pedido, 5);
   const participacoes = [];
   for (let i = 0; i < 5; i += 1) participacoes.push(await cadastrar(lote.codigoPublico));
+  // Saldo reduzido depois dos envios: mais cadastros pendentes do que vagas.
+  await NatalLote.updateOne({ _id: lote._id }, { $set: { cuponsConcedidos: 2 } });
   await Promise.allSettled([
     ...participacoes.map((item) => aprovarParticipacao({ id: item._id, usuario: comercial, now: DENTRO })),
     executarMigracao({ operador, now: DENTRO }),

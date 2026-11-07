@@ -15,7 +15,7 @@
   <img class="capa-logo" src="../../../frontend/src/assets/natal-2026/logo-natal-branco.png" alt="Atual Pet">
   <p class="capa-rotulo">Manual do distribuidor</p>
   <h1>Natal Premiado 2026</h1>
-  <p class="capa-sub">Como acompanhar seus cupons e compartilhar seu link de cadastro com os pet shops.</p>
+  <p class="capa-sub">Como acompanhar seus cupons, compartilhar seu link e entregar vários cupons a cada pet shop.</p>
   <div class="capa-dados">
     <div><b>Campanha</b>03/11 a 10/12/2026</div>
     <div><b>Sorteio</b>15/12/2026</div>
@@ -34,7 +34,7 @@
 
 <section class="secao" data-letra="1" data-titulo="Como a campanha funciona">
   <h1><small>Parte 1</small>Como a campanha funciona</h1>
-  <p>Suas compras acumulam e geram cupons para distribuir aos pet shops. Cada cadastro aprovado recebe um número para o sorteio. O saldo é seu, e não de um pedido específico.</p>
+  <p>Suas compras acumulam e geram cupons para distribuir aos pet shops. Você decide quantos cupons cada pet shop recebe. <strong>Cada cupom é uma chance individual no sorteio</strong>: um pet shop com 25 cupons válidos concorre com 25 números. O saldo é seu, e não de um pedido específico.</p>
   <table>
     <tr><th>Acumulado no ciclo</th><th class="n">Cupons</th><th class="n">Marketing</th><th class="n">Produtos</th></tr>
     <tr><td>Abaixo de R$ 12.000</td><td class="n">0</td><td class="n">0%</td><td class="n">0%</td></tr>
@@ -100,9 +100,10 @@
   <table>
     <tr><th>Indicador</th><th>O que mostra</th></tr>
     <tr><td>Cupons concedidos</td><td>Total que você conquistou</td></tr>
-    <tr><td>Cupons disponíveis</td><td>O que ainda pode ser usado em novos cadastros</td></tr>
-    <tr><td>Cupons utilizados</td><td>Cadastros aprovados, com número de cupom</td></tr>
-    <tr><td>Em análise</td><td>Cadastros aguardando validação da Atual Pet</td></tr>
+    <tr><td>Cupons disponíveis</td><td>O que ainda pode ser entregue. Cupons aguardando validação já saem daqui.</td></tr>
+    <tr><td>Cupons distribuídos</td><td>Tudo o que já foi entregue aos pet shops: válidos e aguardando validação</td></tr>
+    <tr><td>Válidos no sorteio</td><td>Cupons validados pela Atual Pet, que já concorrem</td></tr>
+    <tr><td>Aguardando validação</td><td>Cupons entregues que a Atual Pet ainda vai validar</td></tr>
     <tr><td>Acumulado no ciclo</td><td>Quanto você já comprou no ciclo atual</td></tr>
     <tr><td>Faixa atual</td><td>Faixa alcançada no ciclo</td></tr>
     <tr><td>Falta para a próxima faixa</td><td>Valor que libera mais benefícios</td></tr>
@@ -116,28 +117,96 @@
   </figure>
 </section>
 
-<section class="secao continua" data-letra="4" data-titulo="Cadastros dos pet shops">
-  <h1><small>Parte 4</small>Cadastros dos pet shops</h1>
-  <p>O pet shop abre seu link, preenche os dados e anexa o comprovante da compra. O cadastro fica em análise até a validação da Atual Pet.</p>
-  <ul>
-    <li>Na sua área, <strong>Participações cadastradas</strong> mostra os cadastros e a situação de cada um.</li>
-    <li>Aprovado recebe um número de cupom para o sorteio.</li>
-    <li>Você pode cancelar um cadastro, informando o motivo. Se ele estava aprovado, o número é invalidado e a vaga volta ao seu saldo.</li>
-    <li>Os cadastros vão até 10/12/2026. O sorteio é em 15/12/2026.</li>
-  </ul>
+<section class="secao" data-letra="4" data-titulo="Cadastrar um pet shop com vários cupons">
+  <h1><small>Parte 4</small>Cadastrar um pet shop com vários cupons</h1>
+  <p>Um único cadastro pode receber vários cupons. Não preencha o formulário várias vezes para o mesmo pet shop.</p>
+  <h2>Passo a passo</h2>
+  <ol class="passos">
+    <li>Abra o seu link de cadastro. No topo aparecem o nome do distribuidor, os <strong>cupons disponíveis</strong> e os <strong>já distribuídos</strong>.</li>
+    <li>Preencha os dados do vendedor e do pet shop.</li>
+    <li>Em <strong>Quantos cupons deseja distribuir para este cliente?</strong>, digite a quantidade ou use os botões − e +. Vale de 1 até o saldo disponível.</li>
+    <li>Confira a prévia: quantas chances o pet shop terá no sorteio e como fica o seu saldo.</li>
+    <li>Informe a data e o valor da compra e anexe o comprovante.</li>
+    <li>Clique em <strong>Enviar cadastro</strong>, confira o resumo e clique em <strong>Confirmar e enviar</strong>.</li>
+  </ol>
   <div class="grade">
     <figure>
-      <img src="capturas/d06-pagina-publica.png" alt="Página pública de cadastro">
-      <figcaption>Página de cadastro aberta pelo link.</figcaption>
+      <img src="capturas/d06-pagina-publica.png" alt="Topo da página de cadastro com o saldo">
+      <figcaption>Topo do link: distribuidor e saldo de cupons.</figcaption>
     </figure>
+    <div>
+      <figure>
+        <img src="capturas/d07-quantidade.png" alt="Campo de quantidade de cupons">
+        <figcaption>Quantidade, chances no sorteio e saldo após o cadastro.</figcaption>
+      </figure>
+      <figure>
+        <img src="capturas/d08-confirmacao.png" alt="Confirmação antes da emissão">
+        <figcaption>Confirmação antes de gerar os cupons.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <h2>O que acontece depois</h2>
+  <ul>
+    <li>A mensagem de sucesso só aparece depois que o sistema grava tudo. Ela mostra o protocolo e os números gerados, por exemplo: <em>“Foram gerados 25 cupons para este pet shop.”</em></li>
+    <li>Os cupons saem do seu saldo na hora, mas só valem no sorteio depois da validação da Atual Pet.</li>
+    <li>Se a internet cair durante o envio, toque em <strong>Enviar cadastro</strong> de novo. O sistema reconhece o mesmo envio e não gera cupons em dobro.</li>
+    <li>Se dois vendedores enviarem ao mesmo tempo e o saldo não der para os dois, um deles recebe o aviso de saldo insuficiente. O saldo nunca fica negativo.</li>
+  </ul>
+  <div class="nota">
+    <b class="t">Mesmo CPF/CNPJ no seu link</b>
+    <p>Se o pet shop já tiver cadastro com você, um novo envio pelo link entra como um novo lote do mesmo cadastro. Os dados do cadastro original não mudam. Para não repetir os dados, prefira adicionar cupons pela sua área (Parte 5).</p>
+  </div>
+</section>
+
+<section class="secao" data-letra="5" data-titulo="Adicionar cupons e acompanhar cadastros">
+  <h1><small>Parte 5</small>Adicionar cupons e acompanhar cadastros</h1>
+  <h2>Ver os cadastros e o total de chances</h2>
+  <ol class="passos">
+    <li>Na sua área, desça até <strong>Participações cadastradas</strong>. Cada linha mostra o total de cupons, os válidos e os que aguardam validação.</li>
+    <li>Clique no pet shop para ver cada distribuição de cupons, com data, quantidade, situação e os números.</li>
+  </ol>
+  <figure class="medio">
+    <img src="capturas/d09-cadastro-cupons.png" alt="Distribuições de cupons de um pet shop">
+    <figcaption>Histórico das distribuições de um pet shop: cada lote com seus números.</figcaption>
+  </figure>
+  <h2>Adicionar cupons a um pet shop já cadastrado</h2>
+  <ol class="passos">
+    <li>Abra o pet shop e clique em <strong>Adicionar cupons</strong>.</li>
+    <li>Informe a quantidade, o vendedor, a data e o valor da compra e anexe o comprovante.</li>
+    <li>Confira a prévia e clique em <strong>Revisar envio</strong> e depois em <strong>Confirmar e adicionar</strong>.</li>
+  </ol>
+  <figure class="medio">
+    <img src="capturas/d10-adicionar-cupons.png" alt="Adicionar cupons a um cadastro">
+    <figcaption>Adicionar cupons sem repetir os dados do pet shop.</figcaption>
+  </figure>
+  <p>Exemplo: o Pet Shop Amigo Fiel tem 25 cupons e recebe mais 10. O cadastro continua o mesmo, os 25 anteriores continuam valendo, são gerados 10 números novos e o total passa a 35. Seu saldo diminui 10.</p>
+  <div class="nota aviso">
+    <b class="t">Validação dos novos cupons</b>
+    <p>Cada novo lote também passa pela validação da Atual Pet. Cadastros rejeitados ou cancelados não recebem cupons; nesse caso, faça um novo cadastro.</p>
+  </div>
+  <h2>Cancelamentos</h2>
+  <ul>
+    <li>Você pode cancelar o cadastro inteiro, informando o motivo. Todos os cupons dele são cancelados e voltam ao seu saldo.</li>
+    <li>A Atual Pet pode cancelar só um lote. Os outros lotes do mesmo pet shop continuam valendo.</li>
+    <li>Cupons rejeitados na validação também voltam ao seu saldo.</li>
+    <li>Números cancelados nunca são reutilizados.</li>
+  </ul>
+  <h2>Como cada cupom participa do sorteio</h2>
+  <ul>
+    <li>Cada cupom válido é um número na lista oficial e um papel na urna.</li>
+    <li>Quanto mais cupons válidos, mais chances. O prêmio continua sendo um único Kit Groomer.</li>
+    <li>Cupons aguardando validação, rejeitados, cancelados ou invalidados não participam.</li>
+    <li>Os cadastros vão até 10/12/2026. Depois disso, nenhum cupom novo é emitido. O sorteio é em 15/12/2026.</li>
+  </ul>
+  <div class="grade">
     <figure>
       <img src="capturas/d05-celular.png" alt="Área da campanha no celular">
       <figcaption>Sua área da campanha no celular.</figcaption>
     </figure>
-  </div>
-  <div class="nota">
-    <b class="t">Dúvidas</b>
-    <p>Procure a equipe comercial da Atual Pet.</p>
+    <div class="nota">
+      <b class="t">Dúvidas</b>
+      <p>Procure a equipe comercial da Atual Pet.</p>
+    </div>
   </div>
 </section>
 

@@ -5,6 +5,7 @@ import NatalBonificacao from "../models/NatalBonificacao.js";
 import NatalCompraExterna from "../models/NatalCompraExterna.js";
 import NatalConta from "../models/NatalConta.js";
 import NatalCupom from "../models/NatalCupom.js";
+import NatalDistribuicao from "../models/NatalDistribuicao.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalMigracaoExecucao from "../models/NatalMigracaoExecucao.js";
 import NatalMovimentoCupom from "../models/NatalMovimentoCupom.js";
@@ -37,6 +38,7 @@ export const garantirIndicesNatal = () => {
       NatalLote.createIndexes(),
       NatalParticipacao.createIndexes(),
       NatalCupom.createIndexes(),
+      NatalDistribuicao.createIndexes(),
       NatalAuditoria.createIndexes(),
       NatalExportacao.createIndexes(),
       NatalConta.createIndexes(),

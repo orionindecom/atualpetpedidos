@@ -23,7 +23,7 @@ import {
   atualizarPedidoAdmin,
   atualizarStatusPedido,
 } from "../src/controllers/pedidoController.js";
-import { MENSAGEM_CADASTRO_RECEBIDO } from "../src/controllers/natalController.js";
+import { mensagemEnvioPublico } from "../src/controllers/natalController.js";
 import { resetIndicesNatalParaTestes } from "../src/services/natalBaseService.js";
 import { criarStorageMemoria, setComprovanteStorage, validarArquivoComprovante } from "../src/services/natalComprovanteService.js";
 import { sincronizarPedidoNatal } from "../src/services/natalLoteService.js";
@@ -147,7 +147,7 @@ const dadosParticipacao = (extra = {}) => ({
   ...extra,
 });
 
-const cadastrar = async (conta, { dados = dadosParticipacao(), marca, now = DENTRO } = {}) => {
+const cadastrar = async (conta, { dados = dadosParticipacao(), marca, now = DENTRO, config } = {}) => {
   const buffer = pngValido(marca || String(Math.random()));
   const meta = validarArquivoComprovante({ buffer, mimetype: "image/png", originalname: "nota.png" });
   return registrarParticipacaoPublica({
@@ -157,6 +157,7 @@ const cadastrar = async (conta, { dados = dadosParticipacao(), marca, now = DENT
     ip: "10.0.0.1",
     userAgent: "teste",
     now,
+    ...(config ? { config } : {}),
   });
 };
 
@@ -354,7 +355,9 @@ test("14 e 16. formulário funciona sem login via HTTP e o cadastro fica pendent
     assert.equal(envio.status, 409);
   } else {
     assert.equal(envio.status, 201);
-    assert.equal(corpo.message, MENSAGEM_CADASTRO_RECEBIDO);
+    assert.equal(corpo.message, mensagemEnvioPublico(1));
+    assert.equal(corpo.quantidade, 1);
+    assert.equal(corpo.cupons.length, 1);
     assert.equal(corpo.status, "pendente");
   }
 
@@ -473,9 +476,10 @@ test("22. cancelamento de cadastro pendente não altera o saldo aprovado", async
 test("24 e 25. aprovações simultâneas nunca ultrapassam a quantidade concedida", async () => {
   const { admin, comercial, distribuidor } = await contexto();
   const conta = await liberarPedido(await criarPedido(distribuidor, 12000), admin);
-  await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 3 } });
   const participacoes = [];
   for (let i = 0; i < 8; i += 1) participacoes.push(await cadastrar(conta));
+  // Saldo reduzido depois dos envios: 8 pendentes para 3 vagas.
+  await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 3 } });
 
   // Cada cadastro recebe duas aprovações concorrentes.
   const tentativas = participacoes.flatMap((p) => [p, p]).map((p) => aprovarParticipacao({ id: p._id, usuario: comercial, now: DENTRO }));
@@ -485,16 +489,17 @@ test("24 e 25. aprovações simultâneas nunca ultrapassam a quantidade concedid
   const atual = await NatalConta.findById(conta._id);
   assert.ok(aprovadas <= 3);
   assert.equal(atual.contadores.aprovados, aprovadas);
-  assert.equal(await NatalCupom.countDocuments({ clienteId: conta.clienteId }), aprovadas);
+  assert.equal(await NatalCupom.countDocuments({ clienteId: conta.clienteId, status: "valido" }), aprovadas);
   assert.equal(atual.contadores.pendentes, 8 - aprovadas);
 });
 
 test("ordem de recebimento: com vagas escassas, cadastros antigos têm prioridade", async () => {
   const { admin, comercial, distribuidor } = await contexto();
   const conta = await liberarPedido(await criarPedido(distribuidor, 12000), admin);
-  await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 1 } });
   const antigo = await cadastrar(conta, { now: new Date("2026-11-20T10:00:00Z") });
   const novo = await cadastrar(conta, { now: new Date("2026-11-20T11:00:00Z") });
+  // Saldo reduzido depois dos envios: 2 pendentes para 1 vaga.
+  await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 1 } });
   await assert.rejects(aprovarParticipacao({ id: novo._id, usuario: comercial }), { code: "ordem_recebimento" });
   await rejeitarParticipacao({ id: antigo._id, usuario: comercial, motivo: "Fora das regras" });
   const aprovado = await aprovarParticipacao({ id: novo._id, usuario: comercial, now: DENTRO });
@@ -505,25 +510,29 @@ test("26. números de cupons são únicos, aleatórios e não reaproveitados", a
   const { admin, comercial, distribuidor } = await contexto();
   const config = buildNatalConfig({ NATAL2026_CUPOM_MIN: "1", NATAL2026_CUPOM_MAX: "12", NATAL2026_CUPOM_DIGITOS: "4" });
   const conta = await liberarPedido(await criarPedido(distribuidor, 12000), admin);
+  // Os números são gerados no envio (aguardando validação) e valem na aprovação.
   const participacoes = [];
-  for (let i = 0; i < 13; i += 1) participacoes.push(await cadastrar(conta));
-  const numeros = [];
-  for (const p of participacoes.slice(0, 12)) {
-    numeros.push((await aprovarParticipacao({ id: p._id, usuario: comercial, config, now: DENTRO })).cupom.numero);
-  }
+  for (let i = 0; i < 12; i += 1) participacoes.push(await cadastrar(conta, { config }));
+  const numeros = (await NatalCupom.find({ clienteId: conta.clienteId })).map((cupom) => cupom.numero);
   assert.equal(new Set(numeros).size, 12);
+  assert.ok(numeros.every((numero) => numero >= 1 && numero <= 12));
+  for (const p of participacoes.slice(0, 11)) {
+    const aprovada = await aprovarParticipacao({ id: p._id, usuario: comercial, config, now: DENTRO });
+    assert.ok(numeros.includes(aprovada.cupom.numero), "a aprovação mantém o número do envio");
+  }
   await cancelarParticipacao({ id: participacoes[0]._id, usuario: comercial, motivo: "Teste de reaproveitamento" });
-  // Intervalo esgotado: o número cancelado não volta e a aprovação é desfeita por completo.
-  await assert.rejects(
-    aprovarParticipacao({ id: participacoes[12]._id, usuario: comercial, config, now: DENTRO }),
-    { statusCode: 503, code: "numeracao_esgotada" }
-  );
-  const ultima = await NatalParticipacao.findById(participacoes[12]._id);
-  assert.equal(ultima.status, "pendente");
+  // Intervalo esgotado: o número cancelado não volta e o envio é desfeito por completo.
+  const antes = await NatalConta.findById(conta._id);
+  const arquivosAntes = storage.arquivos.size;
+  await assert.rejects(cadastrar(conta, { config }), { statusCode: 503, code: "numeracao_esgotada" });
   const atual = await NatalConta.findById(conta._id);
-  assert.equal(atual.contadores.aprovados, 11);
+  assert.equal(atual.contadores.aprovados, 10);
   assert.equal(atual.contadores.pendentes, 1);
+  assert.equal(atual.contadores.pendentes, antes.contadores.pendentes, "reserva desfeita");
+  assert.equal(storage.arquivos.size, arquivosAntes, "comprovante removido");
+  assert.equal(await NatalParticipacao.countDocuments({ clienteId: conta.clienteId }), 12, "nenhum cadastro parcial");
   assert.equal(await NatalCupom.countDocuments({ numero: numeros[0] }), 1);
+  assert.equal((await NatalCupom.findOne({ participacaoId: participacoes[0]._id })).status, "cancelado");
 });
 
 test("27 e 28. exportações excluem cancelados, pendentes, rejeitados e invalidados", async () => {
@@ -689,7 +698,7 @@ test("auditoria é imutável", async () => {
   await assert.rejects(registro.save());
 });
 
-test("saldo esgotado bloqueia novos cadastros e fila de pendentes tem limite", async () => {
+test("saldo esgotado bloqueia novos cadastros e a reserva é estrita", async () => {
   const { admin, comercial, distribuidor } = await contexto();
   const conta = await liberarPedido(await criarPedido(distribuidor, 12000), admin);
   await NatalConta.updateOne({ _id: conta._id }, { $set: { "cupons.total": 1 } });
@@ -698,9 +707,8 @@ test("saldo esgotado bloqueia novos cadastros e fila de pendentes tem limite", a
   const meta = validarArquivoComprovante({ buffer, mimetype: "image/png", originalname: "n.png" });
   const enviar = () => registrarParticipacaoPublica({ codigo: conta.codigoPublico, dados: dadosParticipacao(), arquivo: { buffer, meta }, config, now: DENTRO });
   const primeiro = await enviar();
-  await enviar();
   await assert.rejects(enviar(), { code: "fila_cheia" });
-  assert.equal(storage.arquivos.size, 2, "arquivo recusado não fica armazenado");
+  assert.equal(storage.arquivos.size, 1, "arquivo recusado não fica armazenado");
   await aprovarParticipacao({ id: primeiro._id, usuario: comercial, now: DENTRO });
   await assert.rejects(enviar(), { code: "esgotado" });
 });

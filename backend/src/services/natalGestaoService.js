@@ -19,6 +19,8 @@ import {
 import { recalcularContadoresConta } from "./natalContaService.js";
 import { recalcularContadoresLote } from "./natalLoteService.js";
 import { detectarPendenciasSincronizacao, listarDistribuidores } from "./natalDistribuidorService.js";
+import { resumoCuponsCadastro } from "./natalDistribuicaoService.js";
+import NatalDistribuicao from "../models/NatalDistribuicao.js";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const textoBusca = (value, max = 80) => (typeof value === "string" ? value.trim().slice(0, max) : "");
@@ -101,7 +103,10 @@ export const serializarParticipacao = (participacao, { gestor = false } = {}) =>
   } : undefined,
   status: participacao.status,
   recebidoEm: participacao.recebidoEm,
+  // Só nos cadastros antigos de 1 cupom; os demais usam "cupons" e os lotes.
   cupom: participacao.cupom,
+  cupons: resumoCuponsCadastro(participacao),
+  duplicidadeLegada: gestor ? participacao.duplicidadeLegada || undefined : undefined,
   decisao: participacao.decisao ? {
     em: participacao.decisao.em,
     motivo: participacao.decisao.motivo,
@@ -154,8 +159,8 @@ export const construirFiltroParticipacoes = (query = {}, { clienteId } = {}) => 
   }
   const vendedor = textoBusca(query.vendedor);
   if (vendedor) filtro.vendedorNome = { $regex: escapeRegex(vendedor), $options: "i" };
-  const cupom = normalizeDigits(query.cupom).slice(0, 9);
-  if (cupom) filtro["cupom.numero"] = Number(cupom);
+  // A busca por número usa os cupons individuais (ver listarParticipacoes).
+  if (query.comLotePendente === "true") filtro["cupons.pendentes"] = { $gt: 0 };
   const protocolo = textoBusca(query.protocolo, 20).toUpperCase();
   if (protocolo) filtro.protocolo = protocolo;
   if (query.comAlertas === "true") filtro["alertas.0"] = { $exists: true };
@@ -169,6 +174,11 @@ export const construirFiltroParticipacoes = (query = {}, { clienteId } = {}) => 
 
 export const listarParticipacoes = async (query = {}, { clienteId, gestor = false } = {}) => {
   const filtro = construirFiltroParticipacoes(query, { clienteId });
+  const cupom = normalizeDigits(query.cupom).slice(0, 9);
+  if (cupom) {
+    const encontrado = await NatalCupom.findOne({ numero: Number(cupom), ...(clienteId ? { clienteId } : {}) }).select("participacaoId").lean();
+    filtro._id = encontrado ? encontrado.participacaoId : new mongoose.Types.ObjectId();
+  }
   const limite = Math.min(Math.max(Number.parseInt(query.limite, 10) || 30, 1), 100);
   const pagina = Math.max(Number.parseInt(query.pagina, 10) || 1, 1);
   // Ordem de recebimento (mais antigos primeiro) orienta a análise da fila.
@@ -207,13 +217,15 @@ export const listarLotes = async (query = {}, { clienteId, gestor = !clienteId }
 };
 
 export const obterPainelGestao = async () => {
-  const [lotes, participacoes, cupons, estado, porDistribuidor, pendenciasSincronizacao] = await Promise.all([
+  const [lotes, participacoes, cupons, estado, porDistribuidor, pendenciasSincronizacao, lotesAdicionaisPendentes, petshopsComCupomValido] = await Promise.all([
     NatalLote.find({}).select("clienteId status").lean().maxTimeMS(8000),
     NatalParticipacao.aggregate([{ $group: { _id: "$status", total: { $sum: 1 } } }]),
     NatalCupom.aggregate([{ $group: { _id: "$status", total: { $sum: 1 } } }]),
     obterEstadoCampanha(),
     listarDistribuidores(),
     detectarPendenciasSincronizacao(),
+    NatalDistribuicao.countDocuments({ status: "pendente", tipo: "adicional" }),
+    NatalCupom.distinct("participacaoId", { status: "valido" }),
   ]);
   const porStatus = Object.fromEntries(participacoes.map((item) => [item._id, item.total]));
   const cuponsPorStatus = Object.fromEntries(cupons.map((item) => [item._id, item.total]));
@@ -237,7 +249,12 @@ export const obterPainelGestao = async () => {
       cuponsValidos: cuponsPorStatus.valido || 0,
       cuponsCancelados: cuponsPorStatus.cancelado || 0,
       cuponsInvalidados: cuponsPorStatus.invalidado || 0,
+      cuponsAguardandoValidacao: cuponsPorStatus.pendente || 0,
+      cuponsRejeitados: cuponsPorStatus.rejeitado || 0,
+      lotesAdicionaisPendentes,
+      petshopsComCupomValido: petshopsComCupomValido.length,
     },
+    multiplosCupons: Boolean(estado.multiplosCupons),
     porDistribuidor,
     pendenciasSincronizacao,
     estado: {
@@ -267,7 +284,10 @@ export const buscarCupom = async (numeroTexto) => {
   if (!digitos) throw new NatalError(400, "Informe o número do cupom.");
   const cupom = await NatalCupom.findOne({ numero: Number(digitos) }).lean();
   if (!cupom) return null;
-  const participacao = await NatalParticipacao.findById(cupom.participacaoId).lean();
+  const [participacao, distribuicao] = await Promise.all([
+    NatalParticipacao.findById(cupom.participacaoId).lean(),
+    cupom.distribuicaoId ? NatalDistribuicao.findById(cupom.distribuicaoId).select("protocolo status quantidade recebidoEm vendedorNome").lean() : null,
+  ]);
   return {
     cupom: {
       numero: cupom.numero,
@@ -275,9 +295,18 @@ export const buscarCupom = async (numeroTexto) => {
       status: cupom.status,
       emitidoEm: cupom.emitidoEm,
       emitidoPorNome: cupom.emitidoPor?.usuarioNome,
+      validadoEm: cupom.validadoEm,
       encerradoEm: cupom.encerradoEm,
       motivoEncerramento: cupom.motivoEncerramento,
+      origem: cupom.origemSaldo ? { tipo: cupom.origemSaldo.tipo, referencia: cupom.origemSaldo.referencia, numeroPedido: cupom.origemSaldo.numeroPedido } : undefined,
     },
+    lote: distribuicao ? {
+      protocolo: distribuicao.protocolo,
+      status: distribuicao.status,
+      quantidade: distribuicao.quantidade,
+      recebidoEm: distribuicao.recebidoEm,
+      vendedorNome: distribuicao.vendedorNome,
+    } : null,
     participacao: participacao ? serializarParticipacao(participacao, { gestor: true }) : null,
   };
 };

@@ -21,6 +21,9 @@ import {
   formatMoney,
   PARTICIPACAO_STATUS_LABELS,
   PARTICIPACAO_STATUS_TONES,
+  CUPOM_STATUS_LABELS,
+  resumoCupons,
+  textoCupons,
 } from "../../utils/natalPremiado";
 
 const ABAS = [
@@ -33,7 +36,7 @@ const ABAS = [
 
 const FILTROS_INICIAIS = {
   distribuidor: "", pedido: "", petshop: "", documento: "", vendedor: "", cupom: "",
-  status: "", dataInicio: "", dataFim: "", comAlertas: "", ordem: "", pagina: 1,
+  status: "", dataInicio: "", dataFim: "", comAlertas: "", comLotePendente: "", ordem: "", pagina: 1,
 };
 
 const baixarArquivo = async (endpoint, nomePadrao) => {
@@ -77,8 +80,12 @@ function VisaoGeral({ painel, onAbrirDistribuidores }) {
         <div className={styles.kpi}><span>Distribuidores participantes</span><strong>{i.distribuidoresParticipantes}</strong></div>
         <div className={styles.kpi}><span>Compras acumuladas</span><strong>{formatMoney(i.comprasAcumuladas)}</strong></div>
         <div className={styles.kpi}><span>Cupons concedidos</span><strong>{i.cuponsConcedidos}</strong></div>
-        <div className={styles.kpi} data-tone="success"><span>Participações aprovadas</span><strong>{i.participacoesAprovadas}</strong></div>
-        <div className={styles.kpi} data-tone="accent"><span>Participações pendentes</span><strong>{i.participacoesPendentes}</strong></div>
+        <div className={styles.kpi} data-tone="success"><span>Cupons válidos no sorteio</span><strong>{i.cuponsValidos}</strong></div>
+        <div className={styles.kpi} data-tone="accent"><span>Cupons aguardando validação</span><strong>{i.cuponsAguardandoValidacao ?? 0}</strong></div>
+        <div className={styles.kpi}><span>Pet shops com cupom válido</span><strong>{i.petshopsComCupomValido ?? 0}</strong></div>
+        <div className={styles.kpi} data-tone="accent"><span>Lotes extras aguardando validação</span><strong>{i.lotesAdicionaisPendentes ?? 0}</strong></div>
+        <div className={styles.kpi} data-tone="success"><span>Cadastros aprovados</span><strong>{i.participacoesAprovadas}</strong></div>
+        <div className={styles.kpi} data-tone="accent"><span>Cadastros pendentes</span><strong>{i.participacoesPendentes}</strong></div>
         <div className={styles.kpi} data-tone="danger"><span>Participações rejeitadas</span><strong>{i.participacoesRejeitadas}</strong></div>
         <div className={styles.kpi}><span>Participações canceladas</span><strong>{i.participacoesCanceladas}</strong></div>
         <div className={styles.kpi}><span>Cupons disponíveis</span><strong>{i.cuponsDisponiveis}</strong></div>
@@ -192,6 +199,14 @@ function Participacoes({ usuario, onAlterado, filtroInicial }) {
           />
           Só com alerta de duplicidade
         </label>
+        <label className={styles.filtroCheck}>
+          <input
+            type="checkbox"
+            checked={rascunho.comLotePendente === "true"}
+            onChange={(event) => setRascunho((atual) => ({ ...atual, comLotePendente: event.target.checked ? "true" : "" }))}
+          />
+          Só com cupons aguardando validação
+        </label>
         <div className={styles.acoes} style={{ marginTop: 0 }}>
           <button type="button" className={ui.ghostButton} onClick={limpar}>Limpar</button>
           <button type="submit" className={ui.primaryButton}>Filtrar</button>
@@ -222,7 +237,13 @@ function Participacoes({ usuario, onAlterado, filtroInicial }) {
               </div>
               <div className={styles.linhaStatus}>
                 <span className={ui.badge} data-tone={PARTICIPACAO_STATUS_TONES[item.status]}>{PARTICIPACAO_STATUS_LABELS[item.status]}</span>
-                {item.cupom && <small>Cupom {item.cupom.codigo}</small>}
+                <small>
+                  {textoCupons(resumoCupons(item).total)} · {resumoCupons(item).validos} válido(s)
+                  {resumoCupons(item).pendentes ? ` · ${resumoCupons(item).pendentes} aguardando` : ""}
+                  {resumoCupons(item).cancelados + resumoCupons(item).rejeitados + resumoCupons(item).invalidados
+                    ? ` · ${resumoCupons(item).cancelados + resumoCupons(item).rejeitados + resumoCupons(item).invalidados} fora do sorteio`
+                    : ""}
+                </small>
               </div>
             </button>
           ))}
@@ -357,17 +378,39 @@ function Sorteio({ painel, usuario, onPainel }) {
   }, []);
   useEffect(() => { carregarExportacoes(); }, [carregarExportacoes]);
 
+  const ARQUIVOS = {
+    pdf: ["/natal-2026/gestao/exportacoes/pdf-urna", "natal-2026-cupons-urna.pdf"],
+    csv: ["/natal-2026/gestao/exportacoes/lista-numerica", "natal-2026-lista-numerica.csv"],
+    auditoria: ["/natal-2026/gestao/exportacoes/pdf-auditoria", "natal-2026-auditoria-cupons.pdf"],
+    publica: ["/natal-2026/gestao/exportacoes/pdf-auditoria-publica", "natal-2026-cupons-participantes.pdf"],
+  };
+
   const exportar = async (tipo) => {
     setGerando(tipo);
     try {
-      const total = await baixarArquivo(
-        tipo === "pdf" ? "/natal-2026/gestao/exportacoes/pdf-urna" : "/natal-2026/gestao/exportacoes/lista-numerica",
-        tipo === "pdf" ? "natal-2026-cupons-urna.pdf" : "natal-2026-lista-numerica.csv"
-      );
+      const total = await baixarArquivo(...ARQUIVOS[tipo]);
       toast.success("Arquivo gerado", { description: `${total} cupom(ns) válido(s) exportado(s).` });
       carregarExportacoes();
     } catch (error) {
       toast.error("Não foi possível gerar o arquivo", { description: getApiErrorMessage(error) });
+    } finally {
+      setGerando("");
+    }
+  };
+
+  const gerarResultado = async () => {
+    if (!cupom) return;
+    setGerando("resultado");
+    try {
+      await baixarArquivo(`/natal-2026/gestao/cupons/${encodeURIComponent(cupom.cupom.codigo)}/resultado`, `natal-2026-resultado-${cupom.cupom.codigo}.pdf`);
+      toast.success("PDF do resultado gerado");
+      carregarExportacoes();
+    } catch (error) {
+      let mensagem = getApiErrorMessage(error);
+      if (error?.response?.data instanceof Blob) {
+        try { mensagem = JSON.parse(await error.response.data.text()).message || mensagem; } catch { /* mantém a mensagem padrão */ }
+      }
+      toast.error("Não foi possível gerar o resultado", { description: mensagem });
     } finally {
       setGerando("");
     }
@@ -423,7 +466,7 @@ function Sorteio({ painel, usuario, onPainel }) {
       <div className={styles.gradeAcoes}>
         <div className={styles.cartaoAcao}>
           <h3>Sorteio por urna</h3>
-          <p>PDF com cupons padronizados (10 por folha A4) e linhas de corte. Inclui somente cupons válidos.</p>
+          <p>PDF com cupons padronizados (10 por folha A4) e linhas de corte. Um papel por cupom válido: pet shop com 25 cupons tem 25 papéis na urna.</p>
           <div className={styles.acoes}>
             <button type="button" className={ui.primaryButton} disabled={Boolean(gerando)} onClick={() => exportar("pdf")}>
               {gerando === "pdf" ? "Gerando PDF…" : "Gerar PDF para impressão"}
@@ -436,6 +479,18 @@ function Sorteio({ painel, usuario, onPainel }) {
           <div className={styles.acoes}>
             <button type="button" className={ui.primaryButton} disabled={Boolean(gerando)} onClick={() => exportar("csv")}>
               {gerando === "csv" ? "Gerando lista…" : "Gerar lista numérica"}
+            </button>
+          </div>
+        </div>
+        <div className={styles.cartaoAcao}>
+          <h3>Auditoria dos cupons</h3>
+          <p>PDF com totais (elegíveis, invalidados, pet shops) e cada cupom: pet shop, CPF/CNPJ, distribuidor, lote, origem do saldo, situação e emissão. A versão pública mostra só os elegíveis, com documento mascarado.</p>
+          <div className={styles.acoes}>
+            <button type="button" className={ui.secondaryButton} disabled={Boolean(gerando)} onClick={() => exportar("publica")}>
+              {gerando === "publica" ? "Gerando…" : "PDF público"}
+            </button>
+            <button type="button" className={ui.primaryButton} disabled={Boolean(gerando)} onClick={() => exportar("auditoria")}>
+              {gerando === "auditoria" ? "Gerando…" : "PDF de auditoria (interno)"}
             </button>
           </div>
         </div>
@@ -469,13 +524,22 @@ function Sorteio({ painel, usuario, onPainel }) {
         {erroCupom && <div className={ui.feedback} data-type="error" role="alert">{erroCupom}</div>}
         {cupom && (
           <div className={styles.cartaoAcao}>
-            <h3>Cupom {cupom.cupom.codigo} — {cupom.cupom.status === "valido" ? "válido" : cupom.cupom.status}</h3>
+            <h3>Cupom {cupom.cupom.codigo} — {CUPOM_STATUS_LABELS[cupom.cupom.status] || cupom.cupom.status}</h3>
+            {cupom.lote && <p>Lote {cupom.lote.protocolo} ({textoCupons(cupom.lote.quantidade)}, {formatDateTimeBR(cupom.lote.recebidoEm)}, vendedor {cupom.lote.vendedorNome}){cupom.cupom.origem?.referencia ? ` · origem do saldo: ${cupom.cupom.origem.referencia}` : ""}</p>}
+            {cupom.participacao?.cupons && <p>Este pet shop tem {textoCupons(cupom.participacao.cupons.total)}, {cupom.participacao.cupons.validos} válido(s) no sorteio.</p>}
             {cupom.participacao && (
               <p>
                 {cupom.participacao.petshop.nomeFantasia} ({formatDocumentoBR(cupom.participacao.petshop.documento)}) · responsável {cupom.participacao.petshop.responsavel} · WhatsApp {cupom.participacao.petshop.whatsapp} · distribuidor {cupom.participacao.distribuidorNome} · pedido {cupom.participacao.numeroPedido} · protocolo {cupom.participacao.protocolo}
               </p>
             )}
             {cupom.cupom.motivoEncerramento && <p>Motivo do encerramento: {cupom.cupom.motivoEncerramento}</p>}
+            {cupom.cupom.status === "valido" && (
+              <div className={styles.acoes}>
+                <button type="button" className={ui.primaryButton} disabled={Boolean(gerando)} onClick={gerarResultado}>
+                  {gerando === "resultado" ? "Gerando…" : "Gerar PDF do resultado"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

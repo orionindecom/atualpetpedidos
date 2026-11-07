@@ -29,6 +29,10 @@ const natalCampanhaEstadoSchema = new mongoose.Schema(
     modoAlteradoEm: Date,
     // Incrementado por operações do modelo legado: conflita com a troca de modo.
     operacoesLegado: { type: Number, default: 0 },
+    // Múltiplos cupons por cadastro. Só a migração liga, depois de remover o índice
+    // único antigo de NatalCupom.participacaoId. Desligado: 1 cupom por envio.
+    multiplosCupons: { type: Boolean, default: false },
+    multiplosCuponsAlteradoEm: Date,
   },
   { timestamps: true }
 );
@@ -39,7 +43,12 @@ export const NatalCampanhaEstado = mongoose.models.NatalCampanhaEstado ||
 const natalExportacaoSchema = new mongoose.Schema(
   {
     campanha: { type: String, required: true, default: "natal-2026", immutable: true },
-    tipo: { type: String, enum: ["pdf_urna", "csv_numerica"], required: true, immutable: true },
+    tipo: {
+      type: String,
+      enum: ["pdf_urna", "csv_numerica", "pdf_auditoria", "pdf_auditoria_publica", "pdf_resultado"],
+      required: true,
+      immutable: true,
+    },
     geradaEm: { type: Date, required: true, immutable: true },
     autor: { type: autorNatalSchema, required: true, immutable: true },
     listaFechada: { type: Boolean, required: true, immutable: true },

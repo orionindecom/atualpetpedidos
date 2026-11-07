@@ -182,6 +182,12 @@ await Pedido.create(dadosPedido(distribuidorCumulativo, 52000, "aprovado"));
 await executarMigracao({ operador: "Homologação" });
 await concederBeneficios({ operador: "Homologação" });
 await ativarCumulativo({ operador: "Homologação" });
+// Múltiplos cupons por cadastro, ligados pelo mesmo procedimento da produção.
+if (process.env.HOMOLOG_MULTIPLOS_CUPONS !== "false") {
+  const { ativarMultiplosCupons, migrarMultiplosCupons } = await import("../services/natalMultiplosCuponsService.js");
+  await migrarMultiplosCupons({ operador: "Homologação" });
+  await ativarMultiplosCupons({ operador: "Homologação" });
+}
 
 await import("../server.js");
 

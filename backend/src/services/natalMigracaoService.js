@@ -39,9 +39,12 @@ const itensSimbolicos = (pedido) => (pedido?.itens || []).filter((item) => (
 const diagnosticarLote = (lote, pedido, participacoes, cupons) => {
   const divergencias = [];
   const adicionar = (codigo, descricao, gravidade = "revisar") => divergencias.push({ codigo, gravidade, descricao, pedido: lote.numeroPedido });
-  const aprovadas = participacoes.filter((item) => item.status === "aprovado").length;
-  const pendentes = participacoes.filter((item) => item.status === "pendente").length;
-  const validos = cupons.filter((item) => item.status === "valido").length;
+  // Unidades de cupom: cupons emitidos + cadastros antigos de 1 cupom ainda sem número.
+  const aprovadas = cupons.filter((item) => item.status === "valido").length;
+  const pendentes = cupons.filter((item) => item.status === "pendente").length +
+    participacoes.filter((item) => item.status === "pendente" && !item.cupons).length;
+  const aprovadosIds = new Set(participacoes.filter((item) => item.status === "aprovado").map((item) => String(item._id)));
+  const validosSemAprovacao = cupons.filter((item) => item.status === "valido" && !aprovadosIds.has(String(item.participacaoId))).length;
 
   if (!pedido) adicionar("pedido_ausente", "O lote aponta para um pedido que não existe mais.");
   else if (pedido.status === "cancelado" && lote.status === "ativo") adicionar("lote_ativo_pedido_cancelado", "Lote ativo com pedido cancelado.");
@@ -55,7 +58,7 @@ const diagnosticarLote = (lote, pedido, participacoes, cupons) => {
   if (Number(lote.contadores?.aprovados || 0) !== aprovadas || Number(lote.contadores?.pendentes || 0) !== pendentes) {
     adicionar("contadores_divergentes", `Contadores do lote (${lote.contadores?.aprovados || 0}/${lote.contadores?.pendentes || 0}) diferem dos cadastros (${aprovadas}/${pendentes}).`);
   }
-  if (validos !== aprovadas) adicionar("cupons_diferem_de_aprovados", `${validos} cupons válidos para ${aprovadas} cadastros aprovados.`);
+  if (validosSemAprovacao > 0) adicionar("cupom_valido_sem_aprovacao", `${validosSemAprovacao} cupom(ns) válido(s) de cadastro não aprovado.`);
   if (aprovadas > Number(lote.cuponsConcedidos)) adicionar("aprovados_acima_do_concedido", `${aprovadas} aprovados para ${lote.cuponsConcedidos} concedidos.`);
   if (lote.revisaoPendente) adicionar("revisao_pendente_antiga", "Lote com redução sem decisão administrativa.");
   if (itensSimbolicos(pedido).length > 0) {
@@ -71,8 +74,8 @@ export const analisarMigracao = async ({ config = NATAL_2026 } = {}) => {
   const substituidos = await NatalSubstituicaoCompra.find({ campanha: config.slug }).select("pedidoId").lean();
   const [lotes, participacoes, cupons, contas, pedidosContabilizados, totalAuditoria] = await Promise.all([
     NatalLote.find({}).lean(),
-    NatalParticipacao.find({}).select("loteId clienteId status comprovante.chave cupom.numero").lean(),
-    NatalCupom.find({}).select("loteId clienteId status numero").lean(),
+    NatalParticipacao.find({}).select("loteId clienteId status comprovante.chave cupom.numero cupons").lean(),
+    NatalCupom.find({}).select("loteId clienteId status numero participacaoId").lean(),
     NatalConta.find({ campanha: config.slug }).lean(),
     Pedido.find({
       _id: { $nin: substituidos.map((item) => item.pedidoId) },
@@ -191,8 +194,8 @@ export const validarIntegridade = async ({ config = NATAL_2026 } = {}) => {
   const [lotes, contas, participacoes, cupons, movimentos] = await Promise.all([
     NatalLote.find({}).select("clienteId status cuponsConcedidos").lean(),
     NatalConta.find({ campanha: config.slug }).lean(),
-    NatalParticipacao.find({}).select("clienteId status").lean(),
-    NatalCupom.find({}).select("clienteId status numero").lean(),
+    NatalParticipacao.find({}).select("clienteId status cupons").lean(),
+    NatalCupom.find({}).select("clienteId status numero participacaoId").lean(),
     NatalMovimentoCupom.find({ campanha: config.slug }).select("clienteId quantidade").lean(),
   ]);
   const problemas = [];
@@ -211,9 +214,12 @@ export const validarIntegridade = async ({ config = NATAL_2026 } = {}) => {
   for (const conta of contas) {
     const clienteId = String(conta.clienteId);
     const daConta = (item) => String(item.clienteId) === clienteId;
-    const aprovados = participacoes.filter((item) => daConta(item) && item.status === "aprovado").length;
-    const pendentes = participacoes.filter((item) => daConta(item) && item.status === "pendente").length;
-    const cuponsValidos = cupons.filter((item) => daConta(item) && item.status === "valido").length;
+    // Unidades de cupom (cadastros antigos de 1 cupom ainda sem número contam 1).
+    const aprovados = cupons.filter((item) => daConta(item) && item.status === "valido").length;
+    const pendentes = cupons.filter((item) => daConta(item) && item.status === "pendente").length +
+      participacoes.filter((item) => daConta(item) && item.status === "pendente" && !item.cupons).length;
+    const aprovadosIds = new Set(participacoes.filter((item) => daConta(item) && item.status === "aprovado").map((item) => String(item._id)));
+    const validosSemAprovacao = cupons.filter((item) => daConta(item) && item.status === "valido" && !aprovadosIds.has(String(item.participacaoId))).length;
     const somaMovimentos = movimentos.filter(daConta).reduce((soma, item) => soma + item.quantidade, 0);
     const legado = lotes.filter((lote) => String(lote.clienteId) === clienteId && lote.status === "ativo")
       .reduce((soma, lote) => soma + Number(lote.cuponsConcedidos || 0), 0);
@@ -224,7 +230,7 @@ export const validarIntegridade = async ({ config = NATAL_2026 } = {}) => {
     if (Number(conta.cupons?.legado || 0) !== legado) adicionar("legado_divergente", clienteId, `Conta com ${conta.cupons?.legado}; lotes ativos somam ${legado}.`);
     if (Number(conta.contadores?.aprovados || 0) !== aprovados) adicionar("aprovados_divergentes", clienteId, `Conta com ${conta.contadores?.aprovados}; cadastros somam ${aprovados}.`);
     if (Number(conta.contadores?.pendentes || 0) !== pendentes) adicionar("pendentes_divergentes", clienteId, `Conta com ${conta.contadores?.pendentes}; cadastros somam ${pendentes}.`);
-    if (cuponsValidos !== aprovados) adicionar("cupons_diferem_de_aprovados", clienteId, `${cuponsValidos} cupons válidos para ${aprovados} aprovados.`);
+    if (validosSemAprovacao > 0) adicionar("cupom_valido_sem_aprovacao", clienteId, `${validosSemAprovacao} cupom(ns) válido(s) de cadastro não aprovado.`);
     if (aprovados > total) adicionar("aprovados_acima_do_saldo", clienteId, `${aprovados} aprovados para saldo de ${total}.`);
   }
   if (new Set(cupons.map((item) => item.numero)).size !== cupons.length) adicionar("numero_cupom_repetido", "campanha", "Há números de cupom repetidos.");
@@ -243,7 +249,7 @@ export const validarIntegridade = async ({ config = NATAL_2026 } = {}) => {
 };
 
 // Registra a execução e impede duas ao mesmo tempo. Falha fica no histórico.
-const executarEtapa = async ({ etapa, operador, now }, operacao) => {
+export const executarEtapa = async ({ etapa, operador, now, acaoAuditoria = "migracao_cumulativa" }, operacao) => {
   await garantirIndicesNatal();
   const execucaoId = crypto.randomUUID();
   try {
@@ -256,7 +262,7 @@ const executarEtapa = async ({ etapa, operador, now }, operacao) => {
     const resumo = await operacao(execucaoId);
     await NatalMigracaoExecucao.updateOne({ execucaoId }, { $set: { status: "concluida", concluidaEm: new Date(), resumo }, $unset: { emAndamento: 1 } });
     await NatalAuditoria.create({
-      acao: "migracao_cumulativa",
+      acao: acaoAuditoria,
       em: now,
       autor: { usuarioTipo: "sistema", usuarioNome: operador },
       detalhes: { execucaoId, etapa, resumo },

@@ -735,3 +735,166 @@
   flex-wrap: wrap;
   gap: 4px;
 }
+
+/* Múltiplos cupons: resumo, lotes de distribuição e adição de cupons */
+.resumoCupons {
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.resumoCupons div {
+  padding: 8px 10px;
+  border-radius: var(--radius-medium);
+  background: var(--surface-secondary);
+  text-align: center;
+  min-width: 0;
+}
+
+.resumoCupons dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.resumoCupons dd {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.distribuicoes {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.distribuicao {
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+}
+
+.loteCabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.loteNumeros {
+  margin-top: 8px;
+}
+
+.loteNumeros summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-height: 28px;
+}
+
+.loteNumeros ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.loteNumeros li {
+  padding: 3px 8px;
+  border: 1px dashed var(--success);
+  border-radius: var(--radius-medium);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.loteNumeros li[data-tone="accent"] {
+  border-color: var(--brand-accent);
+}
+
+.loteNumeros li[data-tone="inactive"],
+.loteNumeros li[data-tone="danger"] {
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.loteNumeros li small {
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.loteCampos {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+
+.loteCampos .campoTexto input {
+  min-height: 44px;
+}
+
+.checkLinha {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.checkLinha input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.erro {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.previaLote {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-medium);
+  background: var(--brand-accent-soft);
+  font-size: 13px;
+}
+
+.confirmacaoLote {
+  margin-top: 12px;
+  padding: 12px;
+  border: 2px solid var(--brand-accent);
+  border-radius: var(--radius-medium);
+}
+
+.confirmacaoLote p {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .resumoCupons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .loteCampos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

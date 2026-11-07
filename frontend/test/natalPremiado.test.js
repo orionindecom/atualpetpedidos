@@ -83,10 +83,27 @@ test("distribuidor divulga um único link e os anteriores ficam separados", () =
   assert.deepEqual(separarLinks([antigo, outro]), { principal: antigo, anteriores: [outro] });
   assert.deepEqual(separarLinks([]), { principal: null, anteriores: [] });
   const pagina = readFileSync(new URL("../src/pages/NatalDistribuidor/NatalDistribuidor.jsx", import.meta.url), "utf8");
-  for (const rotulo of ["Cupons concedidos", "Cupons disponíveis", "Cupons utilizados", "Faixa atual", "Falta para a próxima faixa"]) {
+  for (const rotulo of ["Cupons concedidos", "Cupons disponíveis", "Cupons distribuídos", "Válidos no sorteio", "Aguardando validação", "Faixa atual", "Falta para a próxima faixa"]) {
     assert.match(pagina, new RegExp(rotulo));
   }
   const cartao = readFileSync(new URL("../src/components/NatalBeneficios/NatalBeneficios.jsx", import.meta.url), "utf8");
   assert.match(cartao, /Copiar link/);
   assert.match(cartao, /Compartilhar pelo WhatsApp/);
+});
+
+test("quantidade de cupons: só inteiros de 1 até o saldo e o teto por envio", async () => {
+  const { validarQuantidadeCupons, LIMITE_CUPONS_POR_ENVIO, gerarChaveEnvio, resumoCupons, textoCupons } = await import("../src/utils/natalPremiado.js");
+  for (const valor of ["0", "-1", "1.5", "1,5", "", " ", "abc", "1e3", "2 3"]) {
+    assert.equal(validarQuantidadeCupons(valor, 100).valido, false, `aceitou "${valor}"`);
+  }
+  assert.equal(validarQuantidadeCupons("25", 175).quantidade, 25);
+  assert.equal(validarQuantidadeCupons("176", 175).valido, false);
+  assert.equal(validarQuantidadeCupons(String(LIMITE_CUPONS_POR_ENVIO + 1), 99999).valido, false);
+  assert.equal(validarQuantidadeCupons("1", 0).valido, false);
+  assert.match(gerarChaveEnvio(), /^[A-Za-z0-9_-]{16,64}$/);
+  assert.notEqual(gerarChaveEnvio(), gerarChaveEnvio());
+  assert.deepEqual(resumoCupons({ status: "aprovado" }), { total: 1, validos: 1, pendentes: 0, cancelados: 0, rejeitados: 0, invalidados: 0 });
+  assert.equal(resumoCupons({ cupons: { total: 35 } }).total, 35);
+  assert.equal(textoCupons(1), "1 cupom");
+  assert.equal(textoCupons(25), "25 cupons");
 });

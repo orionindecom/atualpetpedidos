@@ -36,6 +36,13 @@ export const ACOES_AUDITORIA_NATAL = Object.freeze([
   "revisao_pendente",
   "migracao_cumulativa",
   "compra_origem_substituida",
+  "distribuicao_recebida",
+  "distribuicao_aprovada",
+  "distribuicao_rejeitada",
+  "distribuicao_cancelada",
+  "cupons_invalidados_revisao",
+  "migracao_multiplos_cupons",
+  "resultado_sorteio_gerado",
 ]);
 
 const natalAuditoriaSchema = new mongoose.Schema(

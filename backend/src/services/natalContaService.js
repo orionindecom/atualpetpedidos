@@ -23,6 +23,7 @@ import {
   RepetirTransacaoNatal,
   verificarListaAberta,
 } from "./natalBaseService.js";
+import { contarUnidadesCupom } from "./natalDistribuicaoService.js";
 
 const CAMPANHA = NATAL_2026.slug;
 
@@ -32,21 +33,8 @@ export const cuponsAutomaticos = (conta) => (
 
 const clienteObjectId = (clienteId) => new mongoose.Types.ObjectId(String(clienteId));
 
-const contarParticipacoes = async (clienteId, session) => {
-  const grupos = await NatalParticipacao.aggregate([
-    { $match: { clienteId: clienteObjectId(clienteId) } },
-    { $group: { _id: "$status", total: { $sum: 1 } } },
-  ]).session(session || null);
-  const porStatus = Object.fromEntries(grupos.map((grupo) => [grupo._id, grupo.total]));
-  return {
-    aprovados: porStatus.aprovado || 0,
-    pendentes: porStatus.pendente || 0,
-    rejeitados: porStatus.rejeitado || 0,
-    cancelados: porStatus.cancelado || 0,
-    invalidados: porStatus.invalidado_pedido || 0,
-    invalidadosRevisao: porStatus.invalidado_revisao || 0,
-  };
-};
+// Unidades de cupom por situação (cadastros antigos de 1 cupom contam 1 unidade).
+const contarParticipacoes = (clienteId, session) => contarUnidadesCupom({ clienteId: clienteObjectId(clienteId) }, session);
 
 const nomeDoDistribuidor = async (clienteId, lotes, session) => {
   if (lotes.length > 0) return { nome: lotes[0].distribuidorNome, razao: lotes[0].distribuidorRazaoSocial };
@@ -396,11 +384,13 @@ export const ajustarCuponsConta = async ({ clienteId, quantidade, motivo, justif
     const conta = await garantirConta({ clienteId, usuario, now, session });
     const total = Number(conta.cupons.total);
     const aprovados = Number(conta.contadores?.aprovados || 0);
-    if (total + valor < aprovados) {
-      throw new NatalError(409, `Não é possível retirar ${Math.abs(valor)} cupons: ${aprovados} já estão em uso e o saldo ficaria negativo.`, "ajuste_excede_saldo");
+    const pendentes = Number(conta.contadores?.pendentes || 0);
+    // Cupons aguardando validação também ocupam saldo: a retirada não pode deixá-lo negativo.
+    if (total + valor < aprovados + pendentes) {
+      throw new NatalError(409, `Não é possível retirar ${Math.abs(valor)} cupons: ${aprovados + pendentes} já estão em uso ou aguardando validação e o saldo ficaria negativo.`, "ajuste_excede_saldo");
     }
     const atualizada = await NatalConta.findOneAndUpdate(
-      { _id: conta._id, "cupons.total": total, "contadores.aprovados": aprovados },
+      { _id: conta._id, "cupons.total": total, "contadores.aprovados": aprovados, "contadores.pendentes": pendentes },
       { $inc: { "cupons.ajustes": valor, "cupons.total": valor } },
       { returnDocument: "after", session }
     );

@@ -551,10 +551,10 @@ test("16. dois links antigos do mesmo distribuidor compartilham um único saldo"
 
   const primeira = await cadastrar(loteA.codigoPublico);
   const segunda = await cadastrar(loteB.codigoPublico);
-  const terceira = await cadastrar(loteB.codigoPublico);
+  // Reserva estrita: com as 2 vagas reservadas, o terceiro envio é recusado em qualquer link.
+  await assert.rejects(cadastrar(loteB.codigoPublico), { code: "fila_cheia" });
   await aprovarParticipacao({ id: primeira._id, usuario: comercial, now: DENTRO });
   await aprovarParticipacao({ id: segunda._id, usuario: comercial, now: DENTRO });
-  await assert.rejects(aprovarParticipacao({ id: terceira._id, usuario: comercial, now: DENTRO }), { code: "sem_saldo" });
 
   assert.equal((await obterLotePublico(loteA.codigoPublico, { now: DENTRO })).motivo, "esgotado");
   assert.equal((await contaDe(distribuidor)).contadores.aprovados, 2);
@@ -746,12 +746,14 @@ test("20. pedido fictício da Support Pet segue intacto e a troca por compra ext
 
 test("aprovações simultâneas por links diferentes nunca ultrapassam o saldo do distribuidor", async () => {
   const { comercial, distribuidor } = await contexto();
-  const loteA = await criarLoteLegado(distribuidor, await criarPedido(distribuidor, 100), 2);
-  const loteB = await criarLoteLegado(distribuidor, await criarPedido(distribuidor, 100), 2);
+  const loteA = await criarLoteLegado(distribuidor, await criarPedido(distribuidor, 100), 5);
+  const loteB = await criarLoteLegado(distribuidor, await criarPedido(distribuidor, 100), 5);
   await garantirConta({ clienteId: distribuidor._id });
   const participacoes = [];
   for (let i = 0; i < 5; i += 1) participacoes.push(await cadastrar(loteA.codigoPublico));
   for (let i = 0; i < 5; i += 1) participacoes.push(await cadastrar(loteB.codigoPublico));
+  // Saldo reduzido depois dos envios (como numa adequação): 10 pendentes para 4 vagas.
+  await NatalConta.updateOne({ clienteId: distribuidor._id }, { $set: { "cupons.total": 4 } });
 
   const tentativas = participacoes.flatMap((item) => [item, item]).map((item) => aprovarParticipacao({ id: item._id, usuario: comercial, now: DENTRO }));
   await Promise.allSettled(tentativas);
@@ -780,9 +782,10 @@ test("ajustes e aprovações simultâneos mantêm o saldo coerente", async () =>
   const { comercial, distribuidor } = await contexto();
   await comprar(distribuidor, [12000]);
   const conta = await contaDe(distribuidor);
-  await ajustarCuponsConta({ clienteId: distribuidor._id, quantidade: -97, motivo: "Saldo reduzido para o teste", usuario: comercial });
   const participacoes = [];
   for (let i = 0; i < 5; i += 1) participacoes.push(await cadastrar(conta.codigoPublico));
+  // Saldo reduzido depois dos envios: 5 pendentes para 3 vagas.
+  await NatalConta.updateOne({ _id: conta._id }, { $inc: { "cupons.total": -97, "cupons.ajustes": -97 } });
   await Promise.allSettled([
     ...participacoes.map((item) => aprovarParticipacao({ id: item._id, usuario: comercial, now: DENTRO })),
     ajustarCuponsConta({ clienteId: distribuidor._id, quantidade: -2, motivo: "Retirada simultânea de saldo", usuario: comercial }),

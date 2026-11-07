@@ -389,8 +389,8 @@ function DetalheDistribuidor({ clienteId, listaFechada, isAdmin, cumulativoAtivo
         <div className={styles.kpi}><span>Falta para a próxima faixa</span><strong>{compras.proximaFaixa ? formatMoney(compras.restanteProximaFaixa) : "—"}</strong></div>
         <div className={styles.kpi}><span>Cupons concedidos</span><strong>{cupons.total}</strong></div>
         <div className={styles.kpi} data-tone="success"><span>Cupons disponíveis</span><strong>{cupons.disponiveis}</strong></div>
-        <div className={styles.kpi}><span>Cupons utilizados</span><strong>{cupons.utilizados}</strong></div>
-        <div className={styles.kpi} data-tone="accent"><span>Cadastros em análise</span><strong>{cupons.pendentes}</strong></div>
+        <div className={styles.kpi}><span>Cupons válidos no sorteio</span><strong>{cupons.utilizados}</strong></div>
+        <div className={styles.kpi} data-tone="accent"><span>Cupons aguardando validação</span><strong>{cupons.pendentes}</strong></div>
         <div className={styles.kpi} data-tone="danger"><span>Cupons invalidados</span><strong>{cupons.invalidados + cupons.cancelados}</strong></div>
       </div>
       <p className={styles.muted}>
@@ -674,7 +674,7 @@ function GestaoDistribuidores({ usuario, listaFechada, modoCumulativo, reconcili
             <thead>
               <tr>
                 <th>Distribuidor</th><th>Compras</th><th>Ciclos</th><th>Ciclo atual</th><th>Falta p/ faixa</th>
-                <th>Cupons</th><th>Disponíveis</th><th>Utilizados</th><th>Bonif. produtos</th><th>Bonif. MKT</th>
+                <th>Cupons</th><th>Disponíveis</th><th>Válidos</th><th>Bonif. produtos</th><th>Bonif. MKT</th>
               </tr>
             </thead>
             <tbody>

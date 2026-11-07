@@ -1,6 +1,13 @@
 import express from "express";
 import {
+  adicionarCuponsHandler,
   ajustarCuponsHandler,
+  aprovarDistribuicaoHandler,
+  cancelarDistribuicaoHandler,
+  comprovanteDistribuicao,
+  detalheDistribuicaoHandler,
+  rejeitarDistribuicaoHandler,
+  resultadoSorteioHandler,
   alterarFechamentoHandler,
   aplicarSubstituicaoHandler,
   aprovarParticipacaoHandler,
@@ -78,6 +85,13 @@ router.get("/participacoes/:id/comprovante", validarIdParticipacao, comprovanteP
 router.post("/participacoes/:id/cancelar", validarIdParticipacao, cancelarParticipacaoHandler);
 router.post("/participacoes/:id/aprovar", exigirGestor, validarIdParticipacao, aprovarParticipacaoHandler);
 router.post("/participacoes/:id/rejeitar", exigirGestor, validarIdParticipacao, rejeitarParticipacaoHandler);
+// Lotes de cupons: o distribuidor dono adiciona; só a gestão valida, rejeita ou cancela.
+router.post("/participacoes/:id/distribuicoes", exigirDistribuidor, validarIdParticipacao, natalEnvioLimiter, receberComprovante, adicionarCuponsHandler);
+router.get("/distribuicoes/:id", validarIdParticipacao, detalheDistribuicaoHandler);
+router.get("/distribuicoes/:id/comprovante", validarIdParticipacao, comprovanteDistribuicao);
+router.post("/distribuicoes/:id/aprovar", exigirGestor, validarIdParticipacao, aprovarDistribuicaoHandler);
+router.post("/distribuicoes/:id/rejeitar", exigirGestor, validarIdParticipacao, rejeitarDistribuicaoHandler);
+router.post("/distribuicoes/:id/cancelar", exigirGestor, validarIdParticipacao, cancelarDistribuicaoHandler);
 
 router.get("/gestao/painel", exigirGestor, painelGestao);
 router.get("/gestao/lotes", exigirGestor, lotesGestao);
@@ -96,10 +110,13 @@ router.get("/gestao/compras-externas/:id/comprovante", exigirGestor, validateObj
 router.post("/gestao/bonificacoes/:id/entregas", exigirGestor, validateObjectIdParam(), registrarEntregaHandler);
 router.get("/gestao/participacoes", exigirGestor, participacoesGestao);
 router.get("/gestao/cupons/:numero", exigirGestor, buscarCupomHandler);
+router.get("/gestao/cupons/:numero/resultado", exigirGestor, resultadoSorteioHandler);
 router.get("/gestao/auditoria", exigirGestor, auditoriaGestao);
 router.get("/gestao/exportacoes", exigirGestor, exportacoesGestao);
 router.get("/gestao/exportacoes/pdf-urna", exigirGestor, exportarCupons("pdf_urna"));
 router.get("/gestao/exportacoes/lista-numerica", exigirGestor, exportarCupons("csv_numerica"));
+router.get("/gestao/exportacoes/pdf-auditoria", exigirGestor, exportarCupons("pdf_auditoria"));
+router.get("/gestao/exportacoes/pdf-auditoria-publica", exigirGestor, exportarCupons("pdf_auditoria_publica"));
 router.post("/gestao/pedidos/:id/substituicao/previa", exigirAdmin, validateObjectIdParam(), previaSubstituicaoHandler);
 router.post("/gestao/pedidos/:id/substituicao", exigirAdmin, validateObjectIdParam(), aplicarSubstituicaoHandler);
 router.post("/gestao/fechamento", exigirAdmin, alterarFechamentoHandler);

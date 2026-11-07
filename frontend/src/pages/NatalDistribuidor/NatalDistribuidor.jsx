@@ -18,7 +18,9 @@ import {
   formatMoney,
   PARTICIPACAO_STATUS_LABELS,
   PARTICIPACAO_STATUS_TONES,
+  resumoCupons,
   separarLinks,
+  textoCupons,
 } from "../../utils/natalPremiado";
 
 function NatalDistribuidor() {
@@ -86,8 +88,9 @@ function NatalDistribuidor() {
             <div className={styles.kpis}>
               <div className={styles.kpi}><span>Cupons concedidos</span><strong>{conta?.cupons.total || 0}</strong></div>
               <div className={styles.kpi} data-tone="success"><span>Cupons disponíveis</span><strong>{conta?.cupons.disponiveis || 0}</strong></div>
-              <div className={styles.kpi}><span>Cupons utilizados</span><strong>{conta?.cupons.utilizados || 0}</strong></div>
-              <div className={styles.kpi} data-tone="accent"><span>Em análise</span><strong>{conta?.cupons.pendentes || 0}</strong></div>
+              <div className={styles.kpi}><span>Cupons distribuídos</span><strong>{(conta?.cupons.utilizados || 0) + (conta?.cupons.pendentes || 0)}</strong></div>
+              <div className={styles.kpi}><span>Válidos no sorteio</span><strong>{conta?.cupons.utilizados || 0}</strong></div>
+              <div className={styles.kpi} data-tone="accent"><span>Aguardando validação</span><strong>{conta?.cupons.pendentes || 0}</strong></div>
               <div className={styles.kpi}><span>Acumulado no ciclo {conta?.compras.cicloAtual || 1}</span><strong>{formatMoney(conta?.compras.acumuladoCiclo)}</strong></div>
               <div className={styles.kpi}><span>Faixa atual</span><strong>{descreverFaixa(conta?.compras.faixaAtual)}</strong></div>
               <div className={styles.kpi}><span>Falta para a próxima faixa</span><strong>{conta?.compras.proximaFaixa ? formatMoney(conta.compras.restanteProximaFaixa) : "—"}</strong></div>
@@ -235,7 +238,7 @@ function NatalDistribuidor() {
                   </div>
                   <div className={styles.linhaStatus}>
                     <span className={ui.badge} data-tone={PARTICIPACAO_STATUS_TONES[item.status]}>{PARTICIPACAO_STATUS_LABELS[item.status]}</span>
-                    {item.cupom && item.status === "aprovado" && <small>Cupom {item.cupom.codigo}</small>}
+                    <small>{textoCupons(resumoCupons(item).total)} · {resumoCupons(item).validos} válido(s){resumoCupons(item).pendentes ? ` · ${resumoCupons(item).pendentes} aguardando` : ""}</small>
                   </div>
                 </button>
               ))}
@@ -255,6 +258,7 @@ function NatalDistribuidor() {
         <ParticipacaoModal
           participacaoId={selecionada}
           usuarioTipo="cliente"
+          saldoDisponivel={conta?.cupons.disponiveis}
           onClose={() => setSelecionada(null)}
           onChanged={aposAlteracao}
         />

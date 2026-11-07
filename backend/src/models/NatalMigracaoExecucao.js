@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 // Histórico das etapas da ativação do modelo cumulativo. O índice parcial permite
 // uma única execução em andamento, o que serve de trava contra execuções simultâneas.
 
-export const ETAPAS_MIGRACAO = Object.freeze(["migracao", "concessao", "ativacao", "reversao"]);
+export const ETAPAS_MIGRACAO = Object.freeze([
+  "migracao", "concessao", "ativacao", "reversao",
+  "multiplos_migracao", "multiplos_ativacao", "multiplos_desativacao",
+]);
 
 const natalMigracaoExecucaoSchema = new mongoose.Schema(
   {

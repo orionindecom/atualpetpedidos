@@ -3,7 +3,7 @@ import NatalBonificacao from "../models/NatalBonificacao.js";
 import NatalConta from "../models/NatalConta.js";
 import NatalLote from "../models/NatalLote.js";
 import NatalMovimentoCupom from "../models/NatalMovimentoCupom.js";
-import NatalParticipacao from "../models/NatalParticipacao.js";
+import NatalCupom from "../models/NatalCupom.js";
 import Pedido from "../models/Pedido.js";
 import Usuario from "../models/Usuario.js";
 import { saldoConta, STATUS_FORA_DA_CAMPANHA } from "../utils/natalCampanha.js";
@@ -277,7 +277,8 @@ export const detectarPendenciasSincronizacao = async ({ config = NATAL_2026 } = 
       createdAt: { $gte: config.inicio, $lte: config.fimCadastros },
     }).select("clienteId nomeFantasiaCliente razaoSocialCliente").lean().maxTimeMS(8000),
     NatalBonificacao.find({ campanha: config.slug }).select("clienteId ciclo tipo valorConcedido").lean(),
-    NatalParticipacao.aggregate([{ $match: { status: "aprovado" } }, { $group: { _id: "$clienteId", total: { $sum: 1 } } }]),
+    // Cupons válidos por distribuidor (cada cupom é uma unidade do saldo utilizado).
+    NatalCupom.aggregate([{ $match: { status: "valido" } }, { $group: { _id: "$clienteId", total: { $sum: 1 } } }]),
   ]);
   const contaPorCliente = new Map(contas.map((conta) => [String(conta.clienteId), conta]));
   const aprovadosPorCliente = new Map(participacoes.map((item) => [String(item._id), item.total]));

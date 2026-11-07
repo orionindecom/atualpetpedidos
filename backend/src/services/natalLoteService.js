@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { NATAL_2026 } from "../config/natalPremiado2026.js";
 import NatalConta from "../models/NatalConta.js";
 import NatalLote from "../models/NatalLote.js";
-import NatalParticipacao from "../models/NatalParticipacao.js";
 import Pedido from "../models/Pedido.js";
 import { buildAutorNatal } from "../models/natalSchemas.js";
 import {
@@ -18,6 +17,7 @@ import {
   registrarAuditoriaNatal,
 } from "./natalBaseService.js";
 import { recalcularConta } from "./natalContaService.js";
+import { contarUnidadesCupom } from "./natalDistribuicaoService.js";
 
 // Pedidos são a origem dos valores; o saldo fica na conta do distribuidor. Lotes são
 // os links antigos: continuam válidos e só acompanham o valor do pedido que os gerou.
@@ -69,21 +69,10 @@ const acompanharValorDoLote = async ({ lote, pedido, usuario, origem, now, modo 
   return atualizado;
 };
 
+// Contadores do link antigo em unidades de cupom (cupons enviados por ele).
 export const recalcularContadoresLote = async (loteId) => {
   const id = new mongoose.Types.ObjectId(String(loteId));
-  const grupos = await NatalParticipacao.aggregate([
-    { $match: { loteId: id } },
-    { $group: { _id: "$status", total: { $sum: 1 } } },
-  ]);
-  const porStatus = Object.fromEntries(grupos.map((grupo) => [grupo._id, grupo.total]));
-  const contadores = {
-    aprovados: porStatus.aprovado || 0,
-    pendentes: porStatus.pendente || 0,
-    rejeitados: porStatus.rejeitado || 0,
-    cancelados: porStatus.cancelado || 0,
-    invalidados: porStatus.invalidado_pedido || 0,
-    invalidadosRevisao: porStatus.invalidado_revisao || 0,
-  };
+  const contadores = await contarUnidadesCupom({ loteId: id });
   await NatalLote.updateOne({ _id: id }, { $set: { contadores } });
   return contadores;
 };
